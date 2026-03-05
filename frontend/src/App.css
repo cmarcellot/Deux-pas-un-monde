@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, var(--surface) 0%, var(--background) 30%, var(--background) 100%);
+  background: var(--background);
 }
 
 /* Header */
@@ -116,7 +116,7 @@
   padding: 0.75rem 1.25rem;
   border-radius: 50px;
   border: 1px solid var(--border);
-  background: var(--background-light);
+  background: var(--surface);
   color: var(--text-primary);
   cursor: pointer;
   white-space: nowrap;
@@ -126,7 +126,7 @@
 }
 
 .category-pill:hover {
-  background: var(--surface);
+  background: var(--surface-hover);
   border-color: var(--border-light);
 }
 
