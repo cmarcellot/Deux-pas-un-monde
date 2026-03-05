@@ -36,7 +36,7 @@ places_collection = db["places"]
 UPLOAD_DIR = "/app/backend/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+app.mount("/api/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 security = HTTPBearer()
 
