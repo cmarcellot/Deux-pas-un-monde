@@ -1,0 +1,121 @@
+{
+  "project_identity": {
+    "name": "Deux pas un monde",
+    "description": "A premium, visual-first travel diary based on Instagram aesthetics. Discover hidden gems, hotels, and restaurants through an interactive map.",
+    "persona": "The Sophisticated Explorer",
+    "tone": "Elegant, Intimate, Earthy, Cinematic",
+    "theme": "dark"
+  },
+  "colors": {
+    "palette": {
+      "primary": "#C66B3D",
+      "primary_foreground": "#FFFFFF",
+      "background": "#1A1A1A",
+      "surface": "#2D2D2D",
+      "surface_hover": "#3D3D3D",
+      "text_primary": "#E8E0D5",
+      "text_secondary": "#A0A0A0",
+      "text_muted": "#666666",
+      "border": "#404040",
+      "success": "#4CAF50",
+      "error": "#CF6679"
+    },
+    "usage": {
+      "background": "Use #1A1A1A for the main app background to create depth.",
+      "card_bg": "Use #2D2D2D for cards and panels. This is the 'Anthracite' requested but used structurally.",
+      "text": "Use #E8E0D5 (Cream) for all primary headings and body text. This is the signature brand color.",
+      "cta": "Use #C66B3D (Terracotta) for 'Book Now', 'View Details', or Map Markers. It adds warmth to the cold stone palette.",
+      "map_style": "Dark mode map. Land: #1A1A1A, Roads: #333333, Water: #141414."
+    }
+  },
+  "typography": {
+    "headings": {
+      "family": "Playfair Display, serif",
+      "usage": "Use for H1, H2, H3. Captures the 'Editorial' and 'Romance' of travel.",
+      "weights": "Regular (400) or Italic"
+    },
+    "body": {
+      "family": "DM Sans, sans-serif",
+      "usage": "Use for UI elements, descriptions, buttons.",
+      "weights": "Regular (400), Medium (500)"
+    },
+    "import_url": "https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap"
+  },
+  "layout_strategy": {
+    "mobile": {
+      "structure": "Map-first. The map takes up the full screen background. A 'Bottom Sheet' (swipeable drawer) sits on top containing the list of places. The sheet can be minimized to show only the map.",
+      "navigation": "Bottom Navigation Bar (Home, Categories, Saved, Admin)."
+    },
+    "desktop": {
+      "structure": "Split Screen. Left Panel (40% width) for scrollable list of places/details. Right Panel (60% width) for the interactive map.",
+      "container": "Full width fluid layout. No centered 'container' for the main view."
+    },
+    "spacing": {
+      "base": "1rem",
+      "card_padding": "p-6",
+      "section_gap": "gap-8"
+    }
+  },
+  "components": {
+    "PlaceCard": {
+      "style": "Minimalist 'Polaroid' or 'Magazine' style.",
+      "structure": "Full-width image aspect-video. Title and Rating below. Dark background (#2D2D2D).",
+      "interaction": "Hover: distinct lift (-translate-y-1) and shadow glow."
+    },
+    "MapMarker": {
+      "style": "Custom SVG markers. Circle with icon inside. Color coded by category.",
+      "colors": {
+        "accommodation": "#C66B3D",
+        "restaurant": "#E8E0D5",
+        "activity": "#4CAF50",
+        "gem": "#A0A0A0"
+      }
+    },
+    "CategoryFilter": {
+      "style": "Horizontal scrollable pill list.",
+      "state": {
+        "active": "bg-[#E8E0D5] text-[#1A1A1A]",
+        "inactive": "bg-transparent border border-[#404040] text-[#E8E0D5]"
+      }
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "Use lightly on the Bottom Nav and Top Bar: backdrop-blur-md bg-[#1A1A1A]/80 border-b border-[#ffffff]/5.",
+    "shadows": "soft-shadow: 0 4px 20px rgba(0,0,0,0.5) for floating elements.",
+    "radius": "rounded-xl for cards, rounded-full for buttons."
+  },
+  "assets": {
+    "images": {
+      "hero_bg": "https://images.unsplash.com/photo-1760662544434-dd8d479bfc83?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTJ8MHwxfHNlYXJjaHwxfHxjaW5lbWF0aWMlMjB0cmF2ZWwlMjBsYW5kc2NhcGUlMjBkYXJrJTIwbW9vZHklMjBhZXN0aGV0aWN8ZW58MHx8fHwxNzcyNjY4NzgwfDA&ixlib=rb-4.1.0&q=85",
+      "category_accommodation": "https://images.unsplash.com/photo-1769123300291-81262063e667?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwxfHxjb3p5JTIwYm91dGlxdWUlMjBob3RlbCUyMGludGVyaW9yJTIwd2FybSUyMGxpZ2h0aW5nfGVufDB8fHx8MTc3MjY2ODc4MXww&ixlib=rb-4.1.0&q=85",
+      "category_restaurant": "https://images.unsplash.com/photo-1621494268492-d01b98eba7e4?crop=entropy&cs=srgb\u0026fm=jpg\u0026ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwxfHxmaW5lJTIwZGluaW5nJTIwZm9vZCUyMHBsYXRpbmclMjBkYXJrJTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3NzI2Njg3ODJ8MA\u0026ixlib=rb-4.1.0\u0026q=85",
+      "category_activity": "https://images.unsplash.com/photo-1771838026237-e6d3838e75ca?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHw0fHxoaWtpbmclMjB0cmFpbCUyMHNjZW5pYyUyMHZpZXclMjBtb3VudGFpbnN8ZW58MHx8fHwxNzcyNjY4NzgyfDA&ixlib=rb-4.1.0&q=85",
+      "category_gem": "https://images.unsplash.com/photo-1763736810410-9043f78f8507?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHw0fHxoaWRkZW4lMjBnZW0lMjBjaXR5JTIwc3RyZWV0JTIwY2FmZSUyMGV4dGVyaW9yfGVufDB8fHx8MTc3MjY2ODc4M3ww&ixlib=rb-4.1.0&q=85"
+    }
+  },
+  "accessibility": {
+    "contrast": "Ensure text #E8E0D5 on #2D2D2D meets AA standards (Ratio ~6:1).",
+    "focus": "Visible focus ring color: #C66B3D."
+  },
+  "libraries": {
+    "map": "react-map-gl or leaflet with a custom dark tile layer (e.g., CartoDB Dark Matter).",
+    "icons": "Lucide React (already standard).",
+    "animations": "Framer Motion for page transitions and card hover states."
+  },
+  "instructions_to_main_agent": [
+    "1. Setup Tailwind Colors: Extend the theme with the custom palette provided above.",
+    "2. Fonts: Add the Google Fonts import to index.html or CSS.",
+    "3. Map Integration: Use a dark map tile provider (CartoDB Dark Matter is free and looks great).",
+    "4. Layout: Implement the Split View for Desktop and Bottom Sheet for Mobile.",
+    "5. Cards: Ensure they have the 'Polaroid' feel - clean, image focused, with the 'Cream' text.",
+    "6. Admin: Keep it simple but consistent with the dark theme. Don't revert to a white admin panel.",
+    "7. Data Test IDs: Add data-testid to all interactive elements."
+  ],
+  "universal_guidelines": [
+    "Do not use gradients for backgrounds, use solid colors with texture if possible.",
+    "Avoid centered layouts for text, use left-align for readability.",
+    "Use glassmorphism for overlays.",
+    "Ensure all interactive elements have hover and focus states.",
+    "Use 'sonner' for toast notifications."
+  ]
+}
