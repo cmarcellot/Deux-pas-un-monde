@@ -42,7 +42,7 @@
   align-items: center;
 }
 
-.view-toggle, .admin-link {
+.view-toggle, .admin-link, .instagram-link {
   padding: 0.75rem;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -50,11 +50,20 @@
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
-.view-toggle:hover, .admin-link:hover {
+.view-toggle:hover, .admin-link:hover, .instagram-link:hover {
   background: var(--surface-hover);
   color: var(--text-primary);
+}
+
+.instagram-link:hover {
+  color: #E1306C;
+  border-color: #E1306C;
 }
 
 .view-toggle.active {
