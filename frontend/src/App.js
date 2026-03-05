@@ -173,7 +173,7 @@ const HomePage = () => {
     <div className="home-page">
       <header className="header" data-testid="header">
         <Link to="/" className="logo">
-          <img src="https://customer-assets.emergentagent.com/job_46273412-7467-421f-891b-de2e9e82a7ad/artifacts/ml81pofh_682F1216-435E-40FA-84C2-279EE5063CDF.PNG" alt="Deux pas un monde" />
+          <img src="https://customer-assets.emergentagent.com/job_trip-spots-1/artifacts/iimw3h8i_682F1216-435E-40FA-84C2-279EE5063CDF.PNG" alt="Deux pas un monde" />
         </Link>
         <nav className="header-nav">
           <button
@@ -601,7 +601,7 @@ const AdminPage = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <Link to="/" className="login-logo">
-            <img src="https://customer-assets.emergentagent.com/job_46273412-7467-421f-891b-de2e9e82a7ad/artifacts/ml81pofh_682F1216-435E-40FA-84C2-279EE5063CDF.PNG" alt="Logo" />
+            <img src="https://customer-assets.emergentagent.com/job_trip-spots-1/artifacts/iimw3h8i_682F1216-435E-40FA-84C2-279EE5063CDF.PNG" alt="Logo" />
           </Link>
           <h2>Administration</h2>
           <form onSubmit={handleLogin} data-testid="login-form">
@@ -632,7 +632,7 @@ const AdminPage = () => {
     <div className="admin-page">
       <header className="admin-header">
         <Link to="/" className="admin-logo">
-          <img src="https://customer-assets.emergentagent.com/job_46273412-7467-421f-891b-de2e9e82a7ad/artifacts/ml81pofh_682F1216-435E-40FA-84C2-279EE5063CDF.PNG" alt="Logo" />
+          <img src="https://customer-assets.emergentagent.com/job_trip-spots-1/artifacts/iimw3h8i_682F1216-435E-40FA-84C2-279EE5063CDF.PNG" alt="Logo" />
         </Link>
         <h1>Administration</h1>
         <button onClick={handleLogout} className="logout-btn" data-testid="logout-btn">

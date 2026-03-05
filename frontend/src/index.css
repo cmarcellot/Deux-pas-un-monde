@@ -3,13 +3,13 @@
 :root {
   --primary: #C66B3D;
   --primary-foreground: #FFFFFF;
-  --background: #1A1A1A;
-  --surface: #2D2D2D;
-  --surface-hover: #3D3D3D;
+  --background: #414441;
+  --surface: #4d504d;
+  --surface-hover: #5a5d5a;
   --text-primary: #E8E0D5;
-  --text-secondary: #A0A0A0;
-  --text-muted: #666666;
-  --border: #404040;
+  --text-secondary: #b8b8b8;
+  --text-muted: #888888;
+  --border: #5a5d5a;
   --success: #4CAF50;
   --error: #CF6679;
 }
