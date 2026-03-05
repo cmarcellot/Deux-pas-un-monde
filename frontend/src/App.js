@@ -605,6 +605,10 @@ const AdminPage = () => {
           </Link>
           <h2>Administration</h2>
           <form onSubmit={handleLogin} data-testid="login-form">
+            <Link to="/" className="back-to-home-btn" data-testid="back-home-btn">
+              <ChevronLeft size={18} />
+              Retour à l'accueil
+            </Link>
             <div className="form-group">
               <label>Mot de passe</label>
               <input
