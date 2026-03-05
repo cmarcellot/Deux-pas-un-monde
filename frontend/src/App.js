@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import './App.css';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_URL = '';
 
 const CATEGORIES = [
   { id: 'all', name: 'Tous', icon: Filter, color: '#E8E0D5' },
