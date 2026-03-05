@@ -25,7 +25,7 @@
 }
 
 .logo img {
-  height: 45px;
+  height: 65px;
   object-fit: contain;
   filter: brightness(1.1);
   transition: transform 0.2s ease;
@@ -477,7 +477,7 @@
 }
 
 .login-logo img {
-  height: 70px;
+  height: 90px;
   filter: brightness(1.1);
   transition: transform 0.2s ease;
 }
@@ -613,7 +613,7 @@
 }
 
 .admin-logo img {
-  height: 40px;
+  height: 55px;
   filter: brightness(1.1);
   transition: transform 0.2s ease;
 }
