@@ -12,15 +12,27 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background: rgba(26, 26, 26, 0.9);
+  padding: 0.75rem 2rem;
+  background: rgba(26, 26, 26, 0.95);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 .logo img {
-  height: 50px;
+  height: 45px;
   object-fit: contain;
+  filter: brightness(1.1);
+  transition: transform 0.2s ease;
+}
+
+.logo:hover img {
+  transform: scale(1.05);
 }
 
 .header-nav {
@@ -458,13 +470,20 @@
 }
 
 .login-logo {
-  display: block;
-  text-align: center;
-  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.5rem;
 }
 
 .login-logo img {
-  height: 60px;
+  height: 70px;
+  filter: brightness(1.1);
+  transition: transform 0.2s ease;
+}
+
+.login-logo:hover img {
+  transform: scale(1.05);
 }
 
 .login-card h2 {
@@ -588,8 +607,19 @@
   border-bottom: 1px solid var(--border);
 }
 
+.admin-logo {
+  display: flex;
+  align-items: center;
+}
+
 .admin-logo img {
   height: 40px;
+  filter: brightness(1.1);
+  transition: transform 0.2s ease;
+}
+
+.admin-logo:hover img {
+  transform: scale(1.05);
 }
 
 .admin-header h1 {
