@@ -138,6 +138,111 @@ const MapRecenter = ({ center }) => {
   return null;
 };
 
+const PlaceDetailModal = ({ place, onClose }) => {
+  const [currentImage, setCurrentImage] = useState(0);
+  
+  if (!place) return null;
+  
+  const category = CATEGORIES.find(c => c.id === place.category);
+  const CategoryIcon = category?.icon || MapPin;
+
+  return (
+    <motion.div
+      className="modal-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className="place-detail-modal"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        data-testid="place-detail-modal"
+      >
+        <button className="modal-close-btn" onClick={onClose} data-testid="close-modal-btn">
+          <X size={24} />
+        </button>
+
+        <div className="modal-gallery">
+          {place.photos?.length > 0 ? (
+            <>
+              <div className="modal-main-image">
+                <img
+                  src={place.photos[currentImage].startsWith('/api') 
+                    ? `${API_URL}${place.photos[currentImage]}` 
+                    : place.photos[currentImage]}
+                  alt={place.title}
+                />
+              </div>
+              {place.photos.length > 1 && (
+                <div className="modal-thumbnails">
+                  {place.photos.map((photo, idx) => (
+                    <button
+                      key={idx}
+                      className={`modal-thumb ${idx === currentImage ? 'active' : ''}`}
+                      onClick={() => setCurrentImage(idx)}
+                    >
+                      <img
+                        src={photo.startsWith('/api') ? `${API_URL}${photo}` : photo}
+                        alt={`${place.title} ${idx + 1}`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="modal-no-image">
+              <CategoryIcon size={64} />
+            </div>
+          )}
+        </div>
+
+        <div className="modal-content">
+          <div className="modal-header">
+            <h2>{place.title}</h2>
+            <div className="modal-meta">
+              <div className="category-badge" style={{ background: category?.color }}>
+                <CategoryIcon size={14} color="#414441" />
+                <span>{category?.name}</span>
+              </div>
+              <StarRating rating={place.rating} readonly />
+            </div>
+          </div>
+
+          <div className="modal-address">
+            <MapPin size={18} />
+            <span>{place.address}</span>
+          </div>
+
+          <p className="modal-description">{place.description}</p>
+
+          <div className="modal-map">
+            <MapContainer
+              center={[place.latitude, place.longitude]}
+              zoom={14}
+              style={{ height: '200px', width: '100%', borderRadius: '12px' }}
+              scrollWheelZoom={false}
+            >
+              <TileLayer
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                attribution='&copy; OpenStreetMap'
+              />
+              <Marker
+                position={[place.latitude, place.longitude]}
+                icon={createMarkerIcon(place.category)}
+              />
+            </MapContainer>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const HomePage = () => {
   const navigate = useNavigate();
   const [places, setPlaces] = useState([]);
@@ -219,7 +324,7 @@ const HomePage = () => {
                 <PlaceCard
                   key={place.id}
                   place={place}
-                  onClick={() => navigate(`/place/${place.id}`)}
+                  onClick={() => setSelectedPlace(place)}
                 />
               ))
             )}
@@ -246,7 +351,7 @@ const HomePage = () => {
                   }}
                 >
                   <Popup>
-                    <div className="map-popup" onClick={() => navigate(`/place/${place.id}`)}>
+                    <div className="map-popup" onClick={() => setSelectedPlace(place)}>
                       <h4>{place.title}</h4>
                       <p>{place.address}</p>
                       <StarRating rating={place.rating} readonly />
@@ -264,6 +369,15 @@ const HomePage = () => {
           <a href="https://instagram.com/deuxpasunmonde" target="_blank" rel="noopener noreferrer"> Instagram</a>
         </p>
       </footer>
+
+      <AnimatePresence>
+        {selectedPlace && (
+          <PlaceDetailModal
+            place={selectedPlace}
+            onClose={() => setSelectedPlace(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
