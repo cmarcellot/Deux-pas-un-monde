@@ -512,6 +512,7 @@ const AdminPage = () => {
   const [editingPlace, setEditingPlace] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [viewingPlace, setViewingPlace] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     address: '',
@@ -956,7 +957,7 @@ const AdminPage = () => {
                     </div>
                   </div>
                   <div className="admin-place-actions">
-                    <button onClick={() => navigate(`/place/${place.id}`)} className="action-btn" data-testid={`view-${place.id}`}>
+                    <button onClick={() => setViewingPlace(place)} className="action-btn" data-testid={`view-${place.id}`}>
                       <Eye size={18} />
                     </button>
                     <button onClick={() => handleEdit(place)} className="action-btn" data-testid={`edit-${place.id}`}>
@@ -971,6 +972,15 @@ const AdminPage = () => {
             })
           )}
         </div>
+
+        <AnimatePresence>
+          {viewingPlace && (
+            <PlaceDetailModal
+              place={viewingPlace}
+              onClose={() => setViewingPlace(null)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
