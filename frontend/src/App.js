@@ -4,6 +4,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { 
   Map, List, Home, Settings, Star, MapPin, X, Plus, Trash2, Edit3, 
   LogOut, Upload, Camera, ChevronLeft, Menu, Filter, Bed, Utensils, 
@@ -12,6 +14,21 @@ import {
 import './App.css';
 
 const API_URL = '';
+
+const quillModules = {
+  toolbar: [
+    ['bold', 'italic', 'underline'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['link'],
+    ['clean']
+  ],
+};
+
+const quillFormats = [
+  'bold', 'italic', 'underline',
+  'list', 'bullet',
+  'link'
+];
 
 const CATEGORIES = [
   { id: 'all', name: 'Tous', icon: Filter, color: '#E8E0D5' },
@@ -218,7 +235,10 @@ const PlaceDetailModal = ({ place, onClose }) => {
             <span>{place.address}</span>
           </div>
 
-          <p className="modal-description">{place.description}</p>
+          <div 
+            className="modal-description" 
+            dangerouslySetInnerHTML={{ __html: place.description }}
+          />
 
           <div className="modal-map">
             <MapContainer
@@ -963,13 +983,16 @@ const AdminPage = () => {
 
                     <div className="form-group full-width">
                       <label>Description</label>
-                      <textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        rows={4}
-                        required
-                        data-testid="description-input"
-                      />
+                      <div className="quill-wrapper" data-testid="description-input">
+                        <ReactQuill
+                          theme="snow"
+                          value={formData.description}
+                          onChange={(value) => setFormData({ ...formData, description: value })}
+                          modules={quillModules}
+                          formats={quillFormats}
+                          placeholder="Décrivez ce lieu..."
+                        />
+                      </div>
                     </div>
 
                     <div className="form-group">

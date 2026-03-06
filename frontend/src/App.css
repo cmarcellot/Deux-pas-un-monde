@@ -770,6 +770,112 @@
   border-color: var(--primary);
 }
 
+/* Quill Editor Styles */
+.quill-wrapper {
+  background: var(--background);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.quill-wrapper .ql-toolbar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+  border-bottom: none;
+}
+
+.quill-wrapper .ql-toolbar .ql-stroke {
+  stroke: var(--text-secondary);
+}
+
+.quill-wrapper .ql-toolbar .ql-fill {
+  fill: var(--text-secondary);
+}
+
+.quill-wrapper .ql-toolbar .ql-picker {
+  color: var(--text-secondary);
+}
+
+.quill-wrapper .ql-toolbar button:hover .ql-stroke,
+.quill-wrapper .ql-toolbar button.ql-active .ql-stroke {
+  stroke: var(--primary);
+}
+
+.quill-wrapper .ql-toolbar button:hover .ql-fill,
+.quill-wrapper .ql-toolbar button.ql-active .ql-fill {
+  fill: var(--primary);
+}
+
+.quill-wrapper .ql-container {
+  border: 1px solid var(--border);
+  border-radius: 0 0 12px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
+  min-height: 150px;
+}
+
+.quill-wrapper .ql-editor {
+  color: var(--text-primary);
+  min-height: 150px;
+}
+
+.quill-wrapper .ql-editor.ql-blank::before {
+  color: var(--text-muted);
+  font-style: normal;
+}
+
+.quill-wrapper .ql-editor a {
+  color: var(--primary);
+}
+
+/* Rich text description display */
+.modal-description {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+}
+
+.modal-description p {
+  margin-bottom: 0.75rem;
+}
+
+.modal-description p:last-child {
+  margin-bottom: 0;
+}
+
+.modal-description strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-description em {
+  font-style: italic;
+}
+
+.modal-description u {
+  text-decoration: underline;
+}
+
+.modal-description ul,
+.modal-description ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.modal-description li {
+  margin-bottom: 0.35rem;
+}
+
+.modal-description a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.modal-description a:hover {
+  text-decoration: underline;
+}
+
 .btn-primary {
   width: 100%;
   padding: 1rem;
