@@ -27,11 +27,26 @@ app.add_middleware(
 MONGO_URL = os.environ.get("MONGO_URL")
 DB_NAME = os.environ.get("DB_NAME", "deux_pas_un_monde")
 JWT_SECRET = os.environ.get("JWT_SECRET", "default_secret")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+DEFAULT_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
 client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
 places_collection = db["places"]
+settings_collection = db["settings"]
+
+# Initialiser le mot de passe admin en base si non existant
+def get_admin_password():
+    settings = settings_collection.find_one({"key": "admin_password"})
+    if settings:
+        return settings["value"]
+    return DEFAULT_ADMIN_PASSWORD
+
+def set_admin_password(new_password):
+    settings_collection.update_one(
+        {"key": "admin_password"},
+        {"$set": {"key": "admin_password", "value": new_password}},
+        upsert=True
+    )
 
 UPLOAD_DIR = "/app/backend/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -42,6 +57,10 @@ security = HTTPBearer()
 
 class LoginRequest(BaseModel):
     password: str
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
 
 class PlaceCreate(BaseModel):
     title: str
@@ -94,7 +113,8 @@ def health_check():
 
 @app.post("/api/auth/login")
 def login(request: LoginRequest):
-    if request.password == ADMIN_PASSWORD:
+    admin_password = get_admin_password()
+    if request.password == admin_password:
         token = create_token({"sub": "admin"})
         return {"token": token, "message": "Connexion réussie"}
     raise HTTPException(status_code=401, detail="Mot de passe incorrect")
@@ -102,6 +122,16 @@ def login(request: LoginRequest):
 @app.get("/api/auth/verify")
 def verify_auth(payload: dict = Depends(verify_token)):
     return {"valid": True, "user": payload.get("sub")}
+
+@app.post("/api/auth/change-password")
+def change_password(request: ChangePasswordRequest, payload: dict = Depends(verify_token)):
+    current_password = get_admin_password()
+    if request.current_password != current_password:
+        raise HTTPException(status_code=401, detail="Mot de passe actuel incorrect")
+    if len(request.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Le nouveau mot de passe doit contenir au moins 6 caractères")
+    set_admin_password(request.new_password)
+    return {"message": "Mot de passe modifié avec succès"}
 
 @app.get("/api/places", response_model=List[PlaceResponse])
 def get_places(category: Optional[str] = None):

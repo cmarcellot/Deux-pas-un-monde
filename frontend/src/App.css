@@ -668,6 +668,27 @@
   border: 1px solid var(--border);
 }
 
+/* Password Modal */
+.password-modal {
+  background: linear-gradient(145deg, var(--surface) 0%, var(--surface-hover) 100%);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border);
+  z-index: 10000;
+}
+
+.password-form {
+  padding: 1.5rem 2rem 2rem;
+}
+
+.password-form .form-actions {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
 .login-logo {
   display: flex;
   justify-content: center;
@@ -828,6 +849,31 @@
 .admin-header h1 {
   flex: 1;
   font-size: 1.5rem;
+}
+
+.admin-header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.password-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.password-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--primary);
 }
 
 .logout-btn {

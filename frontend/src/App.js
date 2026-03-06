@@ -7,7 +7,7 @@ import { Toaster, toast } from 'sonner';
 import { 
   Map, List, Home, Settings, Star, MapPin, X, Plus, Trash2, Edit3, 
   LogOut, Upload, Camera, ChevronLeft, Menu, Filter, Bed, Utensils, 
-  Compass, Gem, Eye, Save
+  Compass, Gem, Eye, Save, Key
 } from 'lucide-react';
 import './App.css';
 
@@ -524,6 +524,12 @@ const AdminPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [viewingPlace, setViewingPlace] = useState(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
   const [formData, setFormData] = useState({
     title: '',
     address: '',
@@ -588,6 +594,48 @@ const AdminPage = () => {
     setIsAuthenticated(false);
     setPlaces([]);
     toast.success('Déconnexion réussie');
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('Les mots de passe ne correspondent pas');
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      toast.error('Le nouveau mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+    
+    const token = localStorage.getItem('admin_token');
+    setLoading(true);
+    
+    try {
+      const res = await fetch(`${API_URL}/api/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          current_password: passwordForm.currentPassword,
+          new_password: passwordForm.newPassword,
+        }),
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        toast.success('Mot de passe modifié avec succès !');
+        setShowPasswordModal(false);
+        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        toast.error(data.detail || 'Erreur lors du changement de mot de passe');
+      }
+    } catch (error) {
+      toast.error('Erreur lors du changement de mot de passe');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchPlaces = async (token) => {
@@ -761,11 +809,87 @@ const AdminPage = () => {
           <img src="https://customer-assets.emergentagent.com/job_trip-spots-1/artifacts/w33bidjg_682F1216-435E-40FA-84C2-279EE5063CDF.PNG" alt="Logo" />
         </Link>
         <h1>Administration</h1>
-        <button onClick={handleLogout} className="logout-btn" data-testid="logout-btn">
-          <LogOut size={20} />
-          Déconnexion
-        </button>
+        <div className="admin-header-actions">
+          <button onClick={() => setShowPasswordModal(true)} className="password-btn" data-testid="change-password-btn">
+            <Key size={20} />
+            Mot de passe
+          </button>
+          <button onClick={handleLogout} className="logout-btn" data-testid="logout-btn">
+            <LogOut size={20} />
+            Déconnexion
+          </button>
+        </div>
       </header>
+
+      <AnimatePresence>
+        {showPasswordModal && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowPasswordModal(false)}
+          >
+            <motion.div
+              className="password-modal"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="form-header">
+                <h2>Changer le mot de passe</h2>
+                <button onClick={() => setShowPasswordModal(false)} className="close-btn">
+                  <X size={24} />
+                </button>
+              </div>
+              <form onSubmit={handleChangePassword} className="password-form" data-testid="password-change-form">
+                <div className="form-group">
+                  <label>Mot de passe actuel</label>
+                  <input
+                    type="password"
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                    required
+                    data-testid="current-password-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Nouveau mot de passe</label>
+                  <input
+                    type="password"
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                    required
+                    minLength={6}
+                    data-testid="new-password-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Confirmer le nouveau mot de passe</label>
+                  <input
+                    type="password"
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                    required
+                    minLength={6}
+                    data-testid="confirm-password-input"
+                  />
+                </div>
+                <div className="form-actions">
+                  <button type="button" onClick={() => setShowPasswordModal(false)} className="btn-secondary">
+                    Annuler
+                  </button>
+                  <button type="submit" className="btn-primary" disabled={loading}>
+                    <Key size={18} />
+                    {loading ? 'Modification...' : 'Modifier'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="admin-content">
         <div className="admin-toolbar">
