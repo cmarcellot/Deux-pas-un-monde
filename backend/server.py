@@ -48,7 +48,10 @@ def set_admin_password(new_password):
         upsert=True
     )
 
-UPLOAD_DIR = "/app/backend/uploads"
+# Chemin relatif au fichier server.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app.mount("/api/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
