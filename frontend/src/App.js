@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import './App.css';
 
-const API_URL = '';
+const API_URL = process.env.REACT_APP_API_URL || 'https://deux-pas-un-monde.onrender.com';
 
 const quillModules = {
   toolbar: [
