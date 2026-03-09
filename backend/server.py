@@ -18,12 +18,7 @@ app = FastAPI(title="Deux pas un monde API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://www.deuxpasunmonde.fr",
-        "https://deuxpasunmonde.fr",
-        "http://www.deuxpasunmonde.fr",
-        "http://deuxpasunmonde.fr",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
