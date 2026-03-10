@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
@@ -11,6 +10,8 @@ import uuid
 import base64
 from dotenv import load_dotenv
 from pymongo import MongoClient
+import cloudinary
+import cloudinary.uploader
 
 load_dotenv()
 
@@ -18,7 +19,13 @@ app = FastAPI(title="Deux pas un monde API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://www.deuxpasunmonde.fr",
+        "https://deuxpasunmonde.fr",
+        "http://www.deuxpasunmonde.fr",
+        "http://deuxpasunmonde.fr",
+        "http://deuxpaz.cluster121.hosting.ovh.net",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,12 +36,18 @@ DB_NAME = os.environ.get("DB_NAME", "deux_pas_un_monde")
 JWT_SECRET = os.environ.get("JWT_SECRET", "default_secret")
 DEFAULT_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
+# Configuration Cloudinary
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+)
+
 client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
 places_collection = db["places"]
 settings_collection = db["settings"]
 
-# Initialiser le mot de passe admin en base si non existant
 def get_admin_password():
     settings = settings_collection.find_one({"key": "admin_password"})
     if settings:
@@ -47,14 +60,6 @@ def set_admin_password(new_password):
         {"$set": {"key": "admin_password", "value": new_password}},
         upsert=True
     )
-
-# Chemin relatif au fichier server.py
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-app.mount("/api/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 security = HTTPBearer()
 
@@ -141,7 +146,6 @@ def get_places(category: Optional[str] = None):
     query = {}
     if category and category != "all":
         query["category"] = category
-    
     places = list(places_collection.find(query, {"_id": 0}))
     return places
 
@@ -157,7 +161,6 @@ def create_place(place: PlaceCreate, payload: dict = Depends(verify_token)):
     place_dict = place.model_dump()
     place_dict["id"] = str(uuid.uuid4())
     place_dict["created_at"] = datetime.now(timezone.utc).isoformat()
-    
     places_collection.insert_one(place_dict)
     del place_dict["_id"]
     return place_dict
@@ -167,11 +170,9 @@ def update_place(place_id: str, place: PlaceUpdate, payload: dict = Depends(veri
     existing = places_collection.find_one({"id": place_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Lieu non trouvé")
-    
     update_data = {k: v for k, v in place.model_dump().items() if v is not None}
     if update_data:
         places_collection.update_one({"id": place_id}, {"$set": update_data})
-    
     updated = places_collection.find_one({"id": place_id}, {"_id": 0})
     return updated
 
@@ -187,15 +188,13 @@ async def upload_image(file: UploadFile = File(...), payload: dict = Depends(ver
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Seules les images sont acceptées")
     
-    ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
-    filename = f"{uuid.uuid4()}.{ext}"
-    filepath = os.path.join(UPLOAD_DIR, filename)
-    
     content = await file.read()
-    with open(filepath, "wb") as f:
-        f.write(content)
-    
-    return {"url": f"/api/uploads/{filename}"}
+    result = cloudinary.uploader.upload(
+        content,
+        folder="deuxpasunmonde",
+        public_id=str(uuid.uuid4()),
+    )
+    return {"url": result["secure_url"]}
 
 @app.post("/api/upload-base64")
 async def upload_base64(data: dict, payload: dict = Depends(verify_token)):
@@ -203,16 +202,12 @@ async def upload_base64(data: dict, payload: dict = Depends(verify_token)):
         raise HTTPException(status_code=400, detail="Image manquante")
     
     image_data = data["image"]
-    if "," in image_data:
-        image_data = image_data.split(",")[1]
-    
-    filename = f"{uuid.uuid4()}.jpg"
-    filepath = os.path.join(UPLOAD_DIR, filename)
-    
-    with open(filepath, "wb") as f:
-        f.write(base64.b64decode(image_data))
-    
-    return {"url": f"/api/uploads/{filename}"}
+    result = cloudinary.uploader.upload(
+        image_data,
+        folder="deuxpasunmonde",
+        public_id=str(uuid.uuid4()),
+    )
+    return {"url": result["secure_url"]}
 
 if __name__ == "__main__":
     import uvicorn
