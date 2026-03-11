@@ -334,7 +334,7 @@ const HomePage = () => {
 
       <div className="hero-section">
         <h1>Découvrez nos bonnes adresses</h1>
-        <p>Les lieux que nous avons aimé, partagés avec vous</p>
+        <p>🌍 On teste, on partage, on recommande</p>
       </div>
 
       <CategoryFilter activeCategory={activeCategory} onChange={setActiveCategory} />
