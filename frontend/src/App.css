@@ -464,20 +464,148 @@
 
 @media (max-width: 768px) {
   .place-detail-modal {
-    max-height: 95vh;
-    border-radius: 16px;
+    max-height: 100vh;
+    max-height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-start;
   }
 
   .modal-main-image {
-    border-radius: 16px 16px 0 0;
+    border-radius: 0;
+    aspect-ratio: 4/3;
+  }
+
+  .modal-no-image {
+    border-radius: 0;
+    aspect-ratio: 4/3;
+  }
+
+  .modal-close-btn {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 36px;
+    height: 36px;
   }
 
   .modal-header h2 {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
   }
 
   .modal-content {
     padding: 1rem;
+  }
+
+  .modal-thumbnails {
+    padding: 0.5rem;
+  }
+
+  .modal-thumb {
+    width: 60px;
+    height: 45px;
+  }
+
+  .modal-map {
+    height: 180px;
+  }
+
+  .modal-map .leaflet-container {
+    height: 180px !important;
+  }
+
+  .category-badge {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .modal-address {
+    font-size: 0.9rem;
+    padding: 0.75rem 0;
+  }
+
+  .modal-description {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 0.5rem 1rem;
+  }
+
+  .logo img {
+    height: 50px;
+  }
+
+  .header-nav {
+    gap: 0.35rem;
+  }
+
+  .view-toggle, .admin-link, .instagram-link {
+    padding: 0.6rem;
+  }
+
+  .hero-section {
+    padding: 1rem;
+  }
+
+  .hero-section h1 {
+    font-size: 1.3rem;
+  }
+
+  .hero-section p {
+    font-size: 0.9rem;
+  }
+
+  .category-filter {
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .category-pill {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .content-wrapper {
+    padding: 1rem;
+  }
+
+  .places-grid {
+    gap: 1rem;
+  }
+
+  .place-card-content {
+    padding: 1rem;
+  }
+
+  .place-card-content h3 {
+    font-size: 1.1rem;
+  }
+
+  .footer {
+    padding: 1.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .modal-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .modal-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .star-rating svg {
+    width: 18px;
+    height: 18px;
   }
 }
 
@@ -1272,49 +1400,64 @@
   border-color: var(--error);
 }
 
-/* Responsive */
+/* Responsive - Admin */
 @media (max-width: 768px) {
-  .header {
-    padding: 1rem;
-  }
-
-  .logo img {
-    height: 40px;
-  }
-
-  .hero-section {
-    padding: 2rem 1rem;
-  }
-
-  .category-filter {
-    padding: 1rem;
-  }
-
-  .content-wrapper {
-    padding: 1rem;
-  }
-
-  .places-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
   .form-grid {
     grid-template-columns: 1fr;
   }
 
   .admin-header {
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .admin-header h1 {
+    font-size: 1.2rem;
+    order: 1;
+    width: 100%;
+    text-align: center;
+  }
+
+  .admin-logo {
+    order: 0;
+  }
+
+  .admin-header-actions {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .password-btn span,
+  .logout-btn span {
+    display: none;
+  }
+
+  .password-btn,
+  .logout-btn {
+    padding: 0.6rem;
+  }
+
+  .admin-content {
+    padding: 1rem;
+  }
+
+  .admin-toolbar .btn-primary {
+    width: 100%;
   }
 
   .admin-place-item {
     flex-wrap: wrap;
+    gap: 1rem;
   }
 
   .admin-place-image {
-    width: 80px;
-    height: 60px;
+    width: 70px;
+    height: 52px;
+  }
+
+  .admin-place-info h3 {
+    font-size: 1rem;
   }
 
   .admin-place-actions {
@@ -1322,7 +1465,59 @@
     justify-content: flex-end;
   }
 
-  .detail-content {
-    padding: 0 1rem;
+  .form-modal {
+    margin: 0;
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .form-modal-overlay {
+    padding: 0;
+  }
+
+  .form-header {
+    padding: 1rem;
+  }
+
+  .place-form {
+    padding: 1rem;
+  }
+
+  .password-modal {
+    margin: 1rem;
+    max-width: calc(100% - 2rem);
+  }
+
+  .login-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .quill-wrapper .ql-container {
+    min-height: 120px;
+  }
+
+  .quill-wrapper .ql-editor {
+    min-height: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .admin-logo img {
+    height: 40px;
+  }
+
+  .admin-place-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .action-btn {
+    padding: 0.5rem;
   }
 }

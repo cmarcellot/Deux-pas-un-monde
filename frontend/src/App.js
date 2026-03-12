@@ -832,11 +832,11 @@ const AdminPage = () => {
         <div className="admin-header-actions">
           <button onClick={() => setShowPasswordModal(true)} className="password-btn" data-testid="change-password-btn">
             <Key size={20} />
-            Mot de passe
+            <span>Mot de passe</span>
           </button>
           <button onClick={handleLogout} className="logout-btn" data-testid="logout-btn">
             <LogOut size={20} />
-            Déconnexion
+            <span>Déconnexion</span>
           </button>
         </div>
       </header>
