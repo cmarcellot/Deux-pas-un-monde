@@ -477,7 +477,8 @@ const GuidesPage = () => {
     try {
       const params = activeTag !== 'all' ? `?tag=${activeTag}` : '';
       const res = await fetch(`${API_URL}/api/guides${params}`);
-      setGuides(await res.json());
+      const data = await res.json();
+      setGuides(Array.isArray(data) ? data : []);
     } catch { toast.error('Erreur lors du chargement des guides'); }
     finally { setLoading(false); }
   };
@@ -1186,7 +1187,7 @@ const AdminPage = () => {
     const t = token || localStorage.getItem('admin_token');
     try {
       const res = await fetch(`${API_URL}/api/guides/all`, { headers: { Authorization: `Bearer ${t}` } });
-      if (res.ok) setGuides(await res.json());
+      if (res.ok) { const data = await res.json(); setGuides(Array.isArray(data) ? data : []); }
     } catch { toast.error('Erreur lors du chargement des guides'); }
   };
 
