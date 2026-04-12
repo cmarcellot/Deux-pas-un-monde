@@ -47,6 +47,7 @@ client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
 places_collection = db["places"]
 settings_collection = db["settings"]
+guides_collection = db["guides"]
 
 def get_admin_password():
     settings = settings_collection.find_one({"key": "admin_password"})
@@ -101,6 +102,76 @@ class PlaceResponse(BaseModel):
     longitude: float
     photos: List[str]
     created_at: str
+
+# ---------- Guide models ----------
+class ItineraryActivity(BaseModel):
+    time: Optional[str] = None
+    title: str
+    description: Optional[str] = None
+    place_id: Optional[str] = None
+    duration_minutes: Optional[int] = None
+
+class ItineraryDay(BaseModel):
+    day_number: int
+    title: str
+    description: Optional[str] = None
+    activities: List[ItineraryActivity] = []
+    tips: List[str] = []
+    place_ids: List[str] = []
+
+class PracticalInfo(BaseModel):
+    budget_min: Optional[int] = None
+    budget_max: Optional[int] = None
+    best_seasons: List[str] = []
+    transport_tips: Optional[str] = None
+    visa_info: Optional[str] = None
+    language_tips: Optional[str] = None
+    currency: Optional[str] = None
+
+class GuideCreate(BaseModel):
+    title: str
+    destination: str
+    country: str
+    duration_days: int = Field(ge=1, le=365)
+    cover_image: Optional[str] = None
+    intro: str = ""
+    itinerary: List[ItineraryDay] = []
+    practical_info: PracticalInfo = PracticalInfo()
+    tags: List[str] = []
+    photos: List[str] = []
+    place_ids: List[str] = []
+    published: bool = False
+
+class GuideUpdate(BaseModel):
+    title: Optional[str] = None
+    destination: Optional[str] = None
+    country: Optional[str] = None
+    duration_days: Optional[int] = Field(default=None, ge=1, le=365)
+    cover_image: Optional[str] = None
+    intro: Optional[str] = None
+    itinerary: Optional[List[ItineraryDay]] = None
+    practical_info: Optional[PracticalInfo] = None
+    tags: Optional[List[str]] = None
+    photos: Optional[List[str]] = None
+    place_ids: Optional[List[str]] = None
+    published: Optional[bool] = None
+
+class GuideResponse(BaseModel):
+    id: str
+    title: str
+    destination: str
+    country: str
+    duration_days: int
+    cover_image: Optional[str]
+    intro: str
+    itinerary: List[ItineraryDay]
+    practical_info: PracticalInfo
+    tags: List[str]
+    photos: List[str]
+    place_ids: List[str]
+    published: bool
+    created_at: str
+    updated_at: str
 
 def create_token(data: dict):
     expire = datetime.now(timezone.utc) + timedelta(hours=24)
@@ -208,6 +279,59 @@ async def upload_base64(data: dict, payload: dict = Depends(verify_token)):
         public_id=str(uuid.uuid4()),
     )
     return {"url": result["secure_url"]}
+
+# ---------- Guide endpoints ----------
+@app.get("/api/guides", response_model=List[GuideResponse])
+def get_guides(tag: Optional[str] = None, destination: Optional[str] = None):
+    query: dict = {"published": True}
+    if tag:
+        query["tags"] = {"$in": [tag]}
+    if destination:
+        query["destination"] = {"$regex": destination, "$options": "i"}
+    guides = list(guides_collection.find(query, {"_id": 0}).sort("created_at", -1))
+    return guides
+
+@app.get("/api/guides/all", response_model=List[GuideResponse])
+def get_all_guides(payload: dict = Depends(verify_token)):
+    guides = list(guides_collection.find({}, {"_id": 0}).sort("created_at", -1))
+    return guides
+
+@app.get("/api/guides/{guide_id}", response_model=GuideResponse)
+def get_guide(guide_id: str):
+    guide = guides_collection.find_one({"id": guide_id}, {"_id": 0})
+    if not guide:
+        raise HTTPException(status_code=404, detail="Guide non trouvé")
+    return guide
+
+@app.post("/api/guides", response_model=GuideResponse)
+def create_guide(guide: GuideCreate, payload: dict = Depends(verify_token)):
+    guide_dict = guide.model_dump()
+    guide_dict["id"] = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    guide_dict["created_at"] = now
+    guide_dict["updated_at"] = now
+    guides_collection.insert_one(guide_dict)
+    del guide_dict["_id"]
+    return guide_dict
+
+@app.put("/api/guides/{guide_id}", response_model=GuideResponse)
+def update_guide(guide_id: str, guide: GuideUpdate, payload: dict = Depends(verify_token)):
+    existing = guides_collection.find_one({"id": guide_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Guide non trouvé")
+    update_data = {k: v for k, v in guide.model_dump(exclude_unset=True).items()}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    if update_data:
+        guides_collection.update_one({"id": guide_id}, {"$set": update_data})
+    updated = guides_collection.find_one({"id": guide_id}, {"_id": 0})
+    return updated
+
+@app.delete("/api/guides/{guide_id}")
+def delete_guide(guide_id: str, payload: dict = Depends(verify_token)):
+    result = guides_collection.delete_one({"id": guide_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Guide non trouvé")
+    return {"message": "Guide supprimé"}
 
 if __name__ == "__main__":
     import uvicorn
