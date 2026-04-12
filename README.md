@@ -1,6 +1,6 @@
-# Deux pas un monde 🌍
+# Deux pas un monde
 
-Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.com/deuxpas_unmonde) - Un carnet de voyage interactif pour partager nos bonnes adresses. ✏️ test develop
+Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.com/deuxpas_unmonde) - Un carnet de voyage interactif pour partager nos bonnes adresses.
 
 ## Aperçu
 
