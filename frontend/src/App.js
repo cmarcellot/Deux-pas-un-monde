@@ -373,11 +373,12 @@ const PlaceDetailModal = ({ place, onClose }) => {
 // ============================================================
 const HomePage = () => {
   const [places, setPlaces] = useState([]);
-  const [viewMode, setViewMode] = useState('list');
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [mapCenter, setMapCenter] = useState([46.603354, 1.888334]);
   const [loading, setLoading] = useState(true);
+  const location = window.location;
+  const [viewMode, setViewMode] = useState(new URLSearchParams(location.search).get('view') === 'map' ? 'map' : 'list');
 
   useEffect(() => { fetchPlaces(); }, [activeCategory]);
 
@@ -490,6 +491,8 @@ const GuidesPage = () => {
           <img src="https://customer-assets.emergentagent.com/job_trip-spots-1/artifacts/w33bidjg_682F1216-435E-40FA-84C2-279EE5063CDF.PNG" alt="Deux pas un monde" />
         </Link>
         <nav className="header-nav">
+          <Link to="/" className="view-toggle"><List size={20} /></Link>
+          <Link to="/?view=map" className="view-toggle"><Map size={20} /></Link>
           <Link to="/guides" className="guides-nav-link active"><BookOpen size={20} /><span className="nav-link-label">Guides</span></Link>
           <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="instagram-link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
