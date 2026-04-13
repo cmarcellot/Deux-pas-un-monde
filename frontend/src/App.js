@@ -10,7 +10,8 @@ import {
   Map, List, Home, Settings, Star, MapPin, X, Plus, Trash2, Edit3,
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Eye, Save, Key, ZoomIn,
-  BookOpen, Calendar, Globe, Tag, Clock, Wallet, Info, ChevronDown, ChevronUp, Plane
+  BookOpen, Calendar, Globe, Tag, Clock, Wallet, Info, ChevronDown, ChevronUp, Plane,
+  Search, CheckCircle, Loader2
 } from 'lucide-react';
 import './App.css';
 
@@ -1148,6 +1149,9 @@ const AdminPage = () => {
   const [editingGuide, setEditingGuide] = useState(null);
   const [showGuideForm, setShowGuideForm] = useState(false);
   const [guideFormData, setGuideFormData] = useState({ ...EMPTY_GUIDE });
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeResult, setGeocodeResult] = useState(null);
+  const [showManualCoords, setShowManualCoords] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -1240,6 +1244,28 @@ const AdminPage = () => {
 
   const resetGuideForm = () => { setEditingGuide(null); setShowGuideForm(false); setGuideFormData({ ...EMPTY_GUIDE }); };
 
+  const geocodeAddress = async () => {
+    if (!formData.address.trim()) return;
+    setGeocoding(true); setGeocodeResult(null);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(formData.address)}&format=json&limit=1`,
+        { headers: { 'Accept-Language': 'fr' } }
+      );
+      const data = await res.json();
+      if (data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lng = parseFloat(data[0].lon);
+        setFormData(f => ({ ...f, latitude: lat, longitude: lng }));
+        setGeocodeResult({ lat, lng, display_name: data[0].display_name });
+        toast.success('Coordonnées trouvées !');
+      } else {
+        toast.error('Adresse introuvable — vérifiez ou saisissez les coordonnées manuellement.');
+      }
+    } catch { toast.error('Erreur de géolocalisation'); }
+    finally { setGeocoding(false); }
+  };
+
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     const token = localStorage.getItem('admin_token');
@@ -1285,6 +1311,7 @@ const AdminPage = () => {
   const resetForm = () => {
     setEditingPlace(null); setShowForm(false);
     setFormData({ title: '', address: '', description: '', category: 'accommodation', rating: 3, latitude: 48.8566, longitude: 2.3522, photos: [] });
+    setGeocodeResult(null); setShowManualCoords(false);
   };
 
   if (!isAuthenticated) {
@@ -1372,14 +1399,40 @@ const AdminPage = () => {
                           {CATEGORIES.filter(c => c.id !== 'all').map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                         </select>
                       </div>
-                      <div className="form-group full-width"><label>Adresse</label><input type="text" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} required data-testid="address-input" /></div>
+                      <div className="form-group full-width">
+                        <label>Adresse</label>
+                        <div className="address-geocode-row">
+                          <input type="text" value={formData.address}
+                            onChange={(e) => { setFormData({ ...formData, address: e.target.value }); setGeocodeResult(null); }}
+                            required data-testid="address-input" placeholder="Ex: 12 rue de la Paix, Paris" />
+                          <button type="button" className="geocode-btn" onClick={geocodeAddress} disabled={geocoding}>
+                            {geocoding ? <Loader2 size={16} className="spin" /> : <Search size={16} />}
+                            {geocoding ? 'Recherche…' : 'Géolocaliser'}
+                          </button>
+                        </div>
+                        {geocodeResult && (
+                          <div className="geocode-result">
+                            <CheckCircle size={13} />
+                            {geocodeResult.display_name}
+                            <span className="geocode-coords">{geocodeResult.lat.toFixed(5)}, {geocodeResult.lng.toFixed(5)}</span>
+                          </div>
+                        )}
+                        <button type="button" className="coords-manual-toggle"
+                          onClick={() => setShowManualCoords(v => !v)}>
+                          {showManualCoords ? 'Masquer' : 'Saisir les coordonnées manuellement'}
+                        </button>
+                        {showManualCoords && (
+                          <div className="coords-manual-fields">
+                            <div className="form-group"><label>Latitude</label><input type="number" step="any" value={formData.latitude} onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })} required data-testid="latitude-input" /></div>
+                            <div className="form-group"><label>Longitude</label><input type="number" step="any" value={formData.longitude} onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })} required data-testid="longitude-input" /></div>
+                          </div>
+                        )}
+                      </div>
                       <div className="form-group full-width"><label>Description</label>
                         <div className="quill-wrapper" data-testid="description-input">
                           <ReactQuill theme="snow" value={formData.description} onChange={(value) => setFormData({ ...formData, description: value })} modules={quillModules} formats={quillFormats} placeholder="Décrivez ce lieu..." />
                         </div>
                       </div>
-                      <div className="form-group"><label>Latitude</label><input type="number" step="any" value={formData.latitude} onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })} required data-testid="latitude-input" /></div>
-                      <div className="form-group"><label>Longitude</label><input type="number" step="any" value={formData.longitude} onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })} required data-testid="longitude-input" /></div>
                       <div className="form-group full-width"><label>Note</label><StarRating rating={formData.rating} onChange={(rating) => setFormData({ ...formData, rating })} readonly={false} /></div>
                       <div className="form-group full-width"><label>Photos</label>
                         <div className="photo-upload-area">
