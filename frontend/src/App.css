@@ -528,7 +528,11 @@
   padding: 1rem; overflow-y: auto;
 }
 
-.form-modal { background: var(--surface); border-radius: 20px; width: 100%; max-width: 700px; margin: auto; }
+.form-modal {
+  background: var(--surface); border-radius: 20px; width: 100%; max-width: 700px;
+  margin: auto; max-height: calc(100vh - 2rem); overflow-y: auto;
+  display: flex; flex-direction: column;
+}
 
 .form-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -1157,7 +1161,29 @@
 }
 
 .toggle-row { display: flex; align-items: center; gap: 0.75rem; padding-top: 0.5rem; }
-.toggle-label { cursor: pointer; font-size: 0.9rem; }
+.toggle-label { cursor: pointer; font-size: 0.9rem; color: var(--text-primary); }
+
+/* Toggle switch custom */
+.toggle-row input[type="checkbox"] { display: none; }
+.toggle-row input[type="checkbox"] + .toggle-label {
+  display: flex; align-items: center; gap: 0.65rem;
+  user-select: none; position: relative;
+}
+.toggle-row input[type="checkbox"] + .toggle-label::before {
+  content: '';
+  width: 2.5rem; height: 1.375rem; border-radius: 50px;
+  background: var(--border); transition: background 0.25s;
+  flex-shrink: 0;
+}
+.toggle-row input[type="checkbox"] + .toggle-label::after {
+  content: '';
+  position: absolute; left: 0.2rem;
+  width: 0.975rem; height: 0.975rem; border-radius: 50%;
+  background: white; transition: transform 0.25s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+.toggle-row input[type="checkbox"]:checked + .toggle-label::before { background: var(--primary); }
+.toggle-row input[type="checkbox"]:checked + .toggle-label::after { transform: translateX(1.125rem); }
 
 .day-form-block {
   background: var(--background); border: 1px solid var(--border);
@@ -1166,25 +1192,35 @@
 .day-form-header {
   display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.875rem;
 }
-.activities-section { margin-top: 0.75rem; }
+.activities-section {
+  margin-top: 0.875rem; border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+}
 .activities-header {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 0.5rem;
+  padding: 0.6rem 0.875rem; background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
-.activities-header label { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+.activities-header label { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; }
 .add-activity-btn {
   display: flex; align-items: center; gap: 0.3rem;
-  padding: 0.3rem 0.7rem; border-radius: 8px;
-  background: var(--surface); border: 1px solid var(--border);
+  padding: 0.3rem 0.75rem; border-radius: 6px;
+  background: var(--background); border: 1px solid var(--border);
   color: var(--text-secondary); font-size: 0.78rem; cursor: pointer;
   transition: all 0.15s;
 }
 .add-activity-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
 .activity-form-row {
-  display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap;
+  display: flex; gap: 0.5rem; align-items: center;
+  padding: 0.5rem 0.875rem; flex-wrap: wrap;
+  border-bottom: 1px solid var(--border); background: var(--background);
 }
+.activity-form-row:last-child { border-bottom: none; }
 .activity-form-row input, .activity-form-row select {
   flex: 1; min-width: 80px;
+}
+.activities-section:not(:has(.activity-form-row)) .activities-header {
+  border-bottom: none;
 }
 .add-day-btn {
   display: flex; align-items: center; gap: 0.4rem;
