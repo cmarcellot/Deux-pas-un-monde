@@ -632,10 +632,9 @@ const GuideDetailPage = () => {
   return (
     <>
       <motion.div className="guide-detail-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <header className="detail-header">
-          <button onClick={() => navigate(-1)} className="back-btn"><ChevronLeft size={24} /></button>
-          <h2>{guide.title}</h2>
-        </header>
+        <button onClick={() => navigate(-1)} className="guide-back-btn">
+          <ChevronLeft size={22} />
+        </button>
 
         {guide.cover_image && (
           <div className="guide-hero-image clickable-photo"
@@ -643,6 +642,7 @@ const GuideDetailPage = () => {
             <img src={guide.cover_image} alt={guide.title} />
             <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
             <div className="guide-hero-overlay">
+              <h1 className="guide-hero-title">{guide.title}</h1>
               <div className="guide-hero-meta">
                 <span className="guide-meta-chip"><Globe size={14} />{guide.destination}, {guide.country}</span>
                 <span className="guide-meta-chip"><Calendar size={14} />{guide.duration_days} jours</span>
