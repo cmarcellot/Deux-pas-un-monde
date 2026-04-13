@@ -536,7 +536,7 @@ const GuidesPage = () => {
 // ============================================================
 // DAY ACCORDION — itinerary day component
 // ============================================================
-const DayAccordion = ({ day, places, defaultOpen }) => {
+const DayAccordion = ({ day, places, defaultOpen, onPlaceClick }) => {
   const [open, setOpen] = useState(defaultOpen || false);
   const placeMap = places.reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
 
@@ -566,7 +566,9 @@ const DayAccordion = ({ day, places, defaultOpen }) => {
                       <strong>{act.title}</strong>
                       {act.description && <p>{act.description}</p>}
                       {act.place_id && placeMap[act.place_id] && (
-                        <div className="activity-place-ref"><MapPin size={13} />{placeMap[act.place_id].title}</div>
+                        <button className="activity-place-ref" onClick={() => onPlaceClick?.(placeMap[act.place_id])}>
+                          <MapPin size={13} />{placeMap[act.place_id].title}
+                        </button>
                       )}
                     </div>
                   </div>
@@ -598,6 +600,7 @@ const GuideDetailPage = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [activeSection, setActiveSection] = useState('itinerary');
+  const [selectedPlace, setSelectedPlace] = useState(null);
 
   useEffect(() => { fetchGuide(); }, [id]);
 
@@ -607,9 +610,14 @@ const GuideDetailPage = () => {
       if (!res.ok) throw new Error();
       const g = await res.json();
       setGuide(g);
-      if (g.place_ids?.length > 0) {
+      // Collecter guide.place_ids + tous les place_id des activités
+      const activityPlaceIds = (g.itinerary || []).flatMap(day =>
+        (day.activities || []).map(act => act.place_id).filter(Boolean)
+      );
+      const allPlaceIds = [...new Set([...(g.place_ids || []), ...activityPlaceIds])];
+      if (allPlaceIds.length > 0) {
         const results = await Promise.all(
-          g.place_ids.map(pid => fetch(`${API_URL}/api/places/${pid}`).then(r => r.ok ? r.json() : null))
+          allPlaceIds.map(pid => fetch(`${API_URL}/api/places/${pid}`).then(r => r.ok ? r.json() : null))
         );
         setPlaces(results.filter(Boolean));
       }
@@ -677,7 +685,7 @@ const GuideDetailPage = () => {
               {guide.itinerary.length === 0
                 ? <p className="guide-empty-section">Itinéraire à venir…</p>
                 : guide.itinerary.map((day, i) => (
-                    <DayAccordion key={i} day={day} places={places} defaultOpen={i === 0} />
+                    <DayAccordion key={i} day={day} places={places} defaultOpen={i === 0} onPlaceClick={setSelectedPlace} />
                   ))}
             </div>
           )}
@@ -770,6 +778,9 @@ const GuideDetailPage = () => {
       <AnimatePresence>
         {lightboxOpen && allPhotos.length > 0 && (
           <Lightbox photos={allPhotos} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />
+        )}
+        {selectedPlace && (
+          <PlaceDetailModal place={selectedPlace} onClose={() => setSelectedPlace(null)} />
         )}
       </AnimatePresence>
     </>
