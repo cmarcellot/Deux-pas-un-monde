@@ -511,6 +511,8 @@ const GuidesPage = () => {
 
       <GuideTagFilter activeTag={activeTag} onChange={setActiveTag} />
 
+      <SurpriseCountdown />
+
       <div className="content-wrapper">
         {loading ? (
           <div className="loading">Chargement...</div>
@@ -530,6 +532,55 @@ const GuidesPage = () => {
       <footer className="footer">
         <p>Deux pas un monde © 2026 — Suivez-nous sur <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer">Instagram</a></p>
       </footer>
+    </div>
+  );
+};
+
+// ============================================================
+// SURPRISE COUNTDOWN — teaser pour le guide du 25 avril 2026
+// ============================================================
+const REVEAL_DATE = new Date('2026-04-25T00:00:00');
+
+const SurpriseCountdown = () => {
+  const [timeLeft, setTimeLeft] = useState(null);
+
+  useEffect(() => {
+    const tick = () => {
+      const diff = REVEAL_DATE - new Date();
+      if (diff <= 0) { setTimeLeft(null); return; }
+      setTimeLeft({
+        jours:    Math.floor(diff / (1000 * 60 * 60 * 24)),
+        heures:   Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes:  Math.floor((diff / (1000 * 60)) % 60),
+        secondes: Math.floor((diff / 1000) % 60),
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!timeLeft) return null;
+
+  return (
+    <div className="surprise-countdown">
+      <div className="surprise-inner">
+        <div className="surprise-top">
+          <span className="surprise-icon">?</span>
+          <div>
+            <p className="surprise-label">Destination Surprise</p>
+            <p className="surprise-sub">Un nouveau guide arrive le 25 avril 2026</p>
+          </div>
+        </div>
+        <div className="countdown-blocks">
+          {Object.entries(timeLeft).map(([unit, val]) => (
+            <div key={unit} className="countdown-block">
+              <span className="countdown-num">{String(val).padStart(2, '0')}</span>
+              <span className="countdown-unit">{unit}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
