@@ -602,6 +602,25 @@
 }
 .upload-btn:hover { border-color: var(--primary); color: var(--primary); }
 
+/* Drop zone */
+.drop-zone {
+  border: 2px dashed var(--border); border-radius: 12px;
+  padding: 1.75rem 1rem; text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+  background: var(--background);
+}
+.drop-zone.dragging {
+  border-color: var(--primary);
+  background: rgba(198, 107, 61, 0.08);
+}
+.drop-zone-label {
+  display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  color: var(--text-secondary); cursor: pointer; transition: color 0.2s;
+  font-size: 0.9rem;
+}
+.drop-zone.dragging .drop-zone-label { color: var(--primary); }
+.drop-zone-hint { font-size: 0.75rem; color: var(--text-secondary); opacity: 0.7; }
+
 .uploaded-photos { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 .uploaded-photo { position: relative; width: 90px; height: 68px; border-radius: 8px; overflow: hidden; }
 .uploaded-photo img { width: 100%; height: 100%; object-fit: cover; }
@@ -610,6 +629,18 @@
   border: none; border-radius: 50%; width: 20px; height: 20px;
   display: flex; align-items: center; justify-content: center; cursor: pointer; color: white;
 }
+
+/* Réorganisation des photos */
+.draggable-photo { cursor: grab; transition: opacity 0.2s, outline 0.15s; }
+.draggable-photo:active { cursor: grabbing; }
+.draggable-photo.drag-over { outline: 2px solid var(--primary); outline-offset: 2px; opacity: 0.7; }
+.photo-drag-handle {
+  position: absolute; bottom: 3px; left: 3px;
+  background: rgba(0,0,0,0.55); color: white; border-radius: 4px;
+  width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.15s;
+}
+.draggable-photo:hover .photo-drag-handle { opacity: 1; }
 
 .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
 .form-actions .btn-primary { width: auto; }

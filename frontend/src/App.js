@@ -11,7 +11,7 @@ import {
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Eye, Save, Key, ZoomIn,
   BookOpen, Calendar, Globe, Tag, Clock, Wallet, Info, ChevronDown, ChevronUp, Plane,
-  Search, CheckCircle, Loader2
+  Search, CheckCircle, Loader2, GripVertical
 } from 'lucide-react';
 import './App.css';
 
@@ -873,13 +873,39 @@ const PlaceDetailPage = () => {
 };
 
 // ============================================================
+// DROP ZONE — composant réutilisable pour l'upload par glisser-déposer
+// ============================================================
+const DropZone = ({ onFiles, multiple = true, label = 'Glisser des photos ici', inputId }) => {
+  const [dragging, setDragging] = useState(false);
+  const handleDrop = (e) => {
+    e.preventDefault(); setDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length) onFiles(files);
+  };
+  return (
+    <div className={`drop-zone ${dragging ? 'dragging' : ''}`}
+      onDragOver={e => { e.preventDefault(); setDragging(true); }}
+      onDragEnter={e => { e.preventDefault(); setDragging(true); }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={handleDrop}>
+      <input type="file" accept="image/*" multiple={multiple} id={inputId} className="hidden"
+        onChange={e => onFiles(Array.from(e.target.files))} />
+      <label htmlFor={inputId} className="drop-zone-label">
+        <Upload size={28} />
+        <span>{label}</span>
+        <span className="drop-zone-hint">ou cliquer pour sélectionner</span>
+      </label>
+    </div>
+  );
+};
+
+// ============================================================
 // ADMIN GUIDE FORM
 // ============================================================
 const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, onSubmit, onClose, loading, places }) => {
   if (!show) return null;
 
-  const handleImageUpload = async (e, field) => {
-    const files = Array.from(e.target.files);
+  const uploadFiles = async (files, field) => {
     const token = localStorage.getItem('admin_token');
     for (const file of files) {
       const fd = new FormData(); fd.append('file', file);
@@ -1016,8 +1042,8 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
           <h3 className="form-section-title"><ZoomIn size={16} />Image de couverture</h3>
           <div className="form-group">
             <div className="photo-upload-area">
-              <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'cover_image')} id="cover-upload" className="hidden" />
-              <label htmlFor="cover-upload" className="upload-btn"><Upload size={20} />Choisir une image</label>
+              <DropZone inputId="cover-upload" multiple={false} label="Glisser l'image de couverture ici"
+                onFiles={files => uploadFiles(files, 'cover_image')} />
               {guideFormData.cover_image && (
                 <div className="uploaded-photos">
                   <div className="uploaded-photo">
@@ -1104,8 +1130,8 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
           <h3 className="form-section-title"><ZoomIn size={16} />Photos du guide</h3>
           <div className="form-group full-width">
             <div className="photo-upload-area">
-              <input type="file" accept="image/*" multiple onChange={e => handleImageUpload(e, 'photos')} id="guide-photos-upload" className="hidden" />
-              <label htmlFor="guide-photos-upload" className="upload-btn"><Upload size={20} />Ajouter des photos</label>
+              <DropZone inputId="guide-photos-upload" label="Glisser des photos ici"
+                onFiles={files => uploadFiles(files, 'photos')} />
               <div className="uploaded-photos">
                 {guideFormData.photos.map((photo, idx) => (
                   <div key={idx} className="uploaded-photo">
@@ -1152,6 +1178,8 @@ const AdminPage = () => {
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeResult, setGeocodeResult] = useState(null);
   const [showManualCoords, setShowManualCoords] = useState(false);
+  const [draggedPhotoIdx, setDraggedPhotoIdx] = useState(null);
+  const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -1266,8 +1294,7 @@ const AdminPage = () => {
     finally { setGeocoding(false); }
   };
 
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
+  const uploadFiles = async (files) => {
     const token = localStorage.getItem('admin_token');
     for (const file of files) {
       const fd = new FormData(); fd.append('file', file);
@@ -1280,6 +1307,16 @@ const AdminPage = () => {
   };
 
   const removePhoto = (index) => setFormData(prev => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }));
+
+  const reorderPhotos = (fromIdx, toIdx) => {
+    if (fromIdx === toIdx) return;
+    setFormData(prev => {
+      const photos = [...prev.photos];
+      const [moved] = photos.splice(fromIdx, 1);
+      photos.splice(toIdx, 0, moved);
+      return { ...prev, photos };
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1436,12 +1473,19 @@ const AdminPage = () => {
                       <div className="form-group full-width"><label>Note</label><StarRating rating={formData.rating} onChange={(rating) => setFormData({ ...formData, rating })} readonly={false} /></div>
                       <div className="form-group full-width"><label>Photos</label>
                         <div className="photo-upload-area">
-                          <input type="file" accept="image/*" multiple onChange={handleImageUpload} id="photo-upload" className="hidden" data-testid="photo-upload-input" />
-                          <label htmlFor="photo-upload" className="upload-btn"><Upload size={20} />Ajouter des photos</label>
+                          <DropZone inputId="photo-upload" label="Glisser des photos ici" onFiles={uploadFiles} />
                           <div className="uploaded-photos">
                             {formData.photos.map((photo, idx) => (
-                              <div key={idx} className="uploaded-photo">
+                              <div key={idx}
+                                className={`uploaded-photo draggable-photo ${dragOverPhotoIdx === idx ? 'drag-over' : ''}`}
+                                draggable
+                                onDragStart={() => setDraggedPhotoIdx(idx)}
+                                onDragOver={e => { e.preventDefault(); setDragOverPhotoIdx(idx); }}
+                                onDragLeave={() => setDragOverPhotoIdx(null)}
+                                onDrop={e => { e.preventDefault(); reorderPhotos(draggedPhotoIdx, idx); setDraggedPhotoIdx(null); setDragOverPhotoIdx(null); }}
+                                onDragEnd={() => { setDraggedPhotoIdx(null); setDragOverPhotoIdx(null); }}>
                                 <img src={getPhotoSrc(photo)} alt="" />
+                                <div className="photo-drag-handle"><GripVertical size={14} /></div>
                                 <button type="button" onClick={() => removePhoto(idx)} className="remove-photo"><X size={14} /></button>
                               </div>
                             ))}
