@@ -11,7 +11,7 @@ import {
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Eye, Save, Key, ZoomIn,
   BookOpen, Calendar, Globe, Tag, Clock, Wallet, Info, ChevronDown, ChevronUp, Plane,
-  Search, CheckCircle, Loader2
+  Search, CheckCircle, Loader2, GripVertical
 } from 'lucide-react';
 import './App.css';
 
@@ -1178,6 +1178,8 @@ const AdminPage = () => {
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeResult, setGeocodeResult] = useState(null);
   const [showManualCoords, setShowManualCoords] = useState(false);
+  const [draggedPhotoIdx, setDraggedPhotoIdx] = useState(null);
+  const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -1305,6 +1307,16 @@ const AdminPage = () => {
   };
 
   const removePhoto = (index) => setFormData(prev => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }));
+
+  const reorderPhotos = (fromIdx, toIdx) => {
+    if (fromIdx === toIdx) return;
+    setFormData(prev => {
+      const photos = [...prev.photos];
+      const [moved] = photos.splice(fromIdx, 1);
+      photos.splice(toIdx, 0, moved);
+      return { ...prev, photos };
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1464,8 +1476,16 @@ const AdminPage = () => {
                           <DropZone inputId="photo-upload" label="Glisser des photos ici" onFiles={uploadFiles} />
                           <div className="uploaded-photos">
                             {formData.photos.map((photo, idx) => (
-                              <div key={idx} className="uploaded-photo">
+                              <div key={idx}
+                                className={`uploaded-photo draggable-photo ${dragOverPhotoIdx === idx ? 'drag-over' : ''}`}
+                                draggable
+                                onDragStart={() => setDraggedPhotoIdx(idx)}
+                                onDragOver={e => { e.preventDefault(); setDragOverPhotoIdx(idx); }}
+                                onDragLeave={() => setDragOverPhotoIdx(null)}
+                                onDrop={e => { e.preventDefault(); reorderPhotos(draggedPhotoIdx, idx); setDraggedPhotoIdx(null); setDragOverPhotoIdx(null); }}
+                                onDragEnd={() => { setDraggedPhotoIdx(null); setDragOverPhotoIdx(null); }}>
                                 <img src={getPhotoSrc(photo)} alt="" />
+                                <div className="photo-drag-handle"><GripVertical size={14} /></div>
                                 <button type="button" onClick={() => removePhoto(idx)} className="remove-photo"><X size={14} /></button>
                               </div>
                             ))}

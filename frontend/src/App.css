@@ -630,6 +630,18 @@
   display: flex; align-items: center; justify-content: center; cursor: pointer; color: white;
 }
 
+/* Réorganisation des photos */
+.draggable-photo { cursor: grab; transition: opacity 0.2s, outline 0.15s; }
+.draggable-photo:active { cursor: grabbing; }
+.draggable-photo.drag-over { outline: 2px solid var(--primary); outline-offset: 2px; opacity: 0.7; }
+.photo-drag-handle {
+  position: absolute; bottom: 3px; left: 3px;
+  background: rgba(0,0,0,0.55); color: white; border-radius: 4px;
+  width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.15s;
+}
+.draggable-photo:hover .photo-drag-handle { opacity: 1; }
+
 .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
 .form-actions .btn-primary { width: auto; }
 
