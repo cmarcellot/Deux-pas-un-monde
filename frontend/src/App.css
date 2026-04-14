@@ -498,7 +498,7 @@
 .admin-logo img { height: 48px; filter: brightness(1.1); transition: transform 0.2s ease; }
 .admin-logo:hover img { transform: scale(1.05); }
 
-.admin-header h1 { flex: 1; font-size: 1.3rem; min-width: 0; }
+.admin-header h1 { flex: 1; font-size: 1.6rem; font-family: 'Cormorant Garamond', serif; font-weight: 600; min-width: 0; }
 .admin-header-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
 
 .password-btn {
