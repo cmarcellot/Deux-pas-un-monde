@@ -252,9 +252,6 @@ const GuideCard = ({ guide, onClick }) => (
     <div className="guide-card-content">
       <div className="guide-card-destination"><Globe size={13} />{guide.destination}, {guide.country}</div>
       <h3>{guide.title}</h3>
-      <div className="guide-card-tags">
-        {guide.tags.slice(0, 3).map(tag => <span key={tag} className="guide-tag-pill">{tag}</span>)}
-      </div>
     </div>
   </motion.div>
 );
@@ -468,17 +465,15 @@ const HomePage = () => {
 // ============================================================
 const GuidesPage = () => {
   const [guides, setGuides] = useState([]);
-  const [activeTag, setActiveTag] = useState('all');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => { fetchGuides(); }, [activeTag]);
+  useEffect(() => { fetchGuides(); }, []);
 
   const fetchGuides = async () => {
     setLoading(true);
     try {
-      const params = activeTag !== 'all' ? `?tag=${activeTag}` : '';
-      const res = await fetch(`${API_URL}/api/guides${params}`);
+      const res = await fetch(`${API_URL}/api/guides`);
       const data = await res.json();
       setGuides(Array.isArray(data) ? data : []);
     } catch { toast.error('Erreur lors du chargement des guides'); }
@@ -508,8 +503,6 @@ const GuidesPage = () => {
         <h1>Guides de Voyage</h1>
         <p>Itinéraires jour par jour, conseils pratiques et bonnes adresses</p>
       </div>
-
-      <GuideTagFilter activeTag={activeTag} onChange={setActiveTag} />
 
       <SurpriseCountdown />
 
@@ -708,12 +701,6 @@ const GuideDetailPage = () => {
                 <span className="guide-meta-chip"><Calendar size={14} />{guide.duration_days} jours</span>
               </div>
             </div>
-          </div>
-        )}
-
-        {guide.tags.length > 0 && (
-          <div className="guide-tags-row">
-            {guide.tags.map(tag => <span key={tag} className="guide-tag-pill">{tag}</span>)}
           </div>
         )}
 
@@ -1076,17 +1063,6 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
                 <label htmlFor="published" className="toggle-label">Publié</label>
               </div>
             </div>
-          </div>
-
-          {/* Tags */}
-          <h3 className="form-section-title"><Tag size={16} />Tags</h3>
-          <div className="tags-checkboxes">
-            {GUIDE_TAGS.filter(t => t.id !== 'all').map(tag => (
-              <label key={tag.id} className={`tag-checkbox ${guideFormData.tags.includes(tag.id) ? 'checked' : ''}`}>
-                <input type="checkbox" checked={guideFormData.tags.includes(tag.id)} onChange={() => toggleTag(tag.id)} />
-                {tag.name}
-              </label>
-            ))}
           </div>
 
           {/* Image de couverture */}
@@ -1623,7 +1599,6 @@ const AdminPage = () => {
                     <span className="cat-badge" style={{ background: guide.published ? '#5cb85c' : '#6c6c6c', color: '#fff' }}>
                       {guide.published ? 'Publié' : 'Brouillon'}
                     </span>
-                    {guide.tags.slice(0, 2).map(tag => <span key={tag} className="guide-tag-pill">{tag}</span>)}
                   </div>
                 </div>
                 <div className="admin-place-actions">
