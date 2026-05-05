@@ -52,25 +52,93 @@ const EMPTY_GUIDE = {
   tags: [], photos: [], place_ids: [], published: false,
 };
 
+// Map backend slugs to new design labels and category keys
 const CATEGORIES = [
-  { id: 'all', name: 'Tous', icon: Filter, color: '#E8E0D5' },
-  { id: 'accommodation', name: 'Hébergements', icon: Bed, color: '#C66B3D' },
-  { id: 'restaurant', name: 'Restaurants', icon: Utensils, color: '#E8E0D5' },
-  { id: 'activity', name: 'Activités', icon: Compass, color: '#4CAF50' },
-  { id: 'gem', name: 'Bonnes adresses', icon: Gem, color: '#A0A0A0' },
+  { id: 'all',           key: 'all',        label: 'Tout',       icon: Filter },
+  { id: 'accommodation', key: 'dormir',     label: 'Dormir',     icon: Bed },
+  { id: 'restaurant',    key: 'manger',     label: 'Manger',     icon: Utensils },
+  { id: 'activity',      key: 'decouvrir',  label: 'Découvrir',  icon: Compass },
+  { id: 'gem',           key: 'partir',     label: 'Partir',     icon: Gem },
 ];
 
+const getCatInfo = (categoryId) => CATEGORIES.find(c => c.id === categoryId) || CATEGORIES[0];
+
+// SVG icons for category badges (matching handoff)
+const CAT_ICONS = {
+  accommodation: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>`,
+  restaurant:    `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>`,
+  activity:      `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`,
+  gem:           `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>`,
+};
+
 const createMarkerIcon = (category) => {
-  const colors = { accommodation: '#C66B3D', restaurant: '#E8E0D5', activity: '#4CAF50', gem: '#A0A0A0' };
-  const color = colors[category] || '#C66B3D';
+  const colors = {
+    accommodation: 'oklch(0.52 0.07 230)',
+    restaurant:    'oklch(0.58 0.09 35)',
+    activity:      'oklch(0.52 0.08 155)',
+    gem:           'oklch(0.58 0.08 85)',
+  };
+  const color = colors[category] || '#888';
   return L.divIcon({
     className: 'custom-marker',
-    html: `<div style="width:32px;height:32px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #1A1A1A;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>`,
-    iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32],
+    html: `<div style="width:30px;height:30px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25);"></div>`,
+    iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -30],
   });
 };
 
 const getPhotoSrc = (photo) => photo.startsWith('/api') ? `${API_URL}${photo}` : photo;
+
+// ============================================================
+// LOGO (4 SVG tiles)
+// ============================================================
+const DpmLogo = ({ light = false }) => {
+  const fg = light ? '#3f4240' : '#ede8db';
+  const bg = light ? '#ede8db' : '#3f4240';
+  const size = 48;
+  const gap = 3;
+  const total = size * 4 + gap * 3;
+  const tiles = [
+    // plane
+    { key: 'plane', d: 'M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z' },
+    // camera
+    { key: 'cam',   d: 'M12 15.2c-1.77 0-3.2-1.43-3.2-3.2s1.43-3.2 3.2-3.2 3.2 1.43 3.2 3.2-1.43 3.2-3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z' },
+    // pin
+    { key: 'pin',   d: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z' },
+    // fork
+    { key: 'fork',  d: 'M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z' },
+  ];
+  return (
+    <div className={`dpm-logo${light ? ' light' : ''}`}>
+      <svg width={total} height={size} viewBox={`0 0 ${total} ${size}`} fill="none">
+        {tiles.map((t, i) => (
+          <g key={t.key} transform={`translate(${i * (size + gap)}, 0)`}>
+            <rect x={0} y={0} width={size} height={size} fill={fg}/>
+            <g transform={`translate(${size*0.15},${size*0.15}) scale(${size*0.7/24})`} fill={bg}>
+              <path d={t.d}/>
+            </g>
+          </g>
+        ))}
+      </svg>
+      <div className="dpm-logo-wordmark">
+        <span className="wm-top">DEUX PAS</span>
+        <span className="wm-sub">UN MONDE</span>
+      </div>
+    </div>
+  );
+};
+
+// Category badge (light theme)
+const CategoryBadge = ({ categoryId, small = false }) => {
+  const cat = getCatInfo(categoryId);
+  const icon = CAT_ICONS[categoryId];
+  if (!icon) return null;
+  return (
+    <span className={`cat-badge ${cat.key}${small ? ' small' : ''}`}>
+      <span className="cat-badge-icon" dangerouslySetInnerHTML={{ __html: icon }}/>
+      {cat.label}
+    </span>
+  );
+};
 
 // ============================================================
 // LIGHTBOX
@@ -200,60 +268,62 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
 // ============================================================
 // STAR RATING
 // ============================================================
-const StarRating = ({ rating, onChange, readonly = true }) => (
+const StarRating = ({ rating, onChange, readonly = true, size = 16 }) => (
   <div className="star-rating" data-testid="star-rating">
     {[1, 2, 3, 4, 5].map((star) => (
       <button key={star} type="button" onClick={() => !readonly && onChange?.(star)}
         className={`star-btn ${readonly ? 'readonly' : ''}`} data-testid={`star-${star}`}>
-        <Star size={20} fill={star <= rating ? '#C66B3D' : 'transparent'} color={star <= rating ? '#C66B3D' : '#666666'} />
+        <Star size={size} fill={star <= rating ? '#C4933A' : 'transparent'} color={star <= rating ? '#C4933A' : '#ccc'} />
       </button>
     ))}
   </div>
 );
 
 // ============================================================
-// PLACE CARD
+// PLACE CARD (light)
 // ============================================================
+const stripHtml = (html) => (html || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+
 const PlaceCard = ({ place, onClick }) => {
-  const category = CATEGORIES.find(c => c.id === place.category);
-  const CategoryIcon = category?.icon || MapPin;
+  const cat = getCatInfo(place.category);
+  const CatIcon = cat.icon || MapPin;
   return (
-    <motion.div className="place-card" whileHover={{ y: -4 }} onClick={onClick} data-testid={`place-card-${place.id}`}>
+    <div className="place-card" onClick={onClick} data-testid={`place-card-${place.id}`}>
       <div className="place-card-image">
-        {place.photos?.[0] ? (
-          <img src={getPhotoSrc(place.photos[0])} alt={place.title} />
-        ) : (
-          <div className="place-card-placeholder"><CategoryIcon size={48} /></div>
-        )}
-        <div className="place-card-category" style={{ background: category?.color }}>
-          <CategoryIcon size={14} color="#1A1A1A" />
+        {place.photos?.[0]
+          ? <img src={getPhotoSrc(place.photos[0])} alt={place.title} />
+          : <div className="place-card-placeholder" style={{ background: '#e8e4dc', color: '#aaa' }}><CatIcon size={40} /></div>
+        }
+        <div className="place-card-badge"><CategoryBadge categoryId={place.category} small /></div>
+      </div>
+      <div className="place-card-body">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+          <h3>{place.title}</h3>
+          <StarRating rating={place.rating} readonly size={13} />
         </div>
+        <p className="place-card-location">{place.city || place.address}</p>
+        <p className="place-card-desc">{stripHtml(place.description)}</p>
       </div>
-      <div className="place-card-content">
-        <h3>{place.title}</h3>
-        <p className="place-card-address"><MapPin size={14} />{place.address}</p>
-        <StarRating rating={place.rating} readonly />
-      </div>
-    </motion.div>
+    </div>
   );
 };
 
 // ============================================================
-// GUIDE CARD
+// GUIDE CARD (light)
 // ============================================================
 const GuideCard = ({ guide, onClick }) => (
-  <motion.div className="guide-card" whileHover={{ y: -4 }} onClick={onClick}>
+  <div className="guide-card" onClick={onClick}>
     <div className="guide-card-image">
       {guide.cover_image
         ? <img src={guide.cover_image} alt={guide.title} />
         : <div className="guide-card-placeholder"><BookOpen size={48} /></div>}
       <div className="guide-card-duration"><Calendar size={13} />{guide.duration_days}j</div>
     </div>
-    <div className="guide-card-content">
+    <div className="guide-card-body">
       <div className="guide-card-destination"><Globe size={13} />{guide.destination}, {guide.country}</div>
       <h3>{guide.title}</h3>
     </div>
-  </motion.div>
+  </div>
 );
 
 // ============================================================
@@ -302,9 +372,6 @@ const PlaceDetailModal = ({ place, onClose }) => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
   if (!place) return null;
-  const category = CATEGORIES.find(c => c.id === place.category);
-  const CategoryIcon = category?.icon || MapPin;
-
   const openLightbox = (idx) => { setLightboxIndex(idx); setLightboxOpen(true); };
 
   return (
@@ -332,26 +399,22 @@ const PlaceDetailModal = ({ place, onClose }) => {
                 )}
               </>
             ) : (
-              <div className="modal-no-image"><CategoryIcon size={64} /></div>
+              <div className="modal-no-image"><MapPin size={48} /></div>
             )}
           </div>
 
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>{place.title}</h2>
-              <div className="modal-meta">
-                <div className="category-badge" style={{ background: category?.color }}>
-                  <CategoryIcon size={14} color="#414441" /><span>{category?.name}</span>
-                </div>
-                <StarRating rating={place.rating} readonly />
-              </div>
+          <div className="modal-body">
+            <h2 className="modal-title">{place.title}</h2>
+            <div className="modal-meta">
+              <CategoryBadge categoryId={place.category} />
+              <StarRating rating={place.rating} readonly size={15} />
             </div>
-            <div className="modal-address"><MapPin size={18} /><span>{place.address}</span></div>
+            <div className="modal-address"><MapPin size={16} /><span>{place.address}</span></div>
             <div className="modal-description" dangerouslySetInnerHTML={{ __html: place.description }} />
             <div className="modal-map">
               <MapContainer center={[place.latitude, place.longitude]} zoom={14}
                 style={{ height: '200px', width: '100%', borderRadius: '12px' }} scrollWheelZoom={false}>
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; OpenStreetMap' />
+                <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution='&copy; OpenStreetMap' />
                 <Marker position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)} />
               </MapContainer>
             </div>
@@ -391,50 +454,86 @@ const HomePage = () => {
     finally { setLoading(false); }
   };
 
-  return (
-    <div className="home-page">
-      <header className="header" data-testid="header">
-        <Link to="/" className="logo">
-          <img src="https://customer-assets.emergentagent.com/job_trip-spots-1/artifacts/w33bidjg_682F1216-435E-40FA-84C2-279EE5063CDF.PNG" alt="Deux pas un monde" />
-        </Link>
-        <nav className="header-nav">
-          <button className={`view-toggle ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')} data-testid="view-list-btn"><List size={20} /></button>
-          <button className={`view-toggle ${viewMode === 'map' ? 'active' : ''}`} onClick={() => setViewMode('map')} data-testid="view-map-btn"><Map size={20} /></button>
-          <Link to="/guides" className="guides-nav-link" data-testid="guides-nav-link"><BookOpen size={20} /><span className="nav-link-label">Guides</span></Link>
-          <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="instagram-link" data-testid="instagram-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-            </svg>
-          </a>
-          <Link to="/admin" className="admin-link" data-testid="admin-link"><Settings size={20} /></Link>
-        </nav>
-      </header>
+  const filtered = places;
 
-      <div className="hero-section">
-        <h1>Découvrez nos bonnes adresses</h1>
-        <p>🌍 On teste, on partage, on recommande</p>
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      {/* Dark hero */}
+      <div className="site-hero">
+        <Link to="/"><DpmLogo /></Link>
+        <p className="site-hero-tagline">NOS BONNES ADRESSES À TRAVERS LE MONDE</p>
+        <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr"
+          target="_blank" rel="noopener noreferrer" className="site-hero-instagram">
+          <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}>
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          </svg>
+          @deuxpas_unmonde
+        </a>
+        {/* Section nav */}
+        <div className="section-nav">
+          <Link to="/"><button className="section-nav-btn active">Adresses</button></Link>
+          <Link to="/guides"><button className="section-nav-btn">Guides voyage</button></Link>
+        </div>
       </div>
 
-      <CategoryFilter activeCategory={activeCategory} onChange={setActiveCategory} />
+      {/* Filter bar (sticky) */}
+      <div className="filter-bar" data-testid="header">
+        <div className="filter-bar-inner">
+          <div className="filter-pills">
+            {CATEGORIES.map(cat => (
+              <button key={cat.id}
+                className={`filter-pill ${cat.key} ${activeCategory === cat.id ? 'active' : ''}`}
+                onClick={() => setActiveCategory(cat.id)}
+                data-testid={`category-${cat.id}`}>
+                {cat.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="view-toggles">
+              {[['list','list'],['map','map']].map(([mode, label]) => (
+                <button key={mode}
+                  className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
+                  onClick={() => setViewMode(mode)}
+                  data-testid={`view-${mode}-btn`}
+                  title={label}>
+                  {mode === 'list'
+                    ? <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>
+                    : <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+                  }
+                </button>
+              ))}
+            </div>
+            <Link to="/admin" style={{ display:'flex',alignItems:'center',padding:6,color:'#bbb',transition:'color 0.15s' }}
+              onMouseEnter={e=>e.currentTarget.style.color='#555'}
+              onMouseLeave={e=>e.currentTarget.style.color='#bbb'}
+              data-testid="admin-link" title="Administration">
+              <Settings size={16}/>
+            </Link>
+          </div>
+        </div>
+      </div>
 
-      <div className={`content-wrapper ${viewMode}`}>
+      {/* Content */}
+      <div className="content-area">
+        <p className="results-count">{filtered.length} adresse{filtered.length > 1 ? 's' : ''}</p>
         {viewMode === 'list' ? (
           <div className="places-grid" data-testid="places-grid">
-            {loading ? <div className="loading">Chargement...</div>
-              : places.length === 0 ? (
+            {loading ? <div className="loading">Chargement…</div>
+              : filtered.length === 0 ? (
                 <div className="empty-state" data-testid="empty-state">
-                  <MapPin size={48} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
+                  <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
                 </div>
-              ) : places.map((place) => (
+              ) : filtered.map(place => (
                 <PlaceCard key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
               ))}
           </div>
         ) : (
           <div className="map-wrapper" data-testid="map-wrapper">
             <MapContainer center={mapCenter} zoom={6} style={{ height: '100%', width: '100%' }}>
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
+              <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
               <MapRecenter center={mapCenter} />
-              {places.map((place) => (
+              {filtered.map(place => (
                 <Marker key={place.id} position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)}
                   eventHandlers={{ click: () => setSelectedPlace(place) }}>
                   <Popup>
@@ -450,7 +549,7 @@ const HomePage = () => {
       </div>
 
       <footer className="footer">
-        <p>Deux pas un monde © 2026 - Suivez-nous sur <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer"> Instagram</a></p>
+        <p>Deux pas un monde © 2026 — <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
       </footer>
 
       <AnimatePresence>
@@ -482,36 +581,42 @@ const GuidesPage = () => {
 
   return (
     <div className="guides-page">
-      <header className="header">
-        <Link to="/" className="logo">
-          <img src="https://customer-assets.emergentagent.com/job_trip-spots-1/artifacts/w33bidjg_682F1216-435E-40FA-84C2-279EE5063CDF.PNG" alt="Deux pas un monde" />
-        </Link>
-        <nav className="header-nav">
-          <Link to="/" className="view-toggle"><List size={20} /></Link>
-          <Link to="/?view=map" className="view-toggle"><Map size={20} /></Link>
-          <Link to="/guides" className="guides-nav-link active"><BookOpen size={20} /><span className="nav-link-label">Guides</span></Link>
-          <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="instagram-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-            </svg>
-          </a>
-          <Link to="/admin" className="admin-link"><Settings size={20} /></Link>
-        </nav>
-      </header>
-
-      <div className="guides-hero">
-        <h1>Guides de Voyage</h1>
-        <p>Itinéraires jour par jour, conseils pratiques et bonnes adresses</p>
+      {/* Dark hero — same as home */}
+      <div className="site-hero">
+        <Link to="/"><DpmLogo /></Link>
+        <p className="site-hero-tagline">NOS GUIDES DE VOYAGE</p>
+        <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr"
+          target="_blank" rel="noopener noreferrer" className="site-hero-instagram">
+          <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}>
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          </svg>
+          @deuxpas_unmonde
+        </a>
+        <div className="section-nav">
+          <Link to="/"><button className="section-nav-btn">Adresses</button></Link>
+          <Link to="/guides"><button className="section-nav-btn active">Guides voyage</button></Link>
+        </div>
       </div>
 
-      <SurpriseCountdown />
+      {/* Light filter bar — just admin link */}
+      <div className="filter-bar">
+        <div className="filter-bar-inner" style={{ justifyContent: 'flex-end' }}>
+          <Link to="/admin" style={{ display:'flex',alignItems:'center',padding:6,color:'#bbb',transition:'color 0.15s' }}
+            onMouseEnter={e=>e.currentTarget.style.color='#555'}
+            onMouseLeave={e=>e.currentTarget.style.color='#bbb'}
+            title="Administration">
+            <Settings size={16}/>
+          </Link>
+        </div>
+      </div>
 
-      <div className="content-wrapper">
+      <div className="guides-content">
+        <SurpriseCountdown />
         {loading ? (
-          <div className="loading">Chargement...</div>
+          <div className="loading">Chargement…</div>
         ) : guides.length === 0 ? (
           <div className="empty-state">
-            <BookOpen size={48} /><h3>Aucun guide pour le moment</h3><p>Les guides arrivent bientôt !</p>
+            <BookOpen size={40} /><h3>Aucun guide pour le moment</h3><p>Les guides arrivent bientôt !</p>
           </div>
         ) : (
           <div className="guides-grid">
@@ -523,7 +628,7 @@ const GuidesPage = () => {
       </div>
 
       <footer className="footer">
-        <p>Deux pas un monde © 2026 — Suivez-nous sur <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer">Instagram</a></p>
+        <p>Deux pas un monde © 2026 — <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
       </footer>
     </div>
   );
@@ -799,7 +904,7 @@ const GuideDetailPage = () => {
                   <MapContainer center={mapCenter} zoom={7}
                     style={{ height: '400px', width: '100%', borderRadius: '12px' }}
                     scrollWheelZoom={false}>
-                    <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; OpenStreetMap' />
+                    <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution='&copy; OpenStreetMap' />
                     {places.map(place => (
                       <Marker key={place.id} position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)}>
                         <Popup><div className="map-popup"><h4>{place.title}</h4><p>{place.address}</p></div></Popup>
@@ -851,8 +956,6 @@ const PlaceDetailPage = () => {
 
   if (loading || !place) return <div className="loading-page">Chargement...</div>;
 
-  const category = CATEGORIES.find(c => c.id === place.category);
-  const CategoryIcon = category?.icon || MapPin;
   const openLightbox = (idx) => { setLightboxIndex(idx); setLightboxOpen(true); };
 
   return (
@@ -880,22 +983,20 @@ const PlaceDetailPage = () => {
                 </div>
               )}
             </>
-          ) : <div className="no-image"><CategoryIcon size={64} /></div>}
+          ) : <div className="no-image"><MapPin size={64} /></div>}
         </div>
 
         <div className="detail-content">
           <div className="detail-meta">
-            <div className="category-badge" style={{ background: category?.color }}>
-              <CategoryIcon size={16} color="#1A1A1A" /><span>{category?.name}</span>
-            </div>
+            <CategoryBadge categoryId={place.category} />
             <StarRating rating={place.rating} readonly />
           </div>
           <div className="detail-address"><MapPin size={18} /><span>{place.address}</span></div>
-          <p className="detail-description">{place.description}</p>
+          <div className="detail-description" dangerouslySetInnerHTML={{ __html: place.description }} />
           <div className="detail-map" data-testid="detail-map">
             <MapContainer center={[place.latitude, place.longitude]} zoom={14}
               style={{ height: '250px', width: '100%', borderRadius: '12px' }} scrollWheelZoom={false}>
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
+              <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
               <Marker position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)} />
             </MapContainer>
           </div>
@@ -1382,7 +1483,7 @@ const AdminPage = () => {
     return (
       <div className="admin-login-page">
         <motion.div className="login-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Link to="/" className="login-logo"><img src="https://customer-assets.emergentagent.com/job_trip-spots-1/artifacts/w33bidjg_682F1216-435E-40FA-84C2-279EE5063CDF.PNG" alt="Logo" /></Link>
+          <div className="login-logo"><Link to="/"><DpmLogo light /></Link></div>
           <h2>Administration</h2>
           <form onSubmit={handleLogin} data-testid="login-form">
             <Link to="/" className="back-to-home-btn" data-testid="back-home-btn"><ChevronLeft size={18} />Retour à l'accueil</Link>
@@ -1400,11 +1501,11 @@ const AdminPage = () => {
   return (
     <div className="admin-page">
       <header className="admin-header">
-        <Link to="/" className="admin-logo"><img src="https://customer-assets.emergentagent.com/job_trip-spots-1/artifacts/w33bidjg_682F1216-435E-40FA-84C2-279EE5063CDF.PNG" alt="Logo" /></Link>
-        <h1>Administration</h1>
+        <Link to="/"><DpmLogo /></Link>
+        <span className="admin-header-title">Administration</span>
         <div className="admin-header-actions">
-          <button onClick={() => setShowPasswordModal(true)} className="password-btn" data-testid="change-password-btn"><Key size={20} />Mot de passe</button>
-          <button onClick={handleLogout} className="logout-btn" data-testid="logout-btn"><LogOut size={20} />Déconnexion</button>
+          <button onClick={() => setShowPasswordModal(true)} className="admin-header-btn" data-testid="change-password-btn"><Key size={16} />Mot de passe</button>
+          <button onClick={handleLogout} className="admin-header-btn danger" data-testid="logout-btn"><LogOut size={16} />Déconnexion</button>
         </div>
       </header>
 
@@ -1534,7 +1635,7 @@ const AdminPage = () => {
             {places.length === 0 ? (
               <div className="empty-admin"><MapPin size={48} /><h3>Aucun lieu</h3><p>Commencez par ajouter votre premier lieu</p></div>
             ) : places.map((place) => {
-              const cat = CATEGORIES.find(c => c.id === place.category);
+              const cat = getCatInfo(place.category);
               const CatIcon = cat?.icon || MapPin;
               return (
                 <motion.div key={place.id} className="admin-place-item" initial={{ opacity: 0 }} animate={{ opacity: 1 }} data-testid={`admin-place-${place.id}`}>
@@ -1544,7 +1645,7 @@ const AdminPage = () => {
                   <div className="admin-place-info">
                     <h3>{place.title}</h3><p>{place.address}</p>
                     <div className="admin-place-meta">
-                      <span className="cat-badge" style={{ background: cat?.color }}><CatIcon size={12} color="#1A1A1A" />{cat?.name}</span>
+                      <CategoryBadge categoryId={place.category} small />
                       <StarRating rating={place.rating} readonly />
                     </div>
                   </div>
