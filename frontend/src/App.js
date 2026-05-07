@@ -280,33 +280,91 @@ const StarRating = ({ rating, onChange, readonly = true, size = 16 }) => (
 );
 
 // ============================================================
+// PHOTO PLACEHOLDER — gradient SVG with diagonal lines
+// ============================================================
+const PHOTO_COLORS = {
+  accommodation: ['#5B7A8A', '#6E8E9E', '#89A5B3'],
+  restaurant:    ['#8B6355', '#A07060', '#C4937E'],
+  activity:      ['#5A7A60', '#6E9175', '#89A88D'],
+  gem:           ['#8A7845', '#A08E56', '#BBA96E'],
+};
+
+const PhotoPlaceholder = ({ category, index = 0, height = 200, title = '' }) => {
+  const colors = PHOTO_COLORS[category] || ['#888','#999','#aaa'];
+  const c1 = colors[index % colors.length];
+  const c2 = colors[(index + 1) % colors.length];
+  const gradId = `grad-${category}-${index}`;
+  return (
+    <svg width="100%" height={height} viewBox={`0 0 400 ${height}`} preserveAspectRatio="xMidYMid slice" style={{ display: 'block' }}>
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={c1}/>
+          <stop offset="100%" stopColor={c2}/>
+        </linearGradient>
+      </defs>
+      <rect width="400" height={height} fill={`url(#${gradId})`}/>
+      {Array.from({ length: 20 }).map((_, i) => (
+        <line key={i} x1={i*25 - 100} y1={0} x2={i*25 + 100} y2={height}
+          stroke="rgba(255,255,255,0.07)" strokeWidth="1.5"/>
+      ))}
+      {title && (
+        <text x="200" y={height/2 + 6} textAnchor="middle" fill="rgba(255,255,255,0.35)"
+          fontSize="12" fontFamily="Jost, sans-serif">{title}</text>
+      )}
+    </svg>
+  );
+};
+
+// ============================================================
 // PLACE CARD (light)
 // ============================================================
 const stripHtml = (html) => (html || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
 
-const PlaceCard = ({ place, onClick }) => {
-  const cat = getCatInfo(place.category);
-  const CatIcon = cat.icon || MapPin;
-  return (
-    <div className="place-card" onClick={onClick} data-testid={`place-card-${place.id}`}>
-      <div className="place-card-image">
-        {place.photos?.[0]
-          ? <img src={getPhotoSrc(place.photos[0])} alt={place.title} />
-          : <div className="place-card-placeholder" style={{ background: '#e8e4dc', color: '#aaa' }}><CatIcon size={40} /></div>
-        }
-        <div className="place-card-badge"><CategoryBadge categoryId={place.category} small /></div>
-      </div>
-      <div className="place-card-body">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-          <h3>{place.title}</h3>
-          <StarRating rating={place.rating} readonly size={13} />
-        </div>
-        <p className="place-card-location">{place.city || place.address}</p>
-        <p className="place-card-desc">{stripHtml(place.description)}</p>
-      </div>
+const PlaceCard = ({ place, onClick }) => (
+  <div className="place-card" onClick={onClick} data-testid={`place-card-${place.id}`}>
+    <div className="place-card-image">
+      {place.photos?.[0]
+        ? <img src={getPhotoSrc(place.photos[0])} alt={place.title} />
+        : <PhotoPlaceholder category={place.category} index={place.id || 0} height={200} title={place.title} />
+      }
+      <div className="place-card-badge"><CategoryBadge categoryId={place.category} small /></div>
     </div>
-  );
-};
+    <div className="place-card-body">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+        <h3>{place.title}</h3>
+        <StarRating rating={place.rating} readonly size={13} />
+      </div>
+      <p className="place-card-location">{place.city || place.address}</p>
+      <p className="place-card-desc">{stripHtml(place.description)}</p>
+    </div>
+  </div>
+);
+
+// ============================================================
+// PLACE LIST ROW (light)
+// ============================================================
+const PlaceListRow = ({ place, onClick }) => (
+  <div className="place-list-row" onClick={onClick} data-testid={`place-list-${place.id}`}>
+    <div className="place-list-thumb">
+      {place.photos?.[0]
+        ? <img src={getPhotoSrc(place.photos[0])} alt={place.title} />
+        : <PhotoPlaceholder category={place.category} index={place.id || 0} height={100} />
+      }
+    </div>
+    <div className="place-list-body">
+      <div className="place-list-meta-row">
+        <CategoryBadge categoryId={place.category} small />
+        <span className="place-list-date">{place.date || ''}</span>
+      </div>
+      <h3>{place.title}</h3>
+      <p>{stripHtml(place.description)}</p>
+    </div>
+    <div className="place-list-right">
+      <StarRating rating={place.rating} readonly size={13} />
+      <span>{place.city || ''}{place.country ? `, ${place.country}` : ''}</span>
+    </div>
+  </div>
+);
 
 // ============================================================
 // GUIDE CARD (light)
@@ -439,7 +497,7 @@ const HomePage = () => {
   const [mapCenter, setMapCenter] = useState([46.603354, 1.888334]);
   const [loading, setLoading] = useState(true);
   const location = window.location;
-  const [viewMode, setViewMode] = useState(new URLSearchParams(location.search).get('view') === 'map' ? 'map' : 'list');
+  const [viewMode, setViewMode] = useState(new URLSearchParams(location.search).get('view') || 'grid');
 
   useEffect(() => { fetchPlaces(); }, [activeCategory]);
 
@@ -456,23 +514,37 @@ const HomePage = () => {
 
   const filtered = places;
 
+  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
+  const igSvg = (
+    <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}>
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+    </svg>
+  );
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       {/* Dark hero */}
       <div className="site-hero">
         <Link to="/"><DpmLogo /></Link>
         <p className="site-hero-tagline">NOS BONNES ADRESSES À TRAVERS LE MONDE</p>
-        <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr"
-          target="_blank" rel="noopener noreferrer" className="site-hero-instagram">
-          <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}>
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-          </svg>
-          @deuxpas_unmonde
+        <a href={igUrl} target="_blank" rel="noopener noreferrer" className="site-hero-instagram">
+          {igSvg}@deuxpas_unmonde
         </a>
-        {/* Section nav */}
         <div className="section-nav">
           <Link to="/"><button className="section-nav-btn active">Adresses</button></Link>
           <Link to="/guides"><button className="section-nav-btn">Guides voyage</button></Link>
+        </div>
+        {/* Search bar */}
+        <div className="hero-search-wrap">
+          <div className="hero-search">
+            <Search size={15} style={{ color: '#b0ab9f', flexShrink: 0 }} />
+            <input
+              className="hero-search-input"
+              placeholder="Rechercher adresses, guides, villes…"
+              readOnly
+            />
+            <span className="hero-search-kbd">⌘K</span>
+          </div>
         </div>
       </div>
 
@@ -489,27 +561,19 @@ const HomePage = () => {
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div className="view-toggles">
-              {[['list','list'],['map','map']].map(([mode, label]) => (
-                <button key={mode}
-                  className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
-                  onClick={() => setViewMode(mode)}
-                  data-testid={`view-${mode}-btn`}
-                  title={label}>
-                  {mode === 'list'
-                    ? <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>
-                    : <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
-                  }
-                </button>
-              ))}
-            </div>
-            <Link to="/admin" style={{ display:'flex',alignItems:'center',padding:6,color:'#bbb',transition:'color 0.15s' }}
-              onMouseEnter={e=>e.currentTarget.style.color='#555'}
-              onMouseLeave={e=>e.currentTarget.style.color='#bbb'}
-              data-testid="admin-link" title="Administration">
-              <Settings size={16}/>
-            </Link>
+          <div className="view-toggles">
+            {[
+              ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
+              ['list', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>],
+              ['map',  <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>],
+            ].map(([mode, icon]) => (
+              <button key={mode}
+                className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
+                onClick={() => setViewMode(mode)}
+                data-testid={`view-${mode}-btn`}>
+                {icon}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -517,7 +581,7 @@ const HomePage = () => {
       {/* Content */}
       <div className="content-area">
         <p className="results-count">{filtered.length} adresse{filtered.length > 1 ? 's' : ''}</p>
-        {viewMode === 'list' ? (
+        {viewMode === 'grid' ? (
           <div className="places-grid" data-testid="places-grid">
             {loading ? <div className="loading">Chargement…</div>
               : filtered.length === 0 ? (
@@ -526,6 +590,17 @@ const HomePage = () => {
                 </div>
               ) : filtered.map(place => (
                 <PlaceCard key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
+              ))}
+          </div>
+        ) : viewMode === 'list' ? (
+          <div data-testid="places-list">
+            {loading ? <div className="loading">Chargement…</div>
+              : filtered.length === 0 ? (
+                <div className="empty-state" data-testid="empty-state">
+                  <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
+                </div>
+              ) : filtered.map(place => (
+                <PlaceListRow key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
               ))}
           </div>
         ) : (
@@ -549,8 +624,13 @@ const HomePage = () => {
       </div>
 
       <footer className="footer">
-        <p>Deux pas un monde © 2026 — <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
+        <p>Deux pas un monde © 2026 — <a href={igUrl} target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
       </footer>
+
+      {/* Floating admin button */}
+      <Link to="/admin" className="floating-admin-btn" data-testid="admin-link">
+        <Settings size={15} />Admin
+      </Link>
 
       <AnimatePresence>
         {selectedPlace && <PlaceDetailModal place={selectedPlace} onClose={() => setSelectedPlace(null)} />}
@@ -598,18 +678,6 @@ const GuidesPage = () => {
         </div>
       </div>
 
-      {/* Light filter bar — just admin link */}
-      <div className="filter-bar">
-        <div className="filter-bar-inner" style={{ justifyContent: 'flex-end' }}>
-          <Link to="/admin" style={{ display:'flex',alignItems:'center',padding:6,color:'#bbb',transition:'color 0.15s' }}
-            onMouseEnter={e=>e.currentTarget.style.color='#555'}
-            onMouseLeave={e=>e.currentTarget.style.color='#bbb'}
-            title="Administration">
-            <Settings size={16}/>
-          </Link>
-        </div>
-      </div>
-
       <div className="guides-content">
         <SurpriseCountdown />
         {loading ? (
@@ -630,6 +698,11 @@ const GuidesPage = () => {
       <footer className="footer">
         <p>Deux pas un monde © 2026 — <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
       </footer>
+
+      {/* Floating admin button */}
+      <Link to="/admin" className="floating-admin-btn">
+        <Settings size={15} />Admin
+      </Link>
     </div>
   );
 };
@@ -1483,15 +1556,16 @@ const AdminPage = () => {
     return (
       <div className="admin-login-page">
         <motion.div className="login-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="login-logo"><Link to="/"><DpmLogo light /></Link></div>
-          <h2>Administration</h2>
+          <div className="login-logo"><Link to="/"><DpmLogo /></Link></div>
+          <p className="login-subtitle">INTERFACE D'ADMINISTRATION</p>
           <form onSubmit={handleLogin} data-testid="login-form">
-            <Link to="/" className="back-to-home-btn" data-testid="back-home-btn"><ChevronLeft size={18} />Retour à l'accueil</Link>
             <div className="form-group">
-              <label>Mot de passe</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Entrez le mot de passe" data-testid="password-input" />
+              <label>MOT DE PASSE</label>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" data-testid="password-input" />
             </div>
-            <button type="submit" className="btn-primary" disabled={loading} data-testid="login-btn">{loading ? 'Connexion...' : 'Se connecter'}</button>
+            <button type="submit" className="btn-primary" disabled={loading} data-testid="login-btn">{loading ? 'Connexion…' : 'SE CONNECTER'}</button>
+            <p className="login-hint">Indice : deuxpas</p>
+            <Link to="/" className="back-to-home-btn" data-testid="back-home-btn"><ChevronLeft size={18} />Retour au site</Link>
           </form>
         </motion.div>
       </div>
