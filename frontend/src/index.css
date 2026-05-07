@@ -64,7 +64,7 @@ button:active { opacity: 0.85; }
 /* Leaflet */
 .leaflet-container {
   font-family: 'Jost', sans-serif;
-  background: #e8e4dc !important;
+  background: #aad3df !important; /* OSM default water color */
 }
 
 .leaflet-control-attribution {
