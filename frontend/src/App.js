@@ -60,12 +60,16 @@ const CAT_ICONS = {
   gem:           `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>`,
 };
 
-// Marker icon paths per category
+// Marker icon paths per category (Material Design 24×24 viewBox)
 const MARKER_ICONS = {
-  accommodation: 'M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z',
-  restaurant:    'M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z',
-  activity:      'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
-  gem:           'M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z',
+  // Bed / hotel
+  accommodation: 'M20 9V7c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v2c-1.1 0-2 .9-2 2v5h1.33L2 18h1l.67-2h12.67l.66 2h1l.67-2H20v-5c0-1.1-.9-2-2-2zm-9 0H4V7h7v2zm9 0h-7V7h5c1.1 0 2 .9 2 2v0z',
+  // Fork & knife
+  restaurant: 'M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z',
+  // Map pin
+  activity: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+  // Diamond / gem
+  gem: 'M12 1L3 9l1.5 1.5L6 9.17V20h12V9.17l1.5 1.33L21 9l-9-8zm0 17l-3-3 3-3 3 3-3 3zm0-7l-3-3 3-3 3 3-3 3z',
 };
 
 const createMarkerIcon = (category) => {
@@ -78,23 +82,21 @@ const createMarkerIcon = (category) => {
   const color = colors[category] || '#888';
   const iconPath = MARKER_ICONS[category] || MARKER_ICONS.activity;
 
-  // Pin shape: circle head + pointed tail
-  const svg = `
-    <svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="18" cy="18" r="18" fill="${color}"/>
-      <path d="M18 44 L10 28 Q18 32 26 28 Z" fill="${color}"/>
-      <circle cx="18" cy="18" r="14" fill="rgba(255,255,255,0.15)"/>
-      <g transform="translate(6,6) scale(0.5)">
-        <path d="${iconPath}" fill="white"/>
-      </g>
-    </svg>`;
+  // True teardrop pin: circle top + pointed bottom
+  const svg = `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15 0C6.72 0 0 6.72 0 15c0 9 15 27 15 27S30 24 30 15C30 6.72 23.28 0 15 0z" fill="${color}"/>
+    <circle cx="15" cy="15" r="9" fill="rgba(255,255,255,0.25)"/>
+    <g transform="translate(3,3)">
+      <path d="${iconPath}" fill="white"/>
+    </g>
+  </svg>`;
 
   return L.divIcon({
     className: 'custom-marker',
     html: svg,
-    iconSize: [36, 44],
-    iconAnchor: [18, 44],
-    popupAnchor: [0, -44],
+    iconSize: [30, 42],
+    iconAnchor: [15, 42],
+    popupAnchor: [0, -42],
   });
 };
 
@@ -470,7 +472,7 @@ const PlaceDetailModal = ({ place, onClose }) => {
             <div className="modal-map">
               <MapContainer center={[place.latitude, place.longitude]} zoom={14}
                 style={{ height: '200px', width: '100%', borderRadius: '12px' }} scrollWheelZoom={false}>
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution='&copy; OpenStreetMap' />
+                <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution='&copy; OpenStreetMap' />
                 <Marker position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)} />
               </MapContainer>
             </div>
@@ -604,7 +606,7 @@ const HomePage = () => {
         ) : (
           <div className="map-wrapper" data-testid="map-wrapper">
             <MapContainer center={mapCenter} zoom={6} style={{ height: '100%', width: '100%' }}>
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
+              <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
               <MapRecenter center={mapCenter} />
               {filtered.map(place => (
                 <Marker key={place.id} position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)}
@@ -975,7 +977,7 @@ const GuideDetailPage = () => {
                   <MapContainer center={mapCenter} zoom={7}
                     style={{ height: '400px', width: '100%', borderRadius: '12px' }}
                     scrollWheelZoom={false}>
-                    <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution='&copy; OpenStreetMap' />
+                    <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution='&copy; OpenStreetMap' />
                     {places.map(place => (
                       <Marker key={place.id} position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)}>
                         <Popup><div className="map-popup"><h4>{place.title}</h4><p>{place.address}</p></div></Popup>
@@ -1067,7 +1069,7 @@ const PlaceDetailPage = () => {
           <div className="detail-map" data-testid="detail-map">
             <MapContainer center={[place.latitude, place.longitude]} zoom={14}
               style={{ height: '250px', width: '100%', borderRadius: '12px' }} scrollWheelZoom={false}>
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
+              <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
               <Marker position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)} />
             </MapContainer>
           </div>
