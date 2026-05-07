@@ -28,17 +28,6 @@ const quillModules = {
 
 const quillFormats = ['bold', 'italic', 'underline', 'list', 'bullet', 'link'];
 
-const GUIDE_TAGS = [
-  { id: 'all',         name: 'Tous les guides' },
-  { id: 'aventure',    name: 'Aventure' },
-  { id: 'culture',     name: 'Culture' },
-  { id: 'gastronomie', name: 'Gastronomie' },
-  { id: 'nature',      name: 'Nature' },
-  { id: 'famille',     name: 'Famille' },
-  { id: 'city-break',  name: 'City Break' },
-  { id: 'road-trip',   name: 'Road Trip' },
-];
-
 const SEASONS = ['Printemps', 'Été', 'Automne', 'Hiver'];
 
 const EMPTY_GUIDE = {
@@ -71,18 +60,41 @@ const CAT_ICONS = {
   gem:           `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>`,
 };
 
+// Marker icon paths per category
+const MARKER_ICONS = {
+  accommodation: 'M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z',
+  restaurant:    'M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z',
+  activity:      'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+  gem:           'M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z',
+};
+
 const createMarkerIcon = (category) => {
   const colors = {
-    accommodation: 'oklch(0.52 0.07 230)',
-    restaurant:    'oklch(0.58 0.09 35)',
-    activity:      'oklch(0.52 0.08 155)',
-    gem:           'oklch(0.58 0.08 85)',
+    accommodation: '#5B7A8A',
+    restaurant:    '#8B6355',
+    activity:      '#5A7A60',
+    gem:           '#8A7845',
   };
   const color = colors[category] || '#888';
+  const iconPath = MARKER_ICONS[category] || MARKER_ICONS.activity;
+
+  // Pin shape: circle head + pointed tail
+  const svg = `
+    <svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="18" cy="18" r="18" fill="${color}"/>
+      <path d="M18 44 L10 28 Q18 32 26 28 Z" fill="${color}"/>
+      <circle cx="18" cy="18" r="14" fill="rgba(255,255,255,0.15)"/>
+      <g transform="translate(6,6) scale(0.5)">
+        <path d="${iconPath}" fill="white"/>
+      </g>
+    </svg>`;
+
   return L.divIcon({
     className: 'custom-marker',
-    html: `<div style="width:30px;height:30px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25);"></div>`,
-    iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -30],
+    html: svg,
+    iconSize: [36, 44],
+    iconAnchor: [18, 44],
+    popupAnchor: [0, -44],
   });
 };
 
@@ -381,20 +393,6 @@ const GuideCard = ({ guide, onClick }) => (
       <div className="guide-card-destination"><Globe size={13} />{guide.destination}, {guide.country}</div>
       <h3>{guide.title}</h3>
     </div>
-  </div>
-);
-
-// ============================================================
-// GUIDE TAG FILTER
-// ============================================================
-const GuideTagFilter = ({ activeTag, onChange }) => (
-  <div className="category-filter">
-    {GUIDE_TAGS.map(tag => (
-      <button key={tag.id} className={`category-pill ${activeTag === tag.id ? 'active' : ''}`}
-        onClick={() => onChange(tag.id)}>
-        <span>{tag.name}</span>
-      </button>
-    ))}
   </div>
 );
 
@@ -1190,13 +1188,6 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
       itinerary[dayIdx] = { ...itinerary[dayIdx], activities: itinerary[dayIdx].activities.filter((_, i) => i !== actIdx) };
       return { ...prev, itinerary };
     });
-  };
-
-  const toggleTag = (tag) => {
-    setGuideFormData(prev => ({
-      ...prev,
-      tags: prev.tags.includes(tag) ? prev.tags.filter(t => t !== tag) : [...prev.tags, tag]
-    }));
   };
 
   const toggleSeason = (season) => {
