@@ -1351,6 +1351,7 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
 const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState(false);
   const [places, setPlaces] = useState([]);
   const [editingPlace, setEditingPlace] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -1387,13 +1388,13 @@ const AdminPage = () => {
   };
 
   const handleLogin = async (e) => {
-    e.preventDefault(); setLoading(true);
+    e.preventDefault(); setLoading(true); setLoginError(false);
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
       const data = await res.json();
-      if (res.ok) { localStorage.setItem('admin_token', data.token); setIsAuthenticated(true); fetchPlaces(data.token); fetchGuides(data.token); toast.success('Connexion réussie !'); }
-      else toast.error(data.detail || 'Mot de passe incorrect');
-    } catch { toast.error('Erreur de connexion'); }
+      if (res.ok) { localStorage.setItem('admin_token', data.token); setIsAuthenticated(true); fetchPlaces(data.token); fetchGuides(data.token); }
+      else { setLoginError(true); }
+    } catch { setLoginError(true); }
     finally { setLoading(false); }
   };
 
@@ -1547,15 +1548,25 @@ const AdminPage = () => {
     return (
       <div className="admin-login-page">
         <motion.div className="login-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="login-logo"><Link to="/"><DpmLogo light={true} /></Link></div>
+          <div className="login-logo">
+            <Link to="/"><DpmLogo light={true} /></Link>
+          </div>
           <p className="login-subtitle">INTERFACE D'ADMINISTRATION</p>
           <form onSubmit={handleLogin} data-testid="login-form">
-            <div className="form-group">
-              <label>MOT DE PASSE</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" data-testid="password-input" />
-            </div>
-            <button type="submit" className="btn-primary" disabled={loading} data-testid="login-btn">{loading ? 'Connexion…' : 'SE CONNECTER'}</button>
-            <Link to="/" className="back-to-home-btn" data-testid="back-home-btn"><ChevronLeft size={18} />Retour au site</Link>
+            <label className="login-label">Mot de passe</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setLoginError(false); }}
+              placeholder="••••••••"
+              className={`login-input${loginError ? ' error' : ''}`}
+              data-testid="password-input"
+            />
+            {loginError && <p className="login-error">Mot de passe incorrect.</p>}
+            <button type="submit" className="login-submit-btn" disabled={loading} data-testid="login-btn">
+              {loading ? 'Connexion…' : 'SE CONNECTER'}
+            </button>
+            <Link to="/" className="back-to-home-btn" data-testid="back-home-btn">← Retour au site</Link>
           </form>
         </motion.div>
       </div>

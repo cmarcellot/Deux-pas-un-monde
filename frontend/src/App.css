@@ -609,34 +609,8 @@
 .lightbox-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
 /* ============================================================
-   ADMIN LOGIN
+   ADMIN LOGIN  (styles définitifs — cf. handoff AdminView.jsx)
    ============================================================ */
-.admin-login-page {
-  min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  padding: 1.5rem; background: var(--bg);
-}
-
-.login-card {
-  background: var(--surface); padding: 2.5rem 2rem;
-  border-radius: 16px; width: 100%; max-width: 400px;
-  box-shadow: 0 8px 40px rgba(63,66,64,0.12);
-  border: 1px solid var(--border);
-}
-
-.login-logo {
-  display: flex; justify-content: center; margin-bottom: 24px;
-}
-
-.login-card h2 { text-align: center; margin-bottom: 1.75rem; color: var(--text); }
-
-.back-to-home-btn {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; padding: 10px; margin-bottom: 20px;
-  background: transparent; border: 1px solid var(--border); border-radius: 10px;
-  color: var(--text-muted); text-decoration: none; font-size: 14px;
-  font-family: 'Jost', sans-serif; transition: all 0.2s;
-}
-.back-to-home-btn:hover { background: var(--border); color: var(--text); }
 
 /* ============================================================
    FORM ELEMENTS
@@ -1366,45 +1340,82 @@
 }
 
 /* ============================================================
-   LOGIN PAGE — dark background
+   LOGIN PAGE — exact handoff specs
    ============================================================ */
 .admin-login-page {
   min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
   padding: 1.5rem;
-  background: var(--dark);
+  background: #3f4240;
 }
 
 .login-card {
-  background: var(--surface);
-  padding: 2.5rem 2rem;
-  border-radius: 16px;
-  width: 100%; max-width: 400px;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  background: #faf8f3;
+  padding: 48px 40px;
+  border-radius: 12px;
+  width: 100%; max-width: 380px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.3);
 }
 
 .login-logo {
-  display: flex; justify-content: center; margin-bottom: 16px;
+  display: flex; justify-content: center; margin-bottom: 0;
 }
 
 .login-subtitle {
   text-align: center;
   font-family: 'Jost', sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  color: var(--text-muted);
-  margin-bottom: 24px;
-}
-
-.login-hint {
-  text-align: center;
-  font-family: 'Jost', sans-serif;
   font-size: 12px;
-  color: var(--text-light);
-  margin: 8px 0;
+  letter-spacing: 0.1em;
+  color: #aaa;
+  margin-top: 16px;
+  margin-bottom: 36px;
 }
 
-.login-card h2 { text-align: center; margin-bottom: 1.75rem; color: var(--text); }
+.login-label {
+  display: block;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  color: #888;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.login-input {
+  display: block; width: 100%; box-sizing: border-box;
+  padding: 11px 14px; margin-bottom: 16px;
+  border-radius: 6px; border: 1.5px solid #d5d0c8;
+  font-family: 'Jost', sans-serif; font-size: 14px;
+  background: #fff; color: #252826;
+  outline: none; transition: border-color 0.15s;
+}
+.login-input:focus { border-color: #3f4240; box-shadow: none; }
+.login-input.error { border-color: #c05a3a; margin-bottom: 6px; }
+
+.login-error {
+  font-family: 'Jost', sans-serif; font-size: 12px;
+  color: #c05a3a; margin: 0 0 12px;
+}
+
+.login-submit-btn {
+  width: 100%; padding: 12px;
+  background: #3f4240; color: #ede8db;
+  border: none; border-radius: 6px;
+  font-family: 'Jost', sans-serif; font-size: 13px;
+  letter-spacing: 0.08em; font-weight: 500;
+  cursor: pointer; transition: background 0.2s;
+}
+.login-submit-btn:hover { background: #2f322f; }
+.login-submit-btn:disabled { opacity: 0.6; cursor: default; }
+
+.back-to-home-btn {
+  display: block; width: 100%; margin-top: 12px; padding: 10px;
+  background: transparent; border: 1px solid #d5d0c8; border-radius: 6px;
+  font-family: 'Jost', sans-serif; font-size: 13px; color: #888;
+  text-align: center; text-decoration: none; cursor: pointer;
+  transition: background 0.2s, color 0.2s; box-sizing: border-box;
+}
+.back-to-home-btn:hover { background: #f0ede6; color: #3f4240; }
 
 /* ============================================================
    PLACE DETAIL PAGE (/places/:id) — light theme
