@@ -1556,7 +1556,7 @@ const AdminPage = () => {
     return (
       <div className="admin-login-page">
         <motion.div className="login-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="login-logo"><Link to="/"><DpmLogo /></Link></div>
+          <div className="login-logo"><Link to="/"><DpmLogo light={true} /></Link></div>
           <p className="login-subtitle">INTERFACE D'ADMINISTRATION</p>
           <form onSubmit={handleLogin} data-testid="login-form">
             <div className="form-group">
@@ -1564,7 +1564,6 @@ const AdminPage = () => {
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" data-testid="password-input" />
             </div>
             <button type="submit" className="btn-primary" disabled={loading} data-testid="login-btn">{loading ? 'Connexion…' : 'SE CONNECTER'}</button>
-            <p className="login-hint">Indice : deuxpas</p>
             <Link to="/" className="back-to-home-btn" data-testid="back-home-btn"><ChevronLeft size={18} />Retour au site</Link>
           </form>
         </motion.div>
