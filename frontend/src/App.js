@@ -1471,16 +1471,19 @@ const AdminPage = () => {
     setGeocoding(true); setGeocodeResult(null);
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(formData.address)}&format=json&limit=1`,
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(formData.address)}&format=json&limit=1&addressdetails=1`,
         { headers: { 'Accept-Language': 'fr' } }
       );
       const data = await res.json();
       if (data.length > 0) {
         const lat = parseFloat(data[0].lat);
         const lng = parseFloat(data[0].lon);
-        setFormData(f => ({ ...f, latitude: lat, longitude: lng }));
+        const addr = data[0].address || {};
+        const city = addr.city || addr.town || addr.village || addr.municipality || addr.county || '';
+        const country = addr.country || '';
+        setFormData(f => ({ ...f, latitude: lat, longitude: lng, city, country }));
         setGeocodeResult({ lat, lng, display_name: data[0].display_name });
-        toast.success('Coordonnées trouvées !');
+        toast.success('Coordonnées, ville et pays trouvés !');
       } else {
         toast.error('Adresse introuvable — vérifiez ou saisissez les coordonnées manuellement.');
       }
