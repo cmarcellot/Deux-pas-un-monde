@@ -74,6 +74,9 @@ class ChangePasswordRequest(BaseModel):
 class PlaceCreate(BaseModel):
     title: str
     address: str
+    city: Optional[str] = ''
+    country: Optional[str] = ''
+    date: Optional[str] = ''
     description: str
     category: str
     rating: int = Field(ge=1, le=5)
@@ -84,6 +87,9 @@ class PlaceCreate(BaseModel):
 class PlaceUpdate(BaseModel):
     title: Optional[str] = None
     address: Optional[str] = None
+    city: Optional[str] = None
+    country: Optional[str] = None
+    date: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None
     rating: Optional[int] = Field(default=None, ge=1, le=5)
@@ -95,6 +101,9 @@ class PlaceResponse(BaseModel):
     id: str
     title: str
     address: str
+    city: Optional[str] = ''
+    country: Optional[str] = ''
+    date: Optional[str] = ''
     description: str
     category: str
     rating: int
