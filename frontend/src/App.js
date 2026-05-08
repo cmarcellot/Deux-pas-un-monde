@@ -52,6 +52,16 @@ const CATEGORIES = [
 
 const getCatInfo = (categoryId) => CATEGORIES.find(c => c.id === categoryId) || CATEGORIES[0];
 
+// Formate "2025-03" → "Mars 2025"
+const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const formatMonthYear = (value) => {
+  if (!value) return '';
+  const [year, month] = value.split('-');
+  if (!year || !month) return value;
+  const m = parseInt(month, 10);
+  return isNaN(m) ? value : `${MONTHS_FR[m - 1]} ${year}`;
+};
+
 // SVG icons for category badges (matching handoff)
 const CAT_ICONS = {
   accommodation: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>`,
@@ -346,7 +356,9 @@ const PlaceCard = ({ place, onClick }) => (
         <h3>{place.title}</h3>
         <StarRating rating={place.rating} readonly size={13} />
       </div>
-      <p className="place-card-location">{place.city || place.address}</p>
+      <p className="place-card-location">
+        {place.city || place.address}{place.city && place.country ? `, ${place.country}` : ''}
+      </p>
       <p className="place-card-desc">{stripHtml(place.description)}</p>
     </div>
   </div>
@@ -366,7 +378,7 @@ const PlaceListRow = ({ place, onClick }) => (
     <div className="place-list-body">
       <div className="place-list-meta-row">
         <CategoryBadge categoryId={place.category} small />
-        <span className="place-list-date">{place.date || ''}</span>
+        <span className="place-list-date">{formatMonthYear(place.date)}</span>
       </div>
       <h3>{place.title}</h3>
       <p>{stripHtml(place.description)}</p>
@@ -1640,7 +1652,7 @@ const AdminPage = () => {
                       <div className="form-group"><label>Titre</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required data-testid="title-input" /></div>
                       <div className="form-group"><label>Catégorie</label>
                         <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} data-testid="category-select">
-                          {CATEGORIES.filter(c => c.id !== 'all').map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                          {CATEGORIES.filter(c => c.id !== 'all').map((cat) => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
                         </select>
                       </div>
                       <div className="form-group full-width">
@@ -1674,7 +1686,7 @@ const AdminPage = () => {
                       </div>
                       <div className="form-group"><label>Ville</label><input type="text" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Ex: Lyon" /></div>
                       <div className="form-group"><label>Pays</label><input type="text" value={formData.country} onChange={(e) => setFormData({ ...formData, country: e.target.value })} placeholder="Ex: France" /></div>
-                      <div className="form-group full-width"><label>Date de visite</label><input type="text" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} placeholder="Ex: Mars 2025" /></div>
+                      <div className="form-group full-width"><label>Date de visite</label><input type="month" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} /></div>
                       <div className="form-group full-width"><label>Description</label>
                         <div className="quill-wrapper" data-testid="description-input">
                           <ReactQuill theme="snow" value={formData.description} onChange={(value) => setFormData({ ...formData, description: value })} modules={quillModules} formats={quillFormats} placeholder="Décrivez ce lieu..." />
