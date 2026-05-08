@@ -93,6 +93,7 @@
 
 /* Admin / light header logo variant */
 .dpm-logo.light .dpm-logo-wordmark { color: var(--dark); }
+.dpm-logo.light .dpm-logo-wordmark .wm-sub { color: var(--accent); }
 
 /* ============================================================
    FILTER BAR (sticky below hero)
