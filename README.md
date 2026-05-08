@@ -9,20 +9,21 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 ## Fonctionnalités
 
 ### Pour les visiteurs
-- **Vue Liste** : Parcourir les lieux sous forme de cartes avec photos, notes et descriptions
-- **Vue Carte** : Visualiser tous les lieux sur une carte interactive avec marqueurs colorés par catégorie
+- **3 vues disponibles** : Liste, Carte, et vue hybride Liste + Carte côte à côte
+- **Vue Liste** : Cartes visuelles avec photo, note, badge catégorie coloré, ville et date de visite
+- **Vue Carte** : Marqueurs colorés par catégorie sur OpenStreetMap, popups au clic
 - **Filtrage par catégorie** :
-  - Hébergements (terracotta)
-  - Restaurants (beige)
-  - Activités (vert)
-  - Bonnes adresses (gris)
-- **Détails en modal** : Consulter les informations complètes d'un lieu sans quitter la page
+  - 🛏 Dormir (bleu-gris)
+  - 🍽 Manger (terracotta)
+  - 🧭 Découvrir (vert)
+  - ✈️ Partir (ocre)
+- **Recherche textuelle** : Filtrer les lieux par nom en temps réel
+- **Détails en modal** : Informations complètes d'un lieu avec galerie photos
 - **Galerie photos** : Lightbox avec navigation clavier et tactile
 - **Notation par étoiles** : Appréciation de chaque lieu (1 à 5 étoiles)
 
 ### Guides de Voyage
-- **Page `/guides`** : Bibliothèque de guides avec filtres par tag
-- **Tags disponibles** : Aventure, Culture, Gastronomie, Nature, Famille, City Break, Road Trip
+- **Page `/guides`** : Bibliothèque de guides
 - **Page détail guide** avec 4 onglets :
   - **Itinéraire** : Accordéons jour par jour avec activités, horaires et conseils
   - **Infos pratiques** : Budget estimé, meilleures saisons, transports, visa, monnaie, langue
@@ -31,16 +32,16 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 - **Statut publié/brouillon** : Préparer un guide sans le rendre public
 
 ### Pour les administrateurs
-- **Interface d'administration sécurisée** : Accès protégé par JWT
-- **Gestion des lieux** (onglet Lieux) :
+- **Interface d'administration sécurisée** : Accès protégé par JWT (`/admin`)
+- **Gestion des lieux** :
   - Ajouter, modifier, supprimer des lieux
-  - Upload de photos multiples (Cloudinary)
-  - Géolocalisation GPS
+  - Champs : titre, adresse, **ville**, **pays**, **date de visite**, description, catégorie, note, coordonnées GPS
+  - Upload de photos multiples par drag & drop ou sélection (Cloudinary)
+  - Géolocalisation automatique depuis l'adresse
   - Description enrichie (éditeur Quill)
-- **Gestion des guides** (onglet Guides de voyage) :
+- **Gestion des guides** :
   - Builder d'itinéraire jour par jour
   - Ajout d'activités avec horaires et lieux liés
-  - Sélection de tags et saisons recommandées
   - Infos pratiques (budget, transport, visa, monnaie, langue)
   - Upload de cover image et photos supplémentaires
   - Toggle publié / brouillon
@@ -49,9 +50,9 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 ## Stack technique
 
 ### Frontend
-- **React 18** — Interface utilisateur
+- **React 18** — Interface utilisateur (SPA monolithique `App.js`)
 - **React Router** — Navigation SPA
-- **Leaflet / React-Leaflet** — Carte interactive
+- **Leaflet / React-Leaflet** — Carte interactive OpenStreetMap
 - **Framer Motion** — Animations fluides
 - **React Quill** — Éditeur de texte enrichi
 - **Lucide React** — Icônes
@@ -64,13 +65,14 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 - **JWT** — Authentification sécurisée
 - **Uvicorn** — Serveur ASGI
 
-### Design
-- Thème sombre élégant
-- Couleur principale : `#C66B3D` (terracotta)
-- Fond : `#2d302d` (gris anthracite)
-- Texte : `#E8E0D5` (crème)
-- Police : Playfair Display (titres) + DM Sans (corps)
-- Carte : CartoDB Dark Matter
+### Design (v3.0.0)
+- Thème clair élégant
+- Fond : `#f5f1ea` / Surface : `#faf8f3`
+- Accent : `#c17c5a` (terracotta doux)
+- Texte : `#252826`
+- Polices : **Cormorant Garant** (titres, logo) + **Jost** (corps)
+- Carte : OpenStreetMap standard
+- Catégories en couleurs OKLCH
 
 ## Installation
 
@@ -123,17 +125,16 @@ REACT_APP_API_URL=http://localhost:8001
 │   └── .env               # Variables d'environnement
 ├── frontend/
 │   ├── public/
-│   │   ├── index.html     # HTML avec meta SEO
+│   │   ├── index.html     # HTML avec meta SEO + fonts
 │   │   ├── logo.png       # Favicon
 │   │   └── .htaccess      # Redirection SPA (Apache/OVH)
 │   ├── src/
 │   │   ├── App.js         # Composant principal (toutes les pages)
 │   │   ├── App.css        # Styles et animations
 │   │   ├── index.js       # Point d'entrée React
-│   │   └── index.css      # Variables CSS globales
+│   │   └── index.css      # Variables CSS globales + thème
 │   ├── package.json
 │   └── .env
-├── design_guidelines.json # Système de design
 └── README.md
 ```
 
@@ -158,7 +159,7 @@ REACT_APP_API_URL=http://localhost:8001
 ### Guides de Voyage
 | Méthode | Endpoint | Auth | Description |
 |---------|----------|------|-------------|
-| GET | `/api/guides` | — | Liste des guides publiés (filtre `?tag=X`) |
+| GET | `/api/guides` | — | Liste des guides publiés |
 | GET | `/api/guides/all` | ✓ | Tous les guides (publiés + brouillons) |
 | GET | `/api/guides/:id` | — | Détails d'un guide |
 | POST | `/api/guides` | ✓ | Créer un guide |
@@ -168,21 +169,18 @@ REACT_APP_API_URL=http://localhost:8001
 ### Upload
 | Méthode | Endpoint | Auth | Description |
 |---------|----------|------|-------------|
-| POST | `/api/upload` | ✓ | Upload image vers Cloudinary |
+| POST | `/api/upload` | ✓ | Upload image (multipart) vers Cloudinary |
+| POST | `/api/upload-base64` | ✓ | Upload image base64 vers Cloudinary |
 | GET | `/api/health` | — | Vérification du serveur |
 
 ## Catégories de lieux
 
-| ID | Nom | Couleur |
-|----|-----|---------|
-| `accommodation` | Hébergements | `#C66B3D` |
-| `restaurant` | Restaurants | `#E8E0D5` |
-| `activity` | Activités | `#4CAF50` |
-| `gem` | Bonnes adresses | `#A0A0A0` |
-
-## Tags de guides
-
-`aventure` · `culture` · `gastronomie` · `nature` · `famille` · `city-break` · `road-trip`
+| ID backend | Nom affiché | Couleur |
+|------------|-------------|---------|
+| `accommodation` | Dormir | Bleu-gris OKLCH |
+| `restaurant` | Manger | Terracotta OKLCH |
+| `activity` | Découvrir | Vert OKLCH |
+| `gem` | Partir | Ocre OKLCH |
 
 ## Auteurs
 
