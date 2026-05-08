@@ -1360,7 +1360,8 @@ const AdminPage = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [formData, setFormData] = useState({
-    title: '', address: '', description: '', category: 'accommodation',
+    title: '', address: '', city: '', country: '', date: '',
+    description: '', category: 'accommodation',
     rating: 3, latitude: 48.8566, longitude: 2.3522, photos: [],
   });
   const [adminTab, setAdminTab] = useState('places');
@@ -1525,7 +1526,7 @@ const AdminPage = () => {
 
   const handleEdit = (place) => {
     setEditingPlace(place);
-    setFormData({ title: place.title, address: place.address, description: place.description, category: place.category, rating: place.rating, latitude: place.latitude, longitude: place.longitude, photos: place.photos || [] });
+    setFormData({ title: place.title, address: place.address, city: place.city || '', country: place.country || '', date: place.date || '', description: place.description, category: place.category, rating: place.rating, latitude: place.latitude, longitude: place.longitude, photos: place.photos || [] });
     setShowForm(true);
   };
 
@@ -1540,7 +1541,7 @@ const AdminPage = () => {
 
   const resetForm = () => {
     setEditingPlace(null); setShowForm(false);
-    setFormData({ title: '', address: '', description: '', category: 'accommodation', rating: 3, latitude: 48.8566, longitude: 2.3522, photos: [] });
+    setFormData({ title: '', address: '', city: '', country: '', date: '', description: '', category: 'accommodation', rating: 3, latitude: 48.8566, longitude: 2.3522, photos: [] });
     setGeocodeResult(null); setShowManualCoords(false);
   };
 
@@ -1668,6 +1669,9 @@ const AdminPage = () => {
                           </div>
                         )}
                       </div>
+                      <div className="form-group"><label>Ville</label><input type="text" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Ex: Lyon" /></div>
+                      <div className="form-group"><label>Pays</label><input type="text" value={formData.country} onChange={(e) => setFormData({ ...formData, country: e.target.value })} placeholder="Ex: France" /></div>
+                      <div className="form-group full-width"><label>Date de visite</label><input type="text" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} placeholder="Ex: Mars 2025" /></div>
                       <div className="form-group full-width"><label>Description</label>
                         <div className="quill-wrapper" data-testid="description-input">
                           <ReactQuill theme="snow" value={formData.description} onChange={(value) => setFormData({ ...formData, description: value })} modules={quillModules} formats={quillFormats} placeholder="Décrivez ce lieu..." />
