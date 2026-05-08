@@ -91,9 +91,8 @@
   display: block;
 }
 
-/* Admin / light header logo variant */
-.dpm-logo.light .dpm-logo-wordmark { color: var(--dark); }
-.dpm-logo.light .dpm-logo-wordmark .wm-sub { color: var(--accent); }
+/* Admin / light header logo variant — use near-black for max legibility */
+.dpm-logo.light .dpm-logo-wordmark { color: var(--text); }
 
 /* ============================================================
    FILTER BAR (sticky below hero)
