@@ -356,7 +356,9 @@ const PlaceCard = ({ place, onClick }) => (
         <h3>{place.title}</h3>
         <StarRating rating={place.rating} readonly size={13} />
       </div>
-      <p className="place-card-location">{place.city || place.address}</p>
+      <p className="place-card-location">
+        {place.city || place.address}{place.city && place.country ? `, ${place.country}` : ''}
+      </p>
       <p className="place-card-desc">{stripHtml(place.description)}</p>
     </div>
   </div>
