@@ -1390,11 +1390,15 @@
   transition: background 0.12s;
 }
 .search-result-row:hover { background: var(--bg); }
-.search-result-dot {
-  width: 36px;
-  height: 36px;
+.search-result-thumb {
+  width: 42px;
+  height: 42px;
   border-radius: 8px;
   flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .search-result-main {
   flex: 1;

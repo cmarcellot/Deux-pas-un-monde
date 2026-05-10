@@ -576,17 +576,20 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
                 const cat = getCatInfo(place.category);
                 return (
                   <button key={place.id} className="search-result-row" onClick={() => { onSelectPlace(place); onClose(); }}>
-                    <span className="search-result-dot" style={{ background: CAT_COLORS[place.category] || '#888' }} />
+                    <span className="search-result-thumb" style={{ background: CAT_COLORS[place.category] || '#888' }}>
+                      {place.photos?.[0]
+                        ? <img src={getPhotoSrc(place.photos[0])} alt={place.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+                            dangerouslySetInnerHTML={{ __html: MARKER_SVG_ICONS[place.category] || '' }} />
+                      }
+                    </span>
                     <span className="search-result-main">
                       <span className="search-result-title"><Highlight text={place.title} query={query} /></span>
                       <span className="search-result-sub">
                         <Highlight text={[place.city, place.country].filter(Boolean).join(', ') || place.address} query={query} />
                       </span>
                     </span>
-                    <span className={`cat-badge ${cat.key} small`}>
-                      <span dangerouslySetInnerHTML={{ __html: CAT_ICONS[place.category] }} />
-                      {cat.label}
-                    </span>
+                    <CategoryBadge categoryId={place.category} small />
                   </button>
                 );
               })}
@@ -598,8 +601,8 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
               <p className="search-section-label">Guides voyage · {filteredGuides.length}</p>
               {filteredGuides.map(guide => (
                 <button key={guide.id} className="search-result-row" onClick={() => { navigate(`/guides/${guide.id}`); onClose(); }}>
-                  <span className="search-result-dot" style={{ background: 'var(--border)', overflow: 'hidden', borderRadius: 6 }}>
-                    {guide.cover_image && <img src={guide.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                  <span className="search-result-thumb" style={{ background: 'var(--border)' }}>
+                    {guide.cover_image && <img src={guide.cover_image} alt={guide.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
                   </span>
                   <span className="search-result-main">
                     <span className="search-result-title"><Highlight text={guide.title} query={query} /></span>
