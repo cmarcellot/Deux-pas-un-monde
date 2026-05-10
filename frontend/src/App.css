@@ -692,8 +692,9 @@
 
 .admin-header-title {
   flex: 1;
-  font-family: 'Cormorant Garant', serif;
-  font-size: 1.4rem; font-weight: 600; color: #ede8db; min-width: 0;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px; font-weight: 500; letter-spacing: 0.08em;
+  text-transform: uppercase; color: rgba(255,255,255,0.6); min-width: 0;
 }
 .admin-header-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
@@ -786,8 +787,9 @@
   border-radius: 16px 16px 0 0;
 }
 .form-header h2 {
-  font-family: 'Cormorant Garant', serif;
-  font-size: 22px; font-weight: 600; color: var(--text);
+  font-family: 'Jost', sans-serif;
+  font-size: 17px; font-weight: 500; color: var(--text);
+  letter-spacing: 0.01em;
 }
 
 .close-btn {
