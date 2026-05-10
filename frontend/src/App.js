@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -393,6 +393,25 @@ const PlaceListRow = ({ place, onClick }) => (
 // ============================================================
 // GUIDE CARD (light)
 // ============================================================
+const GuideListRow = ({ guide, onClick }) => (
+  <div className="guide-list-row" onClick={onClick}>
+    <div className="guide-list-thumb">
+      {guide.cover_image
+        ? <img src={guide.cover_image} alt={guide.title} />
+        : <div className="guide-list-thumb-placeholder"><BookOpen size={24} /></div>}
+    </div>
+    <div className="guide-list-body">
+      <div className="guide-list-meta">
+        <Globe size={12} />
+        <span>{guide.destination}{guide.country ? `, ${guide.country}` : ''}</span>
+        <span className="guide-list-duration"><Calendar size={12} />{guide.duration_days} jour{guide.duration_days > 1 ? 's' : ''}</span>
+      </div>
+      <h3>{guide.title}</h3>
+      <p>{stripHtml(guide.intro)}</p>
+    </div>
+  </div>
+);
+
 const GuideCard = ({ guide, onClick }) => (
   <div className="guide-card" onClick={onClick}>
     <div className="guide-card-image">
@@ -498,6 +517,140 @@ const PlaceDetailModal = ({ place, onClose }) => {
 };
 
 // ============================================================
+// SEARCH OVERLAY
+// ============================================================
+const CAT_COLORS = {
+  accommodation: 'var(--cat-dormir)',
+  restaurant:    'var(--cat-manger)',
+  activity:      'var(--cat-decouvrir)',
+  gem:           'var(--cat-partir)',
+};
+
+const Highlight = ({ text, query }) => {
+  if (!query) return <>{text}</>;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="search-highlight">{text.slice(idx, idx + query.length)}</mark>
+      {text.slice(idx + query.length)}
+    </>
+  );
+};
+
+const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
+  const [query, setQuery]   = useState('');
+  const [guides, setGuides] = useState([]);
+  const inputRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!open) { setQuery(''); return; }
+    setTimeout(() => inputRef.current?.focus(), 50);
+    fetch(`${API_URL}/api/guides`)
+      .then(r => r.json()).then(setGuides).catch(() => {});
+  }, [open]);
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  if (!open) return null;
+
+  const q = query.trim().toLowerCase();
+  const matchPlace = (p) => !q || [p.title, p.city, p.country, p.address].some(f => (f||'').toLowerCase().includes(q));
+  const matchGuide = (g) => !q || [g.title, g.destination, g.country].some(f => (f||'').toLowerCase().includes(q));
+
+  const filteredPlaces = places.filter(matchPlace);
+  const filteredGuides = guides.filter(matchGuide);
+  const total = filteredPlaces.length + filteredGuides.length;
+
+  return (
+    <div className="search-overlay-backdrop" onClick={onClose}>
+      <div className="search-overlay-panel" onClick={e => e.stopPropagation()}>
+        <div className="search-overlay-input-row">
+          <Search size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <input
+            ref={inputRef}
+            className="search-overlay-input"
+            placeholder="Rechercher adresses, guides, villes…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+          />
+          {query && (
+            <button className="search-overlay-clear" onClick={() => { setQuery(''); inputRef.current?.focus(); }}>
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <div className="search-overlay-results">
+          {filteredPlaces.length > 0 && (
+            <div className="search-section">
+              <p className="search-section-label">Adresses · {filteredPlaces.length}</p>
+              {filteredPlaces.map(place => {
+                const cat = getCatInfo(place.category);
+                return (
+                  <button key={place.id} className="search-result-row" onClick={() => { onSelectPlace(place); onClose(); }}>
+                    <span className="search-result-thumb" style={{ background: CAT_COLORS[place.category] || '#888' }}>
+                      {place.photos?.[0]
+                        ? <img src={getPhotoSrc(place.photos[0])} alt={place.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+                            dangerouslySetInnerHTML={{ __html: MARKER_SVG_ICONS[place.category] || '' }} />
+                      }
+                    </span>
+                    <span className="search-result-main">
+                      <span className="search-result-title"><Highlight text={place.title} query={query} /></span>
+                      <span className="search-result-sub">
+                        <Highlight text={[place.city, place.country].filter(Boolean).join(', ') || place.address} query={query} />
+                      </span>
+                    </span>
+                    <CategoryBadge categoryId={place.category} small />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {filteredGuides.length > 0 && (
+            <div className="search-section">
+              <p className="search-section-label">Guides voyage · {filteredGuides.length}</p>
+              {filteredGuides.map(guide => (
+                <button key={guide.id} className="search-result-row" onClick={() => { navigate(`/guides/${guide.id}`); onClose(); }}>
+                  <span className="search-result-thumb" style={{ background: 'var(--border)' }}>
+                    {guide.cover_image && <img src={guide.cover_image} alt={guide.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                  </span>
+                  <span className="search-result-main">
+                    <span className="search-result-title"><Highlight text={guide.title} query={query} /></span>
+                    <span className="search-result-sub">
+                      <Highlight text={[guide.destination, guide.country].filter(Boolean).join(', ')} query={query} />
+                      {guide.duration_days ? ` · ${guide.duration_days} jour${guide.duration_days > 1 ? 's' : ''}` : ''}
+                    </span>
+                  </span>
+                  <span className="cat-badge all small">Guide</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {q && total === 0 && (
+            <p className="search-no-result">Aucun résultat pour « {query} »</p>
+          )}
+        </div>
+
+        <div className="search-overlay-footer">
+          {total > 0 ? `${total} résultat${total > 1 ? 's' : ''}` : 'Commencez à taper…'}
+          {' · '}Échap pour fermer
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
 // HOME PAGE
 // ============================================================
 const HomePage = () => {
@@ -508,8 +661,17 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const location = window.location;
   const [viewMode, setViewMode] = useState(new URLSearchParams(location.search).get('view') || 'grid');
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => { fetchPlaces(); }, [activeCategory]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(v => !v); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const fetchPlaces = async () => {
     try {
@@ -546,17 +708,23 @@ const HomePage = () => {
         </div>
         {/* Search bar */}
         <div className="hero-search-wrap">
-          <div className="hero-search">
+          <div className="hero-search" onClick={() => setSearchOpen(true)} role="button" tabIndex={0}
+            onKeyDown={e => e.key === 'Enter' && setSearchOpen(true)}>
             <Search size={15} style={{ color: '#b0ab9f', flexShrink: 0 }} />
-            <input
-              className="hero-search-input"
-              placeholder="Rechercher adresses, guides, villes…"
-              readOnly
-            />
+            <span className="hero-search-input" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Rechercher adresses, guides, villes…
+            </span>
             <span className="hero-search-kbd">⌘K</span>
           </div>
         </div>
       </div>
+
+      <SearchOverlay
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        places={places}
+        onSelectPlace={setSelectedPlace}
+      />
 
       {/* Filter bar (sticky) */}
       <div className="filter-bar" data-testid="header">
@@ -653,8 +821,11 @@ const HomePage = () => {
 // GUIDES LIST PAGE — /guides
 // ============================================================
 const GuidesPage = () => {
-  const [guides, setGuides] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [guides, setGuides]     = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [viewMode, setViewMode] = useState('grid');
+  const [guideCoords, setGuideCoords] = useState({});
+  const [geocoding, setGeocoding]     = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => { fetchGuides(); }, []);
@@ -662,25 +833,57 @@ const GuidesPage = () => {
   const fetchGuides = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/guides`);
+      const res  = await fetch(`${API_URL}/api/guides`);
       const data = await res.json();
       setGuides(Array.isArray(data) ? data : []);
     } catch { toast.error('Erreur lors du chargement des guides'); }
     finally { setLoading(false); }
   };
 
+  // Géocode les destinations quand la vue globe est sélectionnée
+  useEffect(() => {
+    if (viewMode !== 'globe' || guides.length === 0) return;
+    const missing = guides.filter(g => !guideCoords[g.id]);
+    if (missing.length === 0) return;
+    setGeocoding(true);
+    const geocodeOne = async (guide) => {
+      try {
+        const q = encodeURIComponent(`${guide.destination}, ${guide.country}`);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, { headers: { 'Accept-Language': 'fr' } });
+        const data = await res.json();
+        if (data.length > 0) {
+          setGuideCoords(prev => ({ ...prev, [guide.id]: [parseFloat(data[0].lat), parseFloat(data[0].lon)] }));
+        }
+      } catch {}
+    };
+    // Espacer les requêtes pour respecter la politique Nominatim (1 req/s)
+    missing.forEach((g, i) => setTimeout(() => geocodeOne(g), i * 1100));
+    setTimeout(() => setGeocoding(false), missing.length * 1100 + 500);
+  }, [viewMode, guides]);
+
+  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
+  const igSvg = <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>;
+
+  const VIEW_TOGGLES = [
+    { mode: 'grid', icon: <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg> },
+    { mode: 'list', icon: <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg> },
+    { mode: 'globe', icon: <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg> },
+  ];
+
+  const globeMarkerIcon = L.divIcon({
+    className: '',
+    html: `<div style="width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#5B7A8A;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;"><div style="transform:rotate(45deg);width:12px;height:12px;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" fill="white" width="12" height="12"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg></div></div>`,
+    iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -30],
+  });
+
   return (
     <div className="guides-page">
-      {/* Dark hero — same as home */}
+      {/* Hero */}
       <div className="site-hero">
         <Link to="/"><DpmLogo /></Link>
         <p className="site-hero-tagline">NOS GUIDES DE VOYAGE</p>
-        <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr"
-          target="_blank" rel="noopener noreferrer" className="site-hero-instagram">
-          <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}>
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-          </svg>
-          @deuxpas_unmonde
+        <a href={igUrl} target="_blank" rel="noopener noreferrer" className="site-hero-instagram">
+          {igSvg}@deuxpas_unmonde
         </a>
         <div className="section-nav">
           <Link to="/"><button className="section-nav-btn">Adresses</button></Link>
@@ -688,6 +891,21 @@ const GuidesPage = () => {
         </div>
       </div>
 
+      {/* Filter bar */}
+      <div className="filter-bar">
+        <div className="filter-bar-inner">
+          <p className="results-count" style={{ margin: 0 }}>{guides.length} guide{guides.length > 1 ? 's' : ''}</p>
+          <div className="view-toggles">
+            {VIEW_TOGGLES.map(({ mode, icon }) => (
+              <button key={mode} className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`} onClick={() => setViewMode(mode)}>
+                {icon}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
       <div className="guides-content">
         <SurpriseCountdown />
         {loading ? (
@@ -696,23 +914,48 @@ const GuidesPage = () => {
           <div className="empty-state">
             <BookOpen size={40} /><h3>Aucun guide pour le moment</h3><p>Les guides arrivent bientôt !</p>
           </div>
-        ) : (
+        ) : viewMode === 'grid' ? (
           <div className="guides-grid">
             {guides.map(guide => (
               <GuideCard key={guide.id} guide={guide} onClick={() => navigate(`/guides/${guide.id}`)} />
             ))}
           </div>
+        ) : viewMode === 'list' ? (
+          <div className="guides-list">
+            {guides.map(guide => (
+              <GuideListRow key={guide.id} guide={guide} onClick={() => navigate(`/guides/${guide.id}`)} />
+            ))}
+          </div>
+        ) : (
+          <div className="guides-globe-wrap">
+            {geocoding && <p className="guides-globe-loading"><Loader2 size={14} className="spin" /> Géolocalisation des destinations…</p>}
+            <MapContainer center={[20, 10]} zoom={2} style={{ height: '520px', width: '100%', borderRadius: 12 }} scrollWheelZoom={true}>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
+              {guides.map(guide => {
+                const coords = guideCoords[guide.id];
+                if (!coords) return null;
+                return (
+                  <Marker key={guide.id} position={coords} icon={globeMarkerIcon}
+                    eventHandlers={{ click: () => navigate(`/guides/${guide.id}`) }}>
+                    <Popup>
+                      <div className="map-popup" onClick={() => navigate(`/guides/${guide.id}`)} style={{ cursor: 'pointer' }}>
+                        <h4>{guide.title}</h4>
+                        <p>{guide.destination}, {guide.country} · {guide.duration_days}j</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+            </MapContainer>
+          </div>
         )}
       </div>
 
       <footer className="footer">
-        <p>Deux pas un monde © 2026 — <a href="https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
+        <p>Deux pas un monde © 2026 — <a href={igUrl} target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
       </footer>
 
-      {/* Floating admin button */}
-      <Link to="/admin" className="floating-admin-btn">
-        <Settings size={15} />Admin
-      </Link>
+      <Link to="/admin" className="floating-admin-btn"><Settings size={15} />Admin</Link>
     </div>
   );
 };
