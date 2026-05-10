@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -498,6 +498,137 @@ const PlaceDetailModal = ({ place, onClose }) => {
 };
 
 // ============================================================
+// SEARCH OVERLAY
+// ============================================================
+const CAT_COLORS = {
+  accommodation: 'var(--cat-dormir)',
+  restaurant:    'var(--cat-manger)',
+  activity:      'var(--cat-decouvrir)',
+  gem:           'var(--cat-partir)',
+};
+
+const Highlight = ({ text, query }) => {
+  if (!query) return <>{text}</>;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="search-highlight">{text.slice(idx, idx + query.length)}</mark>
+      {text.slice(idx + query.length)}
+    </>
+  );
+};
+
+const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
+  const [query, setQuery]   = useState('');
+  const [guides, setGuides] = useState([]);
+  const inputRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!open) { setQuery(''); return; }
+    setTimeout(() => inputRef.current?.focus(), 50);
+    fetch(`${API_URL}/api/guides`)
+      .then(r => r.json()).then(setGuides).catch(() => {});
+  }, [open]);
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  if (!open) return null;
+
+  const q = query.trim().toLowerCase();
+  const matchPlace = (p) => !q || [p.title, p.city, p.country, p.address].some(f => (f||'').toLowerCase().includes(q));
+  const matchGuide = (g) => !q || [g.title, g.destination, g.country].some(f => (f||'').toLowerCase().includes(q));
+
+  const filteredPlaces = places.filter(matchPlace);
+  const filteredGuides = guides.filter(matchGuide);
+  const total = filteredPlaces.length + filteredGuides.length;
+
+  return (
+    <div className="search-overlay-backdrop" onClick={onClose}>
+      <div className="search-overlay-panel" onClick={e => e.stopPropagation()}>
+        <div className="search-overlay-input-row">
+          <Search size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <input
+            ref={inputRef}
+            className="search-overlay-input"
+            placeholder="Rechercher adresses, guides, villes…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+          />
+          {query && (
+            <button className="search-overlay-clear" onClick={() => { setQuery(''); inputRef.current?.focus(); }}>
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <div className="search-overlay-results">
+          {filteredPlaces.length > 0 && (
+            <div className="search-section">
+              <p className="search-section-label">Adresses · {filteredPlaces.length}</p>
+              {filteredPlaces.map(place => {
+                const cat = getCatInfo(place.category);
+                return (
+                  <button key={place.id} className="search-result-row" onClick={() => { onSelectPlace(place); onClose(); }}>
+                    <span className="search-result-dot" style={{ background: CAT_COLORS[place.category] || '#888' }} />
+                    <span className="search-result-main">
+                      <span className="search-result-title"><Highlight text={place.title} query={query} /></span>
+                      <span className="search-result-sub">
+                        <Highlight text={[place.city, place.country].filter(Boolean).join(', ') || place.address} query={query} />
+                      </span>
+                    </span>
+                    <span className={`cat-badge ${cat.key} small`}>
+                      <span dangerouslySetInnerHTML={{ __html: CAT_ICONS[place.category] }} />
+                      {cat.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {filteredGuides.length > 0 && (
+            <div className="search-section">
+              <p className="search-section-label">Guides voyage · {filteredGuides.length}</p>
+              {filteredGuides.map(guide => (
+                <button key={guide.id} className="search-result-row" onClick={() => { navigate(`/guides/${guide.id}`); onClose(); }}>
+                  <span className="search-result-dot" style={{ background: 'var(--border)', overflow: 'hidden', borderRadius: 6 }}>
+                    {guide.cover_image && <img src={guide.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                  </span>
+                  <span className="search-result-main">
+                    <span className="search-result-title"><Highlight text={guide.title} query={query} /></span>
+                    <span className="search-result-sub">
+                      <Highlight text={[guide.destination, guide.country].filter(Boolean).join(', ')} query={query} />
+                      {guide.duration_days ? ` · ${guide.duration_days} jour${guide.duration_days > 1 ? 's' : ''}` : ''}
+                    </span>
+                  </span>
+                  <span className="cat-badge all small">Guide</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {q && total === 0 && (
+            <p className="search-no-result">Aucun résultat pour « {query} »</p>
+          )}
+        </div>
+
+        <div className="search-overlay-footer">
+          {total > 0 ? `${total} résultat${total > 1 ? 's' : ''}` : 'Commencez à taper…'}
+          {' · '}Échap pour fermer
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
 // HOME PAGE
 // ============================================================
 const HomePage = () => {
@@ -508,8 +639,17 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const location = window.location;
   const [viewMode, setViewMode] = useState(new URLSearchParams(location.search).get('view') || 'grid');
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => { fetchPlaces(); }, [activeCategory]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(v => !v); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const fetchPlaces = async () => {
     try {
@@ -546,17 +686,23 @@ const HomePage = () => {
         </div>
         {/* Search bar */}
         <div className="hero-search-wrap">
-          <div className="hero-search">
+          <div className="hero-search" onClick={() => setSearchOpen(true)} role="button" tabIndex={0}
+            onKeyDown={e => e.key === 'Enter' && setSearchOpen(true)}>
             <Search size={15} style={{ color: '#b0ab9f', flexShrink: 0 }} />
-            <input
-              className="hero-search-input"
-              placeholder="Rechercher adresses, guides, villes…"
-              readOnly
-            />
+            <span className="hero-search-input" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Rechercher adresses, guides, villes…
+            </span>
             <span className="hero-search-kbd">⌘K</span>
           </div>
         </div>
       </div>
+
+      <SearchOverlay
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        places={places}
+        onSelectPlace={setSelectedPlace}
+      />
 
       {/* Filter bar (sticky) */}
       <div className="filter-bar" data-testid="header">
