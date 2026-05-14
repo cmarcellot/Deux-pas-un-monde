@@ -18,6 +18,17 @@ import './App.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://deux-pas-un-monde.onrender.com';
 
+// Activity types — couleurs, labels et icônes SVG (identiques au prototype)
+const ACTIVITY_TYPES = {
+  visite:    { label: 'Visite',    color: 'oklch(0.52 0.08 155)', bg: 'oklch(0.92 0.04 155)', path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z' },
+  repas:     { label: 'Repas',     color: 'oklch(0.58 0.09 35)',  bg: 'oklch(0.92 0.04 35)',  path: 'M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z' },
+  nuit:      { label: 'Nuit',      color: 'oklch(0.52 0.07 230)', bg: 'oklch(0.91 0.04 230)', path: 'M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z' },
+  transport: { label: 'Transport', color: 'oklch(0.58 0.08 85)',  bg: 'oklch(0.92 0.04 85)',  path: 'M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z' },
+  conseil:   { label: 'Conseil',   color: 'oklch(0.50 0.07 300)', bg: 'oklch(0.92 0.04 300)', path: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z' },
+  nature:    { label: 'Nature',    color: 'oklch(0.48 0.10 145)', bg: 'oklch(0.91 0.04 145)', path: 'M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20c4 0 4-2 8-2s4 2 8 2v-2c-4 0-4-2-8-2c-.43 0-.82.04-1.19.1C15.77 13.8 17.5 10.8 17 8z' },
+  shopping:  { label: 'Shopping',  color: 'oklch(0.52 0.08 20)',  bg: 'oklch(0.92 0.04 20)',  path: 'M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3z' },
+};
+
 // Shared style for hero info pills
 const heroPill = {
   fontFamily: 'Jost, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.88)',
@@ -1466,23 +1477,40 @@ const GuideDetailPage = () => {
                           {(day.activities || []).map((act, i) => {
                             const isLast = i === day.activities.length - 1;
                             const linked = act.place_id && placeMap[act.place_id];
+                            const t = ACTIVITY_TYPES[act.type] || null;
                             return (
                               <div key={i} style={{ display: 'flex', gap: 16, paddingBottom: isLast ? 8 : 28 }}>
                                 {/* Timeline dot + line */}
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#f0ece4',
+                                  <div style={{ width: 34, height: 34, borderRadius: '50%',
+                                    background: t ? t.bg : '#f0ece4',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <MapPin size={15} color="#c17c5a" />
+                                    {t ? (
+                                      <svg viewBox="0 0 24 24" fill={t.color} style={{ width: 16, height: 16 }}>
+                                        <path d={t.path} />
+                                      </svg>
+                                    ) : (
+                                      <MapPin size={15} color="#c17c5a" />
+                                    )}
                                   </div>
                                   {!isLast && <div style={{ width: 1, flex: 1, background: '#e8e3d9', marginTop: 4 }} />}
                                 </div>
                                 {/* Content */}
                                 <div style={{ paddingTop: 5, flex: 1 }}>
-                                  {act.time && (
-                                    <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#bbb', letterSpacing: '0.06em', display: 'block', marginBottom: 4 }}>
-                                      {act.time}
-                                    </span>
-                                  )}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                    {act.time && (
+                                      <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#bbb', letterSpacing: '0.06em', minWidth: 36 }}>
+                                        {act.time}
+                                      </span>
+                                    )}
+                                    {t && (
+                                      <span style={{
+                                        fontFamily: 'Jost, sans-serif', fontSize: 10, color: t.color,
+                                        background: t.bg, borderRadius: 3, padding: '2px 7px',
+                                        letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500,
+                                      }}>{t.label}</span>
+                                    )}
+                                  </div>
                                   <div style={{ fontFamily: "'Cormorant Garant', serif", fontWeight: 600, fontSize: 20, color: '#252826', lineHeight: 1.2, marginBottom: 6 }}>
                                     {act.title}
                                   </div>
@@ -1774,7 +1802,7 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
       const itinerary = [...prev.itinerary];
       itinerary[dayIdx] = {
         ...itinerary[dayIdx],
-        activities: [...itinerary[dayIdx].activities, { time: '', title: '', description: '', place_id: null }]
+        activities: [...itinerary[dayIdx].activities, { time: '', type: 'visite', title: '', description: '', place_id: null }]
       };
       return { ...prev, itinerary };
     });
@@ -1885,7 +1913,13 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
                 </div>
                 {day.activities.map((act, actIdx) => (
                   <div key={actIdx} className="activity-form-row">
-                    <input type="text" value={act.time || ''} onChange={e => updateActivity(dayIdx, actIdx, 'time', e.target.value)} placeholder="09:00" style={{ width: '80px', flexShrink: 0 }} />
+                    <input type="text" value={act.time || ''} onChange={e => updateActivity(dayIdx, actIdx, 'time', e.target.value)} placeholder="09:00" style={{ width: '70px', flexShrink: 0 }} />
+                    <select value={act.type || ''} onChange={e => updateActivity(dayIdx, actIdx, 'type', e.target.value || null)} style={{ width: '120px', flexShrink: 0 }}>
+                      <option value="">— Type —</option>
+                      {Object.entries(ACTIVITY_TYPES).map(([key, t]) => (
+                        <option key={key} value={key}>{t.label}</option>
+                      ))}
+                    </select>
                     <input type="text" value={act.title} onChange={e => updateActivity(dayIdx, actIdx, 'title', e.target.value)} placeholder="Titre de l'activité" required />
                     <input type="text" value={act.description || ''} onChange={e => updateActivity(dayIdx, actIdx, 'description', e.target.value)} placeholder="Description" />
                     <select value={act.place_id || ''} onChange={e => updateActivity(dayIdx, actIdx, 'place_id', e.target.value || null)}>
