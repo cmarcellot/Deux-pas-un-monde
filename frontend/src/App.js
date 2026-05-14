@@ -1839,13 +1839,12 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
   };
 
   return (
-    <motion.div className="form-modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <motion.div className="form-modal guide-form-modal" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}>
-        <div className="form-header">
-          <h2>{editingGuide ? 'Modifier le guide' : 'Nouveau guide de voyage'}</h2>
-          <button onClick={onClose} className="close-btn"><X size={24} /></button>
-        </div>
-        <form onSubmit={onSubmit} className="place-form">
+    <div className="admin-inline-form">
+      <div className="form-header">
+        <h2>{editingGuide ? 'Modifier le guide' : 'Nouveau guide de voyage'}</h2>
+        <button onClick={onClose} className="close-btn"><X size={24} /></button>
+      </div>
+      <form onSubmit={onSubmit} className="place-form">
           {/* Informations de base */}
           <h3 className="form-section-title"><Globe size={16} />Informations générales</h3>
           <div className="form-grid">
@@ -1982,8 +1981,7 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
             <button type="submit" className="btn-primary" disabled={loading}><Save size={18} />{loading ? 'Enregistrement...' : 'Enregistrer'}</button>
           </div>
         </form>
-      </motion.div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -2264,21 +2262,14 @@ const AdminPage = () => {
       </div>
 
       <div className="admin-content">
-        {/* ONGLET LIEUX */}
-        {adminTab === 'places' && <>
-          <div className="admin-toolbar">
-            <button className="btn-primary" onClick={() => { resetForm(); setShowForm(true); }} data-testid="add-place-btn"><Plus size={20} />Ajouter un lieu</button>
-          </div>
-
-          <AnimatePresence>
-            {showForm && (
-              <motion.div className="form-modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <motion.div className="form-modal" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}>
-                  <div className="form-header">
-                    <h2>{editingPlace ? 'Modifier le lieu' : 'Nouveau lieu'}</h2>
-                    <button onClick={resetForm} className="close-btn" data-testid="close-form-btn"><X size={24} /></button>
-                  </div>
-                  <form onSubmit={handleSubmit} className="place-form" data-testid="place-form">
+        {/* ONGLET LIEUX — FORMULAIRE */}
+        {adminTab === 'places' && showForm && (
+          <div className="admin-inline-form">
+            <div className="form-header">
+              <h2>{editingPlace ? 'Modifier le lieu' : 'Nouveau lieu'}</h2>
+              <button onClick={resetForm} className="close-btn" data-testid="close-form-btn"><X size={24} /></button>
+            </div>
+            <form onSubmit={handleSubmit} className="place-form" data-testid="place-form">
                     <div className="form-grid">
                       <div className="form-group"><label>Titre</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required data-testid="title-input" /></div>
                       <div className="form-group"><label>Catégorie</label>
@@ -2351,90 +2342,97 @@ const AdminPage = () => {
                       <button type="submit" className="btn-primary" disabled={loading} data-testid="save-btn"><Save size={18} />{loading ? 'Enregistrement...' : 'Enregistrer'}</button>
                     </div>
                   </form>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          </div>
+        )}
 
-          <div className="admin-places-list" data-testid="admin-places-list">
-            {places.length === 0 ? (
-              <div className="empty-admin"><MapPin size={48} /><h3>Aucun lieu</h3><p>Commencez par ajouter votre premier lieu</p></div>
-            ) : places.map((place) => {
-              const cat = getCatInfo(place.category);
-              const CatIcon = cat?.icon || MapPin;
-              return (
-                <motion.div key={place.id} className="admin-place-item" initial={{ opacity: 0 }} animate={{ opacity: 1 }} data-testid={`admin-place-${place.id}`}>
+        {/* ONGLET LIEUX — LISTE */}
+        {adminTab === 'places' && !showForm && (
+          <>
+            <div className="admin-toolbar">
+              <button className="btn-primary" onClick={() => { resetForm(); setShowForm(true); }} data-testid="add-place-btn"><Plus size={20} />Ajouter un lieu</button>
+            </div>
+
+            <div className="admin-places-list" data-testid="admin-places-list">
+              {places.length === 0 ? (
+                <div className="empty-admin"><MapPin size={48} /><h3>Aucun lieu</h3><p>Commencez par ajouter votre premier lieu</p></div>
+              ) : places.map((place) => {
+                const cat = getCatInfo(place.category);
+                const CatIcon = cat?.icon || MapPin;
+                return (
+                  <motion.div key={place.id} className="admin-place-item" initial={{ opacity: 0 }} animate={{ opacity: 1 }} data-testid={`admin-place-${place.id}`}>
+                    <div className="admin-place-image">
+                      {place.photos?.[0] ? <img src={getPhotoSrc(place.photos[0])} alt="" /> : <CatIcon size={32} />}
+                    </div>
+                    <div className="admin-place-info">
+                      <h3>{place.title}</h3><p>{place.address}</p>
+                      <div className="admin-place-meta">
+                        <CategoryBadge categoryId={place.category} small />
+                        <StarRating rating={place.rating} readonly />
+                      </div>
+                    </div>
+                    <div className="admin-place-actions">
+                      <button onClick={() => setViewingPlace(place)} className="action-btn" data-testid={`view-${place.id}`}><Eye size={18} /></button>
+                      <button onClick={() => handleEdit(place)} className="action-btn" data-testid={`edit-${place.id}`}><Edit3 size={18} /></button>
+                      <button onClick={() => handleDelete(place.id)} className="action-btn delete" data-testid={`delete-${place.id}`}><Trash2 size={18} /></button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <AnimatePresence>
+              {viewingPlace && <PlaceDetailModal place={viewingPlace} onClose={() => setViewingPlace(null)} />}
+            </AnimatePresence>
+          </>
+        )}
+
+        {/* ONGLET GUIDES — FORMULAIRE */}
+        {adminTab === 'guides' && showGuideForm && (
+          <AdminGuideForm
+            show={showGuideForm}
+            guideFormData={guideFormData}
+            setGuideFormData={setGuideFormData}
+            editingGuide={editingGuide}
+            onSubmit={handleGuideSubmit}
+            onClose={resetGuideForm}
+            loading={loading}
+            places={places}
+          />
+        )}
+
+        {/* ONGLET GUIDES — LISTE */}
+        {adminTab === 'guides' && !showGuideForm && (
+          <>
+            <div className="admin-toolbar">
+              <button className="btn-primary" onClick={() => { resetGuideForm(); setShowGuideForm(true); }}><Plus size={20} />Nouveau guide</button>
+            </div>
+
+            <div className="admin-places-list">
+              {guides.length === 0 ? (
+                <div className="empty-admin"><BookOpen size={48} /><h3>Aucun guide</h3><p>Créez votre premier guide de voyage</p></div>
+              ) : guides.map((guide) => (
+                <motion.div key={guide.id} className="admin-place-item" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <div className="admin-place-image">
-                    {place.photos?.[0] ? <img src={getPhotoSrc(place.photos[0])} alt="" /> : <CatIcon size={32} />}
+                    {guide.cover_image ? <img src={guide.cover_image} alt="" /> : <BookOpen size={32} />}
                   </div>
                   <div className="admin-place-info">
-                    <h3>{place.title}</h3><p>{place.address}</p>
+                    <h3>{guide.title}</h3>
+                    <p>{guide.destination}, {guide.country} — {guide.duration_days} jour{guide.duration_days > 1 ? 's' : ''}</p>
                     <div className="admin-place-meta">
-                      <CategoryBadge categoryId={place.category} small />
-                      <StarRating rating={place.rating} readonly />
+                      <span className="cat-badge" style={{ background: guide.published ? '#5cb85c' : '#6c6c6c', color: '#fff' }}>
+                        {guide.published ? 'Publié' : 'Brouillon'}
+                      </span>
                     </div>
                   </div>
                   <div className="admin-place-actions">
-                    <button onClick={() => setViewingPlace(place)} className="action-btn" data-testid={`view-${place.id}`}><Eye size={18} /></button>
-                    <button onClick={() => handleEdit(place)} className="action-btn" data-testid={`edit-${place.id}`}><Edit3 size={18} /></button>
-                    <button onClick={() => handleDelete(place.id)} className="action-btn delete" data-testid={`delete-${place.id}`}><Trash2 size={18} /></button>
+                    <button onClick={() => { setEditingGuide(guide); setGuideFormData({ ...guide }); setShowGuideForm(true); }} className="action-btn"><Edit3 size={18} /></button>
+                    <button onClick={() => handleDeleteGuide(guide.id)} className="action-btn delete"><Trash2 size={18} /></button>
                   </div>
                 </motion.div>
-              );
-            })}
-          </div>
-
-          <AnimatePresence>
-            {viewingPlace && <PlaceDetailModal place={viewingPlace} onClose={() => setViewingPlace(null)} />}
-          </AnimatePresence>
-        </>}
-
-        {/* ONGLET GUIDES */}
-        {adminTab === 'guides' && <>
-          <div className="admin-toolbar">
-            <button className="btn-primary" onClick={() => { resetGuideForm(); setShowGuideForm(true); }}><Plus size={20} />Nouveau guide</button>
-          </div>
-
-          <AnimatePresence>
-            {showGuideForm && (
-              <AdminGuideForm
-                show={showGuideForm}
-                guideFormData={guideFormData}
-                setGuideFormData={setGuideFormData}
-                editingGuide={editingGuide}
-                onSubmit={handleGuideSubmit}
-                onClose={resetGuideForm}
-                loading={loading}
-                places={places}
-              />
-            )}
-          </AnimatePresence>
-
-          <div className="admin-places-list">
-            {guides.length === 0 ? (
-              <div className="empty-admin"><BookOpen size={48} /><h3>Aucun guide</h3><p>Créez votre premier guide de voyage</p></div>
-            ) : guides.map((guide) => (
-              <motion.div key={guide.id} className="admin-place-item" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="admin-place-image">
-                  {guide.cover_image ? <img src={guide.cover_image} alt="" /> : <BookOpen size={32} />}
-                </div>
-                <div className="admin-place-info">
-                  <h3>{guide.title}</h3>
-                  <p>{guide.destination}, {guide.country} — {guide.duration_days} jour{guide.duration_days > 1 ? 's' : ''}</p>
-                  <div className="admin-place-meta">
-                    <span className="cat-badge" style={{ background: guide.published ? '#5cb85c' : '#6c6c6c', color: '#fff' }}>
-                      {guide.published ? 'Publié' : 'Brouillon'}
-                    </span>
-                  </div>
-                </div>
-                <div className="admin-place-actions">
-                  <button onClick={() => { setEditingGuide(guide); setGuideFormData({ ...guide }); setShowGuideForm(true); }} className="action-btn"><Edit3 size={18} /></button>
-                  <button onClick={() => handleDeleteGuide(guide.id)} className="action-btn delete"><Trash2 size={18} /></button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </>}
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

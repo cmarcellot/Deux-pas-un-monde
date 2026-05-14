@@ -765,6 +765,16 @@
 .action-btn.delete:hover { background: var(--error); border-color: var(--error); }
 
 /* ============================================================
+   FORM INLINE (remplace la liste en admin)
+   ============================================================ */
+.admin-inline-form {
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+/* ============================================================
    FORM MODAL
    ============================================================ */
 .form-modal-overlay {
