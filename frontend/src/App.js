@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
-import GlobeGL from 'react-globe.gl';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import * as THREE from 'three';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -804,63 +804,308 @@ const HomePage = () => {
 
 // ============================================================
 // ============================================================
-// 3D GLOBE VIEW
+// 3D GLOBE VIEW — Three.js natif (identique au prototype)
 // ============================================================
 const GUIDE_COLORS = ['#c17c5a','#5B7A8A','#5A7A60','#8A7845','#7B5A8A','#8A5A5A','#5A6A8A','#6A8A5A'];
 
-const GlobeView = ({ guides, guideCoords, navigate }) => {
-  const containerRef = useRef(null);
-  const [width, setWidth] = useState(800);
+const _geocodeCache = {};
+const geocodeDestination = async (destination) => {
+  if (_geocodeCache[destination]) return _geocodeCache[destination];
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destination)}&limit=1`);
+    const data = await res.json();
+    if (data[0]) {
+      const coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      _geocodeCache[destination] = coords;
+      return coords;
+    }
+  } catch {}
+  return null;
+};
 
-  useLayoutEffect(() => {
-    const update = () => { if (containerRef.current) setWidth(containerRef.current.offsetWidth); };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
+  const mountRef = useRef(null);
+  const tooltipRef = useRef(null);
+
+  useEffect(() => {
+    if (!mountRef.current || resolvedGuides.length === 0) return;
+    const container = mountRef.current;
+    const W = container.clientWidth;
+    const H = container.clientHeight;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 1000);
+    camera.position.z = 2.8;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const sun = new THREE.DirectionalLight(0xfff5e4, 1.2);
+    sun.position.set(5, 3, 5);
+    scene.add(sun);
+
+    const RADIUS = 1;
+    const texLoader = new THREE.TextureLoader();
+    const earthTex = texLoader.load(
+      'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
+      () => renderer.render(scene, camera),
+      undefined,
+      () => {
+        const cv = document.createElement('canvas');
+        cv.width = 512; cv.height = 256;
+        const cx = cv.getContext('2d');
+        const grad = cx.createLinearGradient(0, 0, 512, 256);
+        grad.addColorStop(0, '#1a3a5c'); grad.addColorStop(0.4, '#2d6a8a');
+        grad.addColorStop(0.6, '#3d8a6a'); grad.addColorStop(1, '#1a3a5c');
+        cx.fillStyle = grad; cx.fillRect(0, 0, 512, 256);
+        earthTex.image = cv; earthTex.needsUpdate = true;
+      }
+    );
+    const globe = new THREE.Mesh(
+      new THREE.SphereGeometry(RADIUS, 64, 64),
+      new THREE.MeshPhongMaterial({ map: earthTex, specular: new THREE.Color(0x222222), shininess: 12 })
+    );
+    scene.add(globe);
+
+    scene.add(new THREE.Mesh(
+      new THREE.SphereGeometry(RADIUS * 1.02, 64, 64),
+      new THREE.MeshPhongMaterial({ color: 0x4488cc, transparent: true, opacity: 0.08, side: THREE.FrontSide })
+    ));
+
+    const starVerts = [];
+    for (let i = 0; i < 2000; i++) {
+      starVerts.push((Math.random()-0.5)*200, (Math.random()-0.5)*200, (Math.random()-0.5)*200);
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts, 3));
+    scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.6 })));
+
+    const toVec3 = (lat, lng, r) => {
+      const phi = (90 - lat) * (Math.PI / 180);
+      const theta = (lng + 180) * (Math.PI / 180);
+      return new THREE.Vector3(
+        -r * Math.sin(phi) * Math.cos(theta),
+         r * Math.cos(phi),
+         r * Math.sin(phi) * Math.sin(theta)
+      );
+    };
+
+    const markers = [];
+    const markerGroup = new THREE.Group();
+    scene.add(markerGroup);
+
+    resolvedGuides.forEach((guide, idx) => {
+      const pos = toVec3(guide._lat, guide._lng, RADIUS + 0.012);
+      const color = new THREE.Color(guide.markerColor || GUIDE_COLORS[idx % GUIDE_COLORS.length]);
+
+      const dot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.022, 16, 16),
+        new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: 0.4 })
+      );
+      dot.position.copy(pos);
+      dot.userData = { guide };
+      markerGroup.add(dot);
+      markers.push(dot);
+
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.028, 0.038, 32),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.6, side: THREE.DoubleSide })
+      );
+      ring.position.copy(pos);
+      ring.lookAt(0, 0, 0);
+      ring.userData = { isPulse: true, phase: idx * 0.8 };
+      markerGroup.add(ring);
+
+      const spike = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.003, 0.003, 0.06, 8),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.5 })
+      );
+      spike.position.copy(pos.clone().multiplyScalar(0.97));
+      spike.lookAt(0, 0, 0);
+      spike.rotateX(Math.PI / 2);
+      markerGroup.add(spike);
+    });
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let isDragging = false, prevX = 0, prevY = 0, rotX = 0, rotY = 0, autoRotate = true;
+
+    const onMouseMove = (evt) => {
+      const rect = container.getBoundingClientRect();
+      mouse.x = ((evt.clientX - rect.left) / W) * 2 - 1;
+      mouse.y = -((evt.clientY - rect.top) / H) * 2 + 1;
+      if (isDragging) {
+        rotY += (evt.clientX - prevX) * 0.005;
+        rotX += (evt.clientY - prevY) * 0.005;
+        rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotX));
+        prevX = evt.clientX; prevY = evt.clientY;
+        autoRotate = false;
+      }
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(markers);
+      if (hits.length > 0) {
+        container.style.cursor = 'pointer';
+        const g = hits[0].object.userData.guide;
+        if (tooltipRef.current) {
+          tooltipRef.current.innerHTML = `
+            <div style="font-family:'Cormorant Garant',serif;font-size:15px;font-weight:600;color:#252826;line-height:1.2">${g.title}</div>
+            <div style="font-family:Jost,sans-serif;font-size:11px;color:#888;margin-top:3px">${g.destination}, ${g.country}</div>
+            <div style="font-family:Jost,sans-serif;font-size:10px;color:#aaa;margin-top:2px">${g.duration_days} jour${g.duration_days > 1 ? 's' : ''}</div>
+          `;
+          tooltipRef.current.style.display = 'block';
+          tooltipRef.current.style.left = (evt.clientX - rect.left + 14) + 'px';
+          tooltipRef.current.style.top = (evt.clientY - rect.top - 10) + 'px';
+        }
+      } else {
+        container.style.cursor = isDragging ? 'grabbing' : 'grab';
+        if (tooltipRef.current) tooltipRef.current.style.display = 'none';
+      }
+    };
+    const onMouseDown = (evt) => { isDragging = true; prevX = evt.clientX; prevY = evt.clientY; container.style.cursor = 'grabbing'; };
+    const onMouseUp = () => {
+      if (!isDragging) return;
+      isDragging = false; container.style.cursor = 'grab';
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(markers);
+      if (hits.length > 0) onSelectGuide(hits[0].object.userData.guide);
+    };
+    const onMouseLeave = () => { isDragging = false; if (tooltipRef.current) tooltipRef.current.style.display = 'none'; };
+
+    container.addEventListener('mousemove', onMouseMove);
+    container.addEventListener('mousedown', onMouseDown);
+    container.addEventListener('mouseup', onMouseUp);
+    container.addEventListener('mouseleave', onMouseLeave);
+
+    let lastTouchX = 0, lastTouchY = 0, hasTouchStart = false;
+    container.addEventListener('touchstart', (e) => { lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY; hasTouchStart = true; autoRotate = false; });
+    container.addEventListener('touchmove', (e) => {
+      if (!hasTouchStart) return;
+      const t = e.touches[0];
+      rotY += (t.clientX - lastTouchX) * 0.005; rotX += (t.clientY - lastTouchY) * 0.005;
+      rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotX));
+      lastTouchX = t.clientX; lastTouchY = t.clientY; e.preventDefault();
+    }, { passive: false });
+    container.addEventListener('touchend', () => { hasTouchStart = false; });
+
+    let raf;
+    const clock = new THREE.Clock();
+    const animate = () => {
+      raf = requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+      if (autoRotate) { globe.rotation.y += 0.002; markerGroup.rotation.y = globe.rotation.y; }
+      else { globe.rotation.set(rotX, rotY, 0); markerGroup.rotation.set(rotX, rotY, 0); }
+      markerGroup.children.forEach(child => {
+        if (child.userData.isPulse) {
+          const sc = 1 + 0.35 * Math.sin(elapsed * 2 + child.userData.phase);
+          child.scale.setScalar(sc);
+          child.material.opacity = 0.4 * (1 - (sc - 1));
+        }
+      });
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    const onResize = () => {
+      const nW = container.clientWidth, nH = container.clientHeight;
+      camera.aspect = nW / nH; camera.updateProjectionMatrix(); renderer.setSize(nW, nH);
+    };
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      renderer.dispose();
+      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
+      container.removeEventListener('mousemove', onMouseMove);
+      container.removeEventListener('mousedown', onMouseDown);
+      container.removeEventListener('mouseup', onMouseUp);
+      container.removeEventListener('mouseleave', onMouseLeave);
+      window.removeEventListener('resize', onResize);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const points = guides
-    .map((g, i) => ({
-      id: g.id, title: g.title,
-      destination: g.destination, country: g.country,
-      color: GUIDE_COLORS[i % GUIDE_COLORS.length],
-      coords: guideCoords[g.id],
-    }))
-    .filter(p => p.coords)
-    .map(p => ({ ...p, lat: p.coords[0], lng: p.coords[1] }));
+  return (
+    <div style={{ position: 'relative', width: '100%' }}>
+      <div ref={mountRef} style={{
+        width: '100%', height: 520, borderRadius: 12, overflow: 'hidden',
+        background: 'linear-gradient(135deg, #0a0e1a 0%, #0d1b2a 50%, #0a0e1a 100%)',
+        cursor: 'grab', userSelect: 'none',
+      }} />
+      <div ref={tooltipRef} style={{
+        position: 'absolute', display: 'none', pointerEvents: 'none',
+        background: '#faf8f3', borderRadius: 8, padding: '10px 14px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.18)', border: '1px solid #e5e0d5',
+        maxWidth: 200, zIndex: 10, top: 0, left: 0,
+      }} />
+    </div>
+  );
+};
+
+const GlobeView = ({ guides, navigate }) => {
+  const [resolvedGuides, setResolvedGuides] = useState([]);
+  const [geocoding, setGeocoding] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setGeocoding(true);
+      const results = await Promise.all(guides.map(async (guide, idx) => {
+        const coords = await geocodeDestination(`${guide.destination}, ${guide.country}`);
+        if (coords) return { ...guide, _lat: coords.lat, _lng: coords.lng, markerColor: GUIDE_COLORS[idx % GUIDE_COLORS.length] };
+        return { ...guide, _lat: null, _lng: null };
+      }));
+      if (!cancelled) {
+        setResolvedGuides(results.filter(g => g._lat && g._lng));
+        setGeocoding(false);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guides.length]);
+
+  const globeKey = resolvedGuides.map(g => `${g.id}_${g._lat}_${g._lng}`).join(',');
 
   return (
     <div>
-      <div ref={containerRef} className="globe-container">
-        <GlobeGL
-          width={width}
-          height={500}
-          globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
-          backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
-          pointsData={points}
-          pointLat="lat"
-          pointLng="lng"
-          pointColor="color"
-          pointRadius={0.5}
-          pointAltitude={0.02}
-          pointLabel={d => `<div style="font-family:Jost,sans-serif;background:rgba(0,0,0,0.75);padding:6px 10px;border-radius:6px;color:#fff"><b>${d.title}</b><br/><span style="font-size:11px;opacity:0.75">${d.destination}, ${d.country}</span></div>`}
-          onPointClick={d => navigate(`/guides/${d.id}`)}
-        />
-      </div>
-      {points.length > 0 && (
-        <div className="globe-legend">
-          {points.map(p => (
-            <button key={p.id} className="globe-legend-item" onClick={() => navigate(`/guides/${p.id}`)}>
-              <span className="globe-legend-dot" style={{ background: p.color }} />
-              <span className="globe-legend-info">
-                <span className="globe-legend-title">{p.title}</span>
-                <span className="globe-legend-dest">{p.destination}, {p.country}</span>
-              </span>
-            </button>
+      {geocoding ? (
+        <div style={{
+          width: '100%', height: 520, borderRadius: 12, overflow: 'hidden',
+          background: 'linear-gradient(135deg, #0a0e1a 0%, #0d1b2a 50%, #0a0e1a 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em' }}>
+            Localisation des destinations…
+          </span>
+        </div>
+      ) : (
+        <GlobeCanvas key={globeKey} resolvedGuides={resolvedGuides} onSelectGuide={g => navigate(`/guides/${g.id}`)} />
+      )}
+      {!geocoding && resolvedGuides.length > 0 && (
+        <div style={{ marginTop: 20, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+          {resolvedGuides.map(g => (
+            <div key={g.id} onClick={() => navigate(`/guides/${g.id}`)}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)',
+                border: '1px solid var(--border)', borderRadius: 6, padding: '7px 14px',
+                cursor: 'pointer', transition: 'box-shadow 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(63,66,64,0.12)'}
+              onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+            >
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: g.markerColor, flexShrink: 0 }} />
+              <div>
+                <div style={{ fontFamily: "'Cormorant Garant', serif", fontSize: 15, fontWeight: 600, color: 'var(--text)', lineHeight: 1.1 }}>{g.title}</div>
+                <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: 'var(--text-muted)' }}>{g.destination}</div>
+              </div>
+            </div>
           ))}
         </div>
       )}
-      <p className="globe-hint">Cliquez et glissez pour faire tourner · Cliquez un marqueur pour ouvrir le guide</p>
+      <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 14 }}>
+        Cliquez et glissez pour faire tourner · Cliquez un marqueur pour ouvrir le guide
+      </p>
     </div>
   );
 };
@@ -872,8 +1117,6 @@ const GuidesPage = () => {
   const [guides, setGuides]     = useState([]);
   const [loading, setLoading]   = useState(true);
   const [viewMode, setViewMode] = useState('grid');
-  const [guideCoords, setGuideCoords] = useState({});
-  const [geocoding, setGeocoding]     = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => { fetchGuides(); }, []);
@@ -887,28 +1130,6 @@ const GuidesPage = () => {
     } catch { toast.error('Erreur lors du chargement des guides'); }
     finally { setLoading(false); }
   };
-
-  // Géocode les destinations quand la vue globe est sélectionnée
-  useEffect(() => {
-    if (viewMode !== 'globe' || guides.length === 0) return;
-    const missing = guides.filter(g => !guideCoords[g.id]);
-    if (missing.length === 0) return;
-    setGeocoding(true);
-    const geocodeOne = async (guide) => {
-      try {
-        const q = encodeURIComponent(`${guide.destination}, ${guide.country}`);
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, { headers: { 'Accept-Language': 'fr' } });
-        const data = await res.json();
-        if (data.length > 0) {
-          setGuideCoords(prev => ({ ...prev, [guide.id]: [parseFloat(data[0].lat), parseFloat(data[0].lon)] }));
-        }
-      } catch {}
-    };
-    // Espacer les requêtes pour respecter la politique Nominatim (1 req/s)
-    missing.forEach((g, i) => setTimeout(() => geocodeOne(g), i * 1100));
-    setTimeout(() => setGeocoding(false), missing.length * 1100 + 500);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, guides]);
 
   const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
   const igSvg = <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>;
@@ -972,8 +1193,7 @@ const GuidesPage = () => {
           </div>
         ) : (
           <div className="guides-globe-wrap">
-            {geocoding && <p className="guides-globe-loading"><Loader2 size={14} className="spin" /> Géolocalisation des destinations…</p>}
-            <GlobeView guides={guides} guideCoords={guideCoords} navigate={navigate} />
+            <GlobeView guides={guides} navigate={navigate} />
           </div>
         )}
       </div>
