@@ -1092,6 +1092,59 @@
   color: var(--text-muted);
   margin-bottom: 12px;
 }
+.globe-container {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  width: 100%;
+}
+.globe-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.globe-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-family: 'Jost', sans-serif;
+  text-align: left;
+  transition: background 0.15s;
+}
+.globe-legend-item:hover { background: var(--bg); }
+.globe-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.globe-legend-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.globe-legend-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.globe-legend-dest {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.globe-hint {
+  text-align: center;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 12px;
+}
 
 /* ============================================================
    GUIDE CARD (light)

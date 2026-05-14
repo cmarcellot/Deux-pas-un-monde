@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
+import Globe from 'react-globe.gl';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -818,6 +819,69 @@ const HomePage = () => {
 };
 
 // ============================================================
+// ============================================================
+// 3D GLOBE VIEW
+// ============================================================
+const GUIDE_COLORS = ['#c17c5a','#5B7A8A','#5A7A60','#8A7845','#7B5A8A','#8A5A5A','#5A6A8A','#6A8A5A'];
+
+const GlobeView = ({ guides, guideCoords, navigate }) => {
+  const containerRef = useRef(null);
+  const [width, setWidth] = useState(800);
+
+  useLayoutEffect(() => {
+    const update = () => { if (containerRef.current) setWidth(containerRef.current.offsetWidth); };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  const points = guides
+    .map((g, i) => ({
+      id: g.id, title: g.title,
+      destination: g.destination, country: g.country,
+      color: GUIDE_COLORS[i % GUIDE_COLORS.length],
+      coords: guideCoords[g.id],
+    }))
+    .filter(p => p.coords)
+    .map(p => ({ ...p, lat: p.coords[0], lng: p.coords[1] }));
+
+  return (
+    <div>
+      <div ref={containerRef} className="globe-container">
+        <Globe
+          width={width}
+          height={500}
+          globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+          backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+          pointsData={points}
+          pointLat="lat"
+          pointLng="lng"
+          pointColor="color"
+          pointRadius={0.5}
+          pointAltitude={0.02}
+          pointLabel={d => `<div style="font-family:Jost,sans-serif;background:rgba(0,0,0,0.75);padding:6px 10px;border-radius:6px;color:#fff"><b>${d.title}</b><br/><span style="font-size:11px;opacity:0.75">${d.destination}, ${d.country}</span></div>`}
+          onPointClick={d => navigate(`/guides/${d.id}`)}
+        />
+      </div>
+      {points.length > 0 && (
+        <div className="globe-legend">
+          {points.map(p => (
+            <button key={p.id} className="globe-legend-item" onClick={() => navigate(`/guides/${p.id}`)}>
+              <span className="globe-legend-dot" style={{ background: p.color }} />
+              <span className="globe-legend-info">
+                <span className="globe-legend-title">{p.title}</span>
+                <span className="globe-legend-dest">{p.destination}, {p.country}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      <p className="globe-hint">Cliquez et glissez pour faire tourner · Cliquez un marqueur pour ouvrir le guide</p>
+    </div>
+  );
+};
+
+// ============================================================
 // GUIDES LIST PAGE — /guides
 // ============================================================
 const GuidesPage = () => {
@@ -870,11 +934,6 @@ const GuidesPage = () => {
     { mode: 'globe', icon: <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg> },
   ];
 
-  const globeMarkerIcon = L.divIcon({
-    className: '',
-    html: `<div style="width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#5B7A8A;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;"><div style="transform:rotate(45deg);width:12px;height:12px;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" fill="white" width="12" height="12"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg></div></div>`,
-    iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -30],
-  });
 
   return (
     <div className="guides-page">
@@ -929,24 +988,7 @@ const GuidesPage = () => {
         ) : (
           <div className="guides-globe-wrap">
             {geocoding && <p className="guides-globe-loading"><Loader2 size={14} className="spin" /> Géolocalisation des destinations…</p>}
-            <MapContainer center={[20, 10]} zoom={2} style={{ height: '520px', width: '100%', borderRadius: 12 }} scrollWheelZoom={true}>
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
-              {guides.map(guide => {
-                const coords = guideCoords[guide.id];
-                if (!coords) return null;
-                return (
-                  <Marker key={guide.id} position={coords} icon={globeMarkerIcon}
-                    eventHandlers={{ click: () => navigate(`/guides/${guide.id}`) }}>
-                    <Popup>
-                      <div className="map-popup" onClick={() => navigate(`/guides/${guide.id}`)} style={{ cursor: 'pointer' }}>
-                        <h4>{guide.title}</h4>
-                        <p>{guide.destination}, {guide.country} · {guide.duration_days}j</p>
-                      </div>
-                    </Popup>
-                  </Marker>
-                );
-              })}
-            </MapContainer>
+            <GlobeView guides={guides} guideCoords={guideCoords} navigate={navigate} />
           </div>
         )}
       </div>
