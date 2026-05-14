@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
-import Globe from 'react-globe.gl';
+import GlobeGL from 'react-globe.gl';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -848,7 +848,7 @@ const GlobeView = ({ guides, guideCoords, navigate }) => {
   return (
     <div>
       <div ref={containerRef} className="globe-container">
-        <Globe
+        <GlobeGL
           width={width}
           height={500}
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
