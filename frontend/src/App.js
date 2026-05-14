@@ -8,10 +8,10 @@ import { Toaster, toast } from 'sonner';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import {
-  Map, List, Home, Settings, Star, MapPin, X, Plus, Trash2, Edit3,
+  Map, Home, Settings, Star, MapPin, X, Plus, Trash2, Edit3,
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Eye, Save, Key, ZoomIn,
-  BookOpen, Calendar, Globe, Tag, Clock, Wallet, Info, ChevronDown, ChevronUp, Plane,
+  BookOpen, Calendar, Globe, Wallet, Info, ChevronDown, ChevronUp, Plane,
   Search, CheckCircle, Loader2, GripVertical
 } from 'lucide-react';
 import './App.css';
@@ -256,7 +256,7 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
           >
             <img
               src={getPhotoSrc(photos[currentIndex])}
-              alt={`Photo ${currentIndex + 1}`}
+              alt={`Image ${currentIndex + 1}`}
               className="lightbox-image"
               draggable={false}
             />
@@ -428,22 +428,6 @@ const GuideCard = ({ guide, onClick }) => (
   </div>
 );
 
-// ============================================================
-// CATEGORY FILTER
-// ============================================================
-const CategoryFilter = ({ activeCategory, onChange }) => (
-  <div className="category-filter" data-testid="category-filter">
-    {CATEGORIES.map((cat) => {
-      const Icon = cat.icon;
-      return (
-        <button key={cat.id} className={`category-pill ${activeCategory === cat.id ? 'active' : ''}`}
-          onClick={() => onChange(cat.id)} data-testid={`category-${cat.id}`}>
-          <Icon size={16} /><span>{cat.name}</span>
-        </button>
-      );
-    })}
-  </div>
-);
 
 const MapRecenter = ({ center }) => {
   const map = useMap();
@@ -593,7 +577,6 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
             <div className="search-section">
               <p className="search-section-label">Adresses · {filteredPlaces.length}</p>
               {filteredPlaces.map(place => {
-                const cat = getCatInfo(place.category);
                 return (
                   <button key={place.id} className="search-result-row" onClick={() => { onSelectPlace(place); onClose(); }}>
                     <span className="search-result-thumb" style={{ background: CAT_COLORS[place.category] || '#888' }}>
@@ -664,6 +647,7 @@ const HomePage = () => {
   const [viewMode, setViewMode] = useState(new URLSearchParams(location.search).get('view') || 'grid');
   const [searchOpen, setSearchOpen] = useState(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchPlaces(); }, [activeCategory]);
 
   useEffect(() => {
@@ -923,6 +907,7 @@ const GuidesPage = () => {
     // Espacer les requêtes pour respecter la politique Nominatim (1 req/s)
     missing.forEach((g, i) => setTimeout(() => geocodeOne(g), i * 1100));
     setTimeout(() => setGeocoding(false), missing.length * 1100 + 500);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, guides]);
 
   const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
@@ -1120,6 +1105,7 @@ const GuideDetailPage = () => {
   const [activeSection, setActiveSection] = useState('itinerary');
   const [selectedPlace, setSelectedPlace] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchGuide(); }, [id]);
 
   const fetchGuide = async () => {
@@ -1311,6 +1297,7 @@ const PlaceDetailPage = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchPlace(); }, [id]);
 
   const fetchPlace = async () => {
@@ -1672,6 +1659,7 @@ const AdminPage = () => {
   const [draggedPhotoIdx, setDraggedPhotoIdx] = useState(null);
   const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     if (token) verifyToken(token);
