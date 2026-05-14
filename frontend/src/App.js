@@ -18,6 +18,13 @@ import './App.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://deux-pas-un-monde.onrender.com';
 
+// Shared style for hero info pills
+const heroPill = {
+  fontFamily: 'Jost, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.88)',
+  background: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: '4px 14px',
+  backdropFilter: 'blur(4px)',
+};
+
 const quillModules = {
   toolbar: [
     ['bold', 'italic', 'underline'],
@@ -1279,62 +1286,8 @@ const SurpriseCountdown = () => {
 };
 
 // ============================================================
-// DAY ACCORDION — itinerary day component
 // ============================================================
-const DayAccordion = ({ day, places, defaultOpen, onPlaceClick }) => {
-  const [open, setOpen] = useState(defaultOpen || false);
-  const placeMap = places.reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
-
-  return (
-    <div className={`day-accordion ${open ? 'open' : ''}`}>
-      <button className="day-accordion-header" onClick={() => setOpen(!open)}>
-        <div className="day-accordion-title">
-          <span className="day-number-badge">Jour {day.day_number}</span>
-          <h3>{day.title}</h3>
-        </div>
-        {open ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div className="day-accordion-body"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}>
-            {day.description && <p className="day-description" dangerouslySetInnerHTML={{ __html: day.description }} />}
-            {day.activities.length > 0 && (
-              <div className="day-activities">
-                {day.activities.map((act, i) => (
-                  <div key={i} className="activity-item">
-                    {act.time && <span className="activity-time">{act.time}</span>}
-                    <div className="activity-content">
-                      <strong>{act.title}</strong>
-                      {act.description && <p>{act.description}</p>}
-                      {act.place_id && placeMap[act.place_id] && (
-                        <button className="activity-place-ref" onClick={() => onPlaceClick?.(placeMap[act.place_id])}>
-                          <MapPin size={13} />{placeMap[act.place_id].title}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {day.tips.length > 0 && (
-              <div className="day-tips">
-                <h4><Info size={15} /> Conseils du jour</h4>
-                <ul>{day.tips.map((tip, i) => <li key={i}>{tip}</li>)}</ul>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-// ============================================================
-// GUIDE DETAIL PAGE — /guides/:id
+// GUIDE DETAIL PAGE — /guides/:id (style prototype)
 // ============================================================
 const GuideDetailPage = () => {
   const { id } = useParams();
@@ -1345,6 +1298,7 @@ const GuideDetailPage = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [activeSection, setActiveSection] = useState('itinerary');
+  const [activeDay, setActiveDay] = useState(0);
   const [selectedPlace, setSelectedPlace] = useState(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1356,7 +1310,6 @@ const GuideDetailPage = () => {
       if (!res.ok) throw new Error();
       const g = await res.json();
       setGuide(g);
-      // Collecter guide.place_ids + tous les place_id des activités
       const activityPlaceIds = (g.itinerary || []).flatMap(day =>
         (day.activities || []).map(act => act.place_id).filter(Boolean)
       );
@@ -1375,109 +1328,227 @@ const GuideDetailPage = () => {
 
   const allPhotos = [guide.cover_image, ...guide.photos].filter(Boolean);
   const mapCenter = places.length > 0 ? [places[0].latitude, places[0].longitude] : [46.6, 1.9];
+  const placeMap = places.reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
 
-  const sections = [
-    { id: 'itinerary', label: 'Itinéraire', icon: Calendar },
-    { id: 'practical', label: 'Infos pratiques', icon: Info },
-    { id: 'photos',    label: 'Photos',          icon: ZoomIn },
-    { id: 'map',       label: 'Carte',            icon: Map },
+  const TABS = [
+    ['itinerary', 'Itinéraire'],
+    ['practical', 'Infos pratiques'],
+    ['photos',    'Photos'],
+    ['map',       'Carte'],
   ];
+
+  const PRACTICAL_BLOCKS = [
+    { icon: <Wallet size={16} />, label: 'Budget estimé', show: guide.practical_info?.budget_min || guide.practical_info?.budget_max,
+      content: `${guide.practical_info?.budget_min || '?'}€ – ${guide.practical_info?.budget_max || '?'}€ / pers / jour` },
+    { icon: <Calendar size={16} />, label: 'Meilleures saisons', show: guide.practical_info?.best_seasons?.length > 0,
+      content: guide.practical_info?.best_seasons?.join(' · ') },
+    { icon: <Plane size={16} />, label: 'Transports', show: guide.practical_info?.transport_tips,
+      content: guide.practical_info?.transport_tips },
+    { icon: <Info size={16} />, label: 'Visa & formalités', show: guide.practical_info?.visa_info,
+      content: guide.practical_info?.visa_info },
+    { icon: <Wallet size={16} />, label: 'Monnaie', show: guide.practical_info?.currency,
+      content: guide.practical_info?.currency },
+    { icon: <Globe size={16} />, label: 'Langue', show: guide.practical_info?.language_tips,
+      content: guide.practical_info?.language_tips },
+  ].filter(b => b.show);
 
   return (
     <>
-      <motion.div className="guide-detail-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <button onClick={() => navigate(-1)} className="guide-back-btn">
-          <ChevronLeft size={22} />
-        </button>
+      <div className="guide-detail-page">
 
-        {guide.cover_image && (
-          <div className="guide-hero-image clickable-photo"
-            onClick={() => { setLightboxIndex(0); setLightboxOpen(true); }}>
-            <img src={guide.cover_image} alt={guide.title} />
-            <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
-            <div className="guide-hero-overlay">
-              <h1 className="guide-hero-title">{guide.title}</h1>
-              <div className="guide-hero-meta">
-                <span className="guide-meta-chip"><Globe size={14} />{guide.destination}, {guide.country}</span>
-                <span className="guide-meta-chip"><Calendar size={14} />{guide.duration_days} jours</span>
-              </div>
+        {/* ── Hero ─────────────────────────────────────────── */}
+        <div style={{ position: 'relative', height: 300, overflow: 'hidden' }}>
+          {guide.cover_image
+            ? <img src={guide.cover_image} alt={guide.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #c17c5a 0%, #5B7A8A 100%)' }} />
+          }
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,17,15,0.78) 0%, rgba(15,17,15,0.2) 55%, transparent 100%)' }} />
+
+          {/* Back */}
+          <button onClick={() => navigate(-1)} style={{
+            position: 'absolute', top: 20, left: 20, background: 'rgba(0,0,0,0.38)',
+            border: 'none', color: '#fff', borderRadius: 6, padding: '8px 16px',
+            fontFamily: 'Jost, sans-serif', fontSize: 13, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 6, backdropFilter: 'blur(4px)',
+          }}>← Retour</button>
+
+          {/* Photos shortcut */}
+          {allPhotos.length > 0 && (
+            <button onClick={() => { setLightboxIndex(0); setLightboxOpen(true); }} style={{
+              position: 'absolute', top: 20, right: 20, background: 'rgba(0,0,0,0.38)',
+              border: 'none', color: '#fff', borderRadius: 6, padding: '8px 16px',
+              fontFamily: 'Jost, sans-serif', fontSize: 13, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6, backdropFilter: 'blur(4px)',
+            }}><ZoomIn size={14} /> Photos ({allPhotos.length})</button>
+          )}
+
+          {/* Title block */}
+          <div style={{ position: 'absolute', bottom: 28, left: '50%', transform: 'translateX(-50%)', textAlign: 'center', width: '90%', maxWidth: 700 }}>
+            <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
+              Guide voyage — {guide.destination}, {guide.country}
+            </p>
+            <h1 style={{ fontFamily: "'Cormorant Garant', serif", fontWeight: 600, fontSize: 42, color: '#fff', margin: 0, lineHeight: 1.1, textShadow: '0 2px 16px rgba(0,0,0,0.35)' }}>
+              {guide.title}
+            </h1>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
+              <span style={heroPill}>{guide.duration_days} jour{guide.duration_days > 1 ? 's' : ''}</span>
+              {guide.practical_info?.best_seasons?.length > 0 && (
+                <span style={heroPill}>{guide.practical_info.best_seasons.join(' · ')}</span>
+              )}
+              {guide.practical_info?.budget_min && (
+                <span style={heroPill}>{guide.practical_info.budget_min}–{guide.practical_info.budget_max}€/j</span>
+              )}
             </div>
           </div>
-        )}
-
-        <div className="guide-section-tabs">
-          {sections.map(({ id: sid, label, icon: Icon }) => (
-            <button key={sid}
-              className={`guide-tab-btn ${activeSection === sid ? 'active' : ''}`}
-              onClick={() => setActiveSection(sid)}>
-              <Icon size={15} />{label}
-            </button>
-          ))}
         </div>
 
-        <div className="guide-detail-content">
+        {/* ── Body ─────────────────────────────────────────── */}
+        <div style={{ maxWidth: 860, margin: '0 auto', padding: '48px 24px 80px' }}>
+
+          {/* Intro */}
           {guide.intro && (
-            <div className="guide-intro" dangerouslySetInnerHTML={{ __html: guide.intro }} />
+            <p style={{ fontFamily: "'Cormorant Garant', serif", fontStyle: 'italic', fontSize: 20, color: '#666',
+              lineHeight: 1.75, marginBottom: 44, textAlign: 'center' }}
+              dangerouslySetInnerHTML={{ __html: guide.intro }} />
           )}
 
+          {/* Tab toggle */}
+          <div style={{ display: 'flex', gap: 4, marginBottom: 36, background: '#ede8db', borderRadius: 8, padding: 4, width: 'fit-content', flexWrap: 'wrap' }}>
+            {TABS.map(([key, label]) => (
+              <button key={key} onClick={() => setActiveSection(key)} style={{
+                fontFamily: 'Jost, sans-serif', fontSize: 13, padding: '7px 20px', borderRadius: 6,
+                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                background: activeSection === key ? '#3f4240' : 'transparent',
+                color: activeSection === key ? '#ede8db' : '#888',
+                fontWeight: activeSection === key ? 500 : 400,
+              }}>{label}</button>
+            ))}
+          </div>
+
+          {/* ── Itinéraire ── */}
           {activeSection === 'itinerary' && (
-            <div className="guide-itinerary">
-              {guide.itinerary.length === 0
-                ? <p className="guide-empty-section">Itinéraire à venir…</p>
-                : guide.itinerary.map((day, i) => (
-                    <DayAccordion key={i} day={day} places={places} defaultOpen={i === 0} onPlaceClick={setSelectedPlace} />
-                  ))}
-            </div>
-          )}
-
-          {activeSection === 'practical' && (
-            <div className="guide-practical">
-              {(guide.practical_info?.budget_min || guide.practical_info?.budget_max) && (
-                <div className="practical-block">
-                  <h4><Wallet size={16} /> Budget estimé</h4>
-                  <p>{guide.practical_info.budget_min}€ – {guide.practical_info.budget_max}€ / pers / jour</p>
-                </div>
-              )}
-              {guide.practical_info?.best_seasons?.length > 0 && (
-                <div className="practical-block">
-                  <h4><Calendar size={16} /> Meilleures saisons</h4>
-                  <div className="season-pills">
-                    {guide.practical_info.best_seasons.map(s => <span key={s} className="season-pill">{s}</span>)}
+            guide.itinerary.length === 0
+              ? <p className="guide-empty-section">Itinéraire à venir…</p>
+              : <>
+                  {/* Day pills */}
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 36, flexWrap: 'wrap' }}>
+                    {guide.itinerary.map((day, i) => (
+                      <button key={i} onClick={() => setActiveDay(i)} style={{
+                        fontFamily: 'Jost, sans-serif', fontSize: 13, padding: '8px 20px', borderRadius: 6,
+                        border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                        background: activeDay === i ? '#3f4240' : '#faf8f3',
+                        color: activeDay === i ? '#ede8db' : '#888',
+                        boxShadow: activeDay === i ? '0 2px 8px rgba(63,66,64,0.2)' : '0 1px 3px rgba(0,0,0,0.06)',
+                        fontWeight: activeDay === i ? 500 : 400,
+                      }}>
+                        Jour {day.day_number}
+                        {day.title && <span style={{ fontSize: 11, opacity: 0.65, marginLeft: 6 }}>— {day.title}</span>}
+                      </button>
+                    ))}
                   </div>
-                </div>
-              )}
-              {guide.practical_info?.transport_tips && (
-                <div className="practical-block">
-                  <h4><Plane size={16} /> Transports</h4>
-                  <p>{guide.practical_info.transport_tips}</p>
-                </div>
-              )}
-              {guide.practical_info?.visa_info && (
-                <div className="practical-block">
-                  <h4><Info size={16} /> Visa & formalités</h4>
-                  <p>{guide.practical_info.visa_info}</p>
-                </div>
-              )}
-              {guide.practical_info?.currency && (
-                <div className="practical-block">
-                  <h4><Wallet size={16} /> Monnaie</h4>
-                  <p>{guide.practical_info.currency}</p>
-                </div>
-              )}
-              {guide.practical_info?.language_tips && (
-                <div className="practical-block">
-                  <h4><Globe size={16} /> Langue</h4>
-                  <p>{guide.practical_info.language_tips}</p>
-                </div>
-              )}
-              {!guide.practical_info?.budget_min && !guide.practical_info?.transport_tips &&
-               !guide.practical_info?.visa_info && !guide.practical_info?.currency &&
-               !guide.practical_info?.language_tips && guide.practical_info?.best_seasons?.length === 0 && (
-                <p className="guide-empty-section">Informations pratiques à venir…</p>
-              )}
-            </div>
+
+                  {/* Day content */}
+                  {guide.itinerary[activeDay] && (() => {
+                    const day = guide.itinerary[activeDay];
+                    return (
+                      <div>
+                        <h2 style={{ fontFamily: "'Cormorant Garant', serif", fontWeight: 600, fontSize: 30, color: '#252826', marginBottom: 8 }}>
+                          Jour {day.day_number}
+                          {day.title && <span style={{ fontWeight: 400, color: '#aaa', fontSize: 24 }}> — {day.title}</span>}
+                        </h2>
+                        {day.description && (
+                          <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 14, color: '#777', lineHeight: 1.7, marginBottom: 32 }}
+                            dangerouslySetInnerHTML={{ __html: day.description }} />
+                        )}
+
+                        {/* Timeline activities */}
+                        <div style={{ marginBottom: day.tips?.length > 0 ? 0 : 8 }}>
+                          {(day.activities || []).map((act, i) => {
+                            const isLast = i === day.activities.length - 1;
+                            const linked = act.place_id && placeMap[act.place_id];
+                            return (
+                              <div key={i} style={{ display: 'flex', gap: 16, paddingBottom: isLast ? 8 : 28 }}>
+                                {/* Timeline dot + line */}
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#f0ece4',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <MapPin size={15} color="#c17c5a" />
+                                  </div>
+                                  {!isLast && <div style={{ width: 1, flex: 1, background: '#e8e3d9', marginTop: 4 }} />}
+                                </div>
+                                {/* Content */}
+                                <div style={{ paddingTop: 5, flex: 1 }}>
+                                  {act.time && (
+                                    <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#bbb', letterSpacing: '0.06em', display: 'block', marginBottom: 4 }}>
+                                      {act.time}
+                                    </span>
+                                  )}
+                                  <div style={{ fontFamily: "'Cormorant Garant', serif", fontWeight: 600, fontSize: 20, color: '#252826', lineHeight: 1.2, marginBottom: 6 }}>
+                                    {act.title}
+                                  </div>
+                                  {act.description && (
+                                    <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 13.5, color: '#666', margin: '0 0 10px', lineHeight: 1.65 }}
+                                      dangerouslySetInnerHTML={{ __html: act.description }} />
+                                  )}
+                                  {linked && (
+                                    <button onClick={() => setSelectedPlace(linked)} style={{
+                                      display: 'inline-flex', alignItems: 'center', gap: 8,
+                                      background: '#f5f1ea', borderRadius: 6, padding: '6px 12px',
+                                      border: '1px solid #e5e0d5', cursor: 'pointer',
+                                      fontFamily: "'Cormorant Garant', serif", fontSize: 14, fontWeight: 600, color: '#252826',
+                                    }}>
+                                      <MapPin size={12} color="#c17c5a" />{linked.title}
+                                      {linked.city && <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: '#aaa', fontWeight: 400 }}>{linked.city}</span>}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Tips du jour */}
+                        {day.tips?.length > 0 && (
+                          <div style={{ marginTop: 24, background: '#faf8f3', borderRadius: 8, padding: '20px 24px', border: '1px solid #e5e0d5' }}>
+                            <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#bbb', marginBottom: 12 }}>
+                              Conseils du jour
+                            </p>
+                            <ul style={{ paddingLeft: 18, margin: 0 }}>
+                              {day.tips.map((tip, i) => (
+                                <li key={i} style={{ fontFamily: 'Jost, sans-serif', fontSize: 13.5, color: '#555', lineHeight: 1.65, marginBottom: 6 }}>{tip}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </>
           )}
 
+          {/* ── Infos pratiques ── */}
+          {activeSection === 'practical' && (
+            PRACTICAL_BLOCKS.length === 0
+              ? <p className="guide-empty-section">Informations pratiques à venir…</p>
+              : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+                  {PRACTICAL_BLOCKS.map((b, i) => (
+                    <div key={i} style={{ background: '#faf8f3', borderRadius: 8, padding: '20px 22px', border: '1px solid #e5e0d5' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                        <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#f0ece4',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#3f4240' }}>
+                          {b.icon}
+                        </div>
+                        <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#999', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                          {b.label}
+                        </span>
+                      </div>
+                      <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 13.5, color: '#555', margin: 0, lineHeight: 1.65 }}>{b.content}</p>
+                    </div>
+                  ))}
+                </div>
+          )}
+
+          {/* ── Photos ── */}
           {activeSection === 'photos' && (
             <div className="guide-photos-grid">
               {allPhotos.length === 0
@@ -1492,13 +1563,14 @@ const GuideDetailPage = () => {
             </div>
           )}
 
+          {/* ── Carte ── */}
           {activeSection === 'map' && (
             <div className="guide-map-section">
               {places.length === 0
                 ? <p className="guide-empty-section">Aucun lieu lié à ce guide.</p>
                 : (
                   <MapContainer center={mapCenter} zoom={7}
-                    style={{ height: '400px', width: '100%', borderRadius: '12px' }}
+                    style={{ height: '420px', width: '100%', borderRadius: '10px', border: '1px solid #e5e0d5' }}
                     scrollWheelZoom={false}>
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
                     {places.map(place => (
@@ -1510,10 +1582,20 @@ const GuideDetailPage = () => {
                 )}
             </div>
           )}
+
+          {/* Tags */}
+          {guide.tags?.length > 0 && (
+            <div style={{ marginTop: 48, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {guide.tags.map(t => (
+                <span key={t} style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#aaa',
+                  background: '#f0ece4', borderRadius: 20, padding: '4px 12px' }}>#{t}</span>
+              ))}
+            </div>
+          )}
         </div>
 
         <Link to="/guides" className="floating-home"><BookOpen size={22} /></Link>
-      </motion.div>
+      </div>
 
       <AnimatePresence>
         {lightboxOpen && allPhotos.length > 0 && (
