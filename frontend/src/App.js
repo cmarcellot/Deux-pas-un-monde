@@ -932,6 +932,13 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let isDragging = false, prevX = 0, prevY = 0, rotX = 0, rotY = 0, autoRotate = true;
+    const Z_MIN = 1.4, Z_MAX = 5.0;
+
+    const onWheel = (evt) => {
+      evt.preventDefault();
+      camera.position.z = Math.max(Z_MIN, Math.min(Z_MAX, camera.position.z + evt.deltaY * 0.005));
+    };
+    container.addEventListener('wheel', onWheel, { passive: false });
 
     const onMouseMove = (evt) => {
       const rect = container.getBoundingClientRect();
@@ -979,9 +986,23 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
     container.addEventListener('mouseup', onMouseUp);
     container.addEventListener('mouseleave', onMouseLeave);
 
-    let lastTouchX = 0, lastTouchY = 0, hasTouchStart = false;
-    container.addEventListener('touchstart', (e) => { lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY; hasTouchStart = true; autoRotate = false; });
+    let lastTouchX = 0, lastTouchY = 0, hasTouchStart = false, lastPinchDist = 0;
+    container.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        lastPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      } else {
+        lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
+        hasTouchStart = true; autoRotate = false;
+      }
+    });
     container.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2) {
+        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        camera.position.z = Math.max(Z_MIN, Math.min(Z_MAX, camera.position.z - (dist - lastPinchDist) * 0.02));
+        lastPinchDist = dist;
+        e.preventDefault();
+        return;
+      }
       if (!hasTouchStart) return;
       const t = e.touches[0];
       rotY += (t.clientX - lastTouchX) * 0.005; rotX += (t.clientY - lastTouchY) * 0.005;
@@ -1022,6 +1043,7 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
       container.removeEventListener('mousedown', onMouseDown);
       container.removeEventListener('mouseup', onMouseUp);
       container.removeEventListener('mouseleave', onMouseLeave);
+      container.removeEventListener('wheel', onWheel);
       window.removeEventListener('resize', onResize);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
