@@ -115,6 +115,7 @@ class PlaceResponse(BaseModel):
 # ---------- Guide models ----------
 class ItineraryActivity(BaseModel):
     time: Optional[str] = None
+    type: Optional[str] = None
     title: str
     description: Optional[str] = None
     place_id: Optional[str] = None
