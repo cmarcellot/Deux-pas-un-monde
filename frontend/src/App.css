@@ -956,6 +956,46 @@
 }
 .add-activity-btn:hover { background: var(--dark); color: white; border-color: var(--dark); }
 
+/* ── Carte d'activité (nouveau layout prototype) ─────────────────── */
+.activity-form-card {
+  background: #faf8f3;
+  border-radius: 6px;
+  border: 1px solid #ece8e0;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.activity-form-card-grid {
+  display: grid;
+  grid-template-columns: 70px 120px 1fr 28px;
+  gap: 8px;
+  align-items: flex-start;
+}
+.form-label-xs {
+  font-family: 'Jost', sans-serif;
+  font-size: 9px;
+  color: #999;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+.input-xs {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 8px;
+  border-radius: 6px;
+  border: 1.5px solid #ddd9d0;
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  background: #fff;
+  outline: none;
+  color: #252826;
+}
+.input-xs:focus { border-color: var(--dark); }
+.input-xs::placeholder { color: #bbb; }
+
+/* Ancien layout conservé pour compatibilité */
 .activity-form-row {
   display: flex; gap: 8px; align-items: center;
   padding: 8px 14px; flex-wrap: wrap;
