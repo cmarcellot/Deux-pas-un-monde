@@ -8,10 +8,10 @@ import { Toaster, toast } from 'sonner';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import {
-  Map, Home, Settings, Star, MapPin, X, Plus, Trash2, Edit3,
+  Home, Settings, Star, MapPin, X, Plus, Trash2, Edit3,
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Eye, Save, Key, ZoomIn,
-  BookOpen, Calendar, Globe, Wallet, Info, ChevronDown, ChevronUp, Plane,
+  BookOpen, Calendar, Globe, Wallet, Info, Plane,
   Search, CheckCircle, Loader2, GripVertical
 } from 'lucide-react';
 import './App.css';
@@ -58,6 +58,7 @@ const EMPTY_GUIDE = {
     transport_tips: '', visa_info: '', language_tips: '', currency: '',
   },
   tags: [], photos: [], place_ids: [], published: false,
+  marker_color: '#c1845a', date: '',
 };
 
 // Map backend slugs to new design labels and category keys
@@ -274,7 +275,7 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
           >
             <img
               src={getPhotoSrc(photos[currentIndex])}
-              alt={`Image ${currentIndex + 1}`}
+              alt=""
               className="lightbox-image"
               draggable={false}
             />
@@ -1094,7 +1095,7 @@ const GlobeView = ({ guides, navigate }) => {
       setGeocoding(true);
       const results = await Promise.all(guides.map(async (guide, idx) => {
         const coords = await geocodeDestination(`${guide.destination}, ${guide.country}`);
-        if (coords) return { ...guide, _lat: coords.lat, _lng: coords.lng, markerColor: GUIDE_COLORS[idx % GUIDE_COLORS.length] };
+        if (coords) return { ...guide, _lat: coords.lat, _lng: coords.lng, markerColor: guide.marker_color || GUIDE_COLORS[idx % GUIDE_COLORS.length] };
         return { ...guide, _lat: null, _lng: null };
       }));
       if (!cancelled) {
@@ -1746,6 +1747,87 @@ const DropZone = ({ onFiles, multiple = true, label = 'Glisser des photos ici', 
 };
 
 // ============================================================
+// PLACE SEARCH — dropdown searchable pour lier une adresse à une activité
+// ============================================================
+const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(false);
+  const [changing, setChanging] = useState(false);
+
+  const linked = act.place_id ? places.find(p => p.id === act.place_id) : null;
+  const showSearch = !linked || changing;
+
+  const filtered = places.filter(p =>
+    !search.trim() ? true :
+    p.title.toLowerCase().includes(search.toLowerCase()) ||
+    (p.city || '').toLowerCase().includes(search.toLowerCase())
+  ).slice(0, 8);
+
+  return (
+    <div style={{ marginTop: 10, position: 'relative' }}>
+      <label style={{ fontFamily: 'Jost, sans-serif', fontSize: 9, color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+        Adresse liée
+      </label>
+      {!showSearch ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f0ece4', borderRadius: 6, padding: '6px 10px', border: '1px solid #e5e0d5', marginTop: 4 }}>
+          <CategoryBadge categoryId={linked.category} small />
+          <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: '#252826', flex: 1 }}>{linked.title} — {linked.city}</span>
+          <button type="button" onClick={() => { updateActivity(dayIdx, actIdx, 'place_id', null); setChanging(false); setSearch(''); }}
+            style={{ background: 'none', border: 'none', color: '#bbb', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '0 4px' }}>×</button>
+          <button type="button" onClick={() => { setChanging(true); setOpen(true); setSearch(''); }}
+            style={{ background: 'none', border: '1px solid #d0cbc0', color: '#888', cursor: 'pointer', fontFamily: 'Jost, sans-serif', fontSize: 11, borderRadius: 4, padding: '2px 8px' }}>
+            Changer
+          </button>
+        </div>
+      ) : (
+        <div>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
+            <input
+              style={{ display: 'block', width: '100%', boxSizing: 'border-box', padding: '7px 10px', borderRadius: 6, border: '1.5px solid #ddd9d0', fontFamily: 'Jost, sans-serif', fontSize: 12, background: '#fff', outline: 'none', color: '#252826', flex: 1 }}
+              value={search}
+              onChange={e => { setSearch(e.target.value); setOpen(true); }}
+              onFocus={() => setOpen(true)}
+              onBlur={() => setTimeout(() => setOpen(false), 150)}
+              placeholder="Rechercher une adresse..."
+            />
+            {changing && (
+              <button type="button" onClick={() => { setChanging(false); setSearch(''); setOpen(false); }}
+                style={{ background: 'none', border: '1px solid #d0cbc0', color: '#888', cursor: 'pointer', fontFamily: 'Jost, sans-serif', fontSize: 11, borderRadius: 4, padding: '6px 10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                Annuler
+              </button>
+            )}
+          </div>
+          {open && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200, background: '#fff', border: '1px solid #ddd9d0', borderTop: 'none', borderRadius: '0 0 6px 6px', boxShadow: '0 8px 20px rgba(0,0,0,0.1)', maxHeight: 220, overflowY: 'auto' }}>
+              {filtered.length === 0 ? (
+                <div style={{ padding: '10px 12px', fontFamily: 'Jost, sans-serif', fontSize: 12, color: '#bbb' }}>Aucune adresse trouvée</div>
+              ) : filtered.map(p => (
+                <div key={p.id}
+                  onMouseDown={e => { e.preventDefault(); updateActivity(dayIdx, actIdx, 'place_id', p.id); setSearch(''); setOpen(false); setChanging(false); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f5f1ea' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#f5f0e8'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <CategoryBadge categoryId={p.category} small />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: "'Cormorant Garant', serif", fontSize: 14, fontWeight: 600, color: '#252826', lineHeight: 1.1 }}>{p.title}</div>
+                    <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: '#aaa' }}>{p.city}, {p.country}</div>
+                  </div>
+                </div>
+              ))}
+              {!search && places.length > 0 && (
+                <div style={{ padding: '6px 12px', fontFamily: 'Jost, sans-serif', fontSize: 10, color: '#ccc', borderTop: '1px solid #f0ece4' }}>
+                  Tapez pour filtrer ({places.length} adresses)
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================================
 // ADMIN GUIDE FORM
 // ============================================================
 const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, onSubmit, onClose, loading, places }) => {
@@ -1856,6 +1938,18 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
               <input type="text" value={guideFormData.country} onChange={e => setGuideFormData(p => ({ ...p, country: e.target.value }))} required placeholder="Ex: Japon" /></div>
             <div className="form-group"><label>Durée (jours) *</label>
               <input type="number" min="1" max="365" value={guideFormData.duration_days} onChange={e => setGuideFormData(p => ({ ...p, duration_days: parseInt(e.target.value) || 1 }))} required /></div>
+            <div className="form-group"><label>Date de publication</label>
+              <input type="month" value={guideFormData.date || ''} onChange={e => setGuideFormData(p => ({ ...p, date: e.target.value }))} /></div>
+            <div className="form-group full-width"><label>Tags (séparés par des virgules)</label>
+              <input type="text" value={(guideFormData.tags || []).join(', ')} onChange={e => setGuideFormData(p => ({ ...p, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) }))} placeholder="italie, city-break, gastronomie" /></div>
+            <div className="form-group">
+              <label>Couleur du marqueur (globe)</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                <input type="color" value={guideFormData.marker_color || '#c1845a'} onChange={e => setGuideFormData(p => ({ ...p, marker_color: e.target.value }))}
+                  style={{ width: 44, height: 34, padding: 2, borderRadius: 6, border: '1.5px solid var(--border)', cursor: 'pointer' }} />
+                <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: '#aaa' }}>Point affiché sur le globe 3D</span>
+              </div>
+            </div>
             <div className="form-group">
               <label>Statut</label>
               <div className="toggle-row">
@@ -1911,21 +2005,37 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
                   <button type="button" onClick={() => addActivity(dayIdx)} className="add-activity-btn"><Plus size={14} />Ajouter</button>
                 </div>
                 {day.activities.map((act, actIdx) => (
-                  <div key={actIdx} className="activity-form-row">
-                    <input type="text" value={act.time || ''} onChange={e => updateActivity(dayIdx, actIdx, 'time', e.target.value)} placeholder="09:00" style={{ width: '70px', flexShrink: 0 }} />
-                    <select value={act.type || ''} onChange={e => updateActivity(dayIdx, actIdx, 'type', e.target.value || null)} style={{ width: '120px', flexShrink: 0 }}>
-                      <option value="">— Type —</option>
-                      {Object.entries(ACTIVITY_TYPES).map(([key, t]) => (
-                        <option key={key} value={key}>{t.label}</option>
-                      ))}
-                    </select>
-                    <input type="text" value={act.title} onChange={e => updateActivity(dayIdx, actIdx, 'title', e.target.value)} placeholder="Titre de l'activité" required />
-                    <input type="text" value={act.description || ''} onChange={e => updateActivity(dayIdx, actIdx, 'description', e.target.value)} placeholder="Description" />
-                    <select value={act.place_id || ''} onChange={e => updateActivity(dayIdx, actIdx, 'place_id', e.target.value || null)}>
-                      <option value="">— Lieu lié —</option>
-                      {places.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
-                    </select>
-                    <button type="button" onClick={() => removeActivity(dayIdx, actIdx)} className="action-btn delete"><X size={14} /></button>
+                  <div key={actIdx} className="activity-form-card">
+                    <div className="activity-form-card-grid">
+                      {/* Heure */}
+                      <div>
+                        <label className="form-label-xs">Heure</label>
+                        <input type="text" value={act.time || ''} onChange={e => updateActivity(dayIdx, actIdx, 'time', e.target.value)} placeholder="09h00" className="input-xs" />
+                      </div>
+                      {/* Type */}
+                      <div>
+                        <label className="form-label-xs">Type</label>
+                        <select value={act.type || ''} onChange={e => updateActivity(dayIdx, actIdx, 'type', e.target.value || null)} className="input-xs">
+                          <option value="">— —</option>
+                          {Object.entries(ACTIVITY_TYPES).map(([key, t]) => (
+                            <option key={key} value={key}>{t.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      {/* Titre + Description + Lat/Lng */}
+                      <div>
+                        <label className="form-label-xs">Titre & description</label>
+                        <input type="text" value={act.title} onChange={e => updateActivity(dayIdx, actIdx, 'title', e.target.value)} placeholder="Nom de l'activité" required className="input-xs" />
+                        <textarea value={act.description || ''} onChange={e => updateActivity(dayIdx, actIdx, 'description', e.target.value)} placeholder="Description (optionnel)" rows={2} className="input-xs" style={{ marginTop: 4, resize: 'none' }} />
+                        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                          <input type="number" step="any" value={act.latitude || ''} onChange={e => updateActivity(dayIdx, actIdx, 'latitude', e.target.value ? parseFloat(e.target.value) : null)} placeholder="Latitude" className="input-xs" />
+                          <input type="number" step="any" value={act.longitude || ''} onChange={e => updateActivity(dayIdx, actIdx, 'longitude', e.target.value ? parseFloat(e.target.value) : null)} placeholder="Longitude" className="input-xs" />
+                        </div>
+                      </div>
+                      {/* Supprimer */}
+                      <button type="button" onClick={() => removeActivity(dayIdx, actIdx)} style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: 18, alignSelf: 'start', paddingTop: 20 }}>×</button>
+                    </div>
+                    <PlaceSearch act={act} dayIdx={dayIdx} actIdx={actIdx} places={places} updateActivity={updateActivity} />
                   </div>
                 ))}
               </div>
@@ -2016,6 +2126,7 @@ const AdminPage = () => {
   const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     if (token) verifyToken(token);
@@ -2080,6 +2191,7 @@ const AdminPage = () => {
       const method = editingGuide ? 'PUT' : 'POST';
       const payload = {
         ...guideFormData,
+        tags: Array.isArray(guideFormData.tags) ? guideFormData.tags : (guideFormData.tags || '').split(',').map(t => t.trim()).filter(Boolean),
         practical_info: {
           ...guideFormData.practical_info,
           budget_min: guideFormData.practical_info.budget_min ? parseInt(guideFormData.practical_info.budget_min) : null,

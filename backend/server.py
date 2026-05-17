@@ -120,6 +120,8 @@ class ItineraryActivity(BaseModel):
     description: Optional[str] = None
     place_id: Optional[str] = None
     duration_minutes: Optional[int] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 class ItineraryDay(BaseModel):
     day_number: int
@@ -151,6 +153,8 @@ class GuideCreate(BaseModel):
     photos: List[str] = []
     place_ids: List[str] = []
     published: bool = False
+    marker_color: Optional[str] = None
+    date: Optional[str] = None
 
 class GuideUpdate(BaseModel):
     title: Optional[str] = None
@@ -165,6 +169,8 @@ class GuideUpdate(BaseModel):
     photos: Optional[List[str]] = None
     place_ids: Optional[List[str]] = None
     published: Optional[bool] = None
+    marker_color: Optional[str] = None
+    date: Optional[str] = None
 
 class GuideResponse(BaseModel):
     id: str
@@ -182,6 +188,8 @@ class GuideResponse(BaseModel):
     published: bool
     created_at: str
     updated_at: str
+    marker_color: Optional[str] = None
+    date: Optional[str] = None
 
 def create_token(data: dict):
     expire = datetime.now(timezone.utc) + timedelta(hours=24)
