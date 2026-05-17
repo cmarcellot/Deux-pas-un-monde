@@ -8,10 +8,10 @@ import { Toaster, toast } from 'sonner';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import {
-  Map, Home, Settings, Star, MapPin, X, Plus, Trash2, Edit3,
+  Home, Settings, Star, MapPin, X, Plus, Trash2, Edit3,
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Eye, Save, Key, ZoomIn,
-  BookOpen, Calendar, Globe, Wallet, Info, ChevronDown, ChevronUp, Plane,
+  BookOpen, Calendar, Globe, Wallet, Info, Plane,
   Search, CheckCircle, Loader2, GripVertical
 } from 'lucide-react';
 import './App.css';
@@ -275,7 +275,7 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
           >
             <img
               src={getPhotoSrc(photos[currentIndex])}
-              alt={`Image ${currentIndex + 1}`}
+              alt=""
               className="lightbox-image"
               draggable={false}
             />
@@ -2125,6 +2125,7 @@ const AdminPage = () => {
   const [draggedPhotoIdx, setDraggedPhotoIdx] = useState(null);
   const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
