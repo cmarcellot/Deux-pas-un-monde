@@ -1095,7 +1095,7 @@ const GlobeView = ({ guides, navigate }) => {
       setGeocoding(true);
       const results = await Promise.all(guides.map(async (guide, idx) => {
         const coords = await geocodeDestination(`${guide.destination}, ${guide.country}`);
-        if (coords) return { ...guide, _lat: coords.lat, _lng: coords.lng, markerColor: GUIDE_COLORS[idx % GUIDE_COLORS.length] };
+        if (coords) return { ...guide, _lat: coords.lat, _lng: coords.lng, markerColor: guide.marker_color || GUIDE_COLORS[idx % GUIDE_COLORS.length] };
         return { ...guide, _lat: null, _lng: null };
       }));
       if (!cancelled) {
