@@ -120,6 +120,7 @@ class ItineraryActivity(BaseModel):
     description: Optional[str] = None
     place_id: Optional[str] = None
     duration_minutes: Optional[int] = None
+    address: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
 
