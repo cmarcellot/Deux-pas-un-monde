@@ -1827,6 +1827,72 @@ const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
   );
 };
 
+// ACTIVITY ADDRESS GEO — géolocalisation de l'adresse d'une activité
+// ============================================================
+const ActivityAddressGeo = ({ act, dayIdx, actIdx, updateActivityFields }) => {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(
+    act.latitude && act.longitude ? { lat: act.latitude, lng: act.longitude } : null
+  );
+
+  const geocode = async () => {
+    const q = (act.address || '').trim();
+    if (!q) return;
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,
+        { headers: { 'Accept-Language': 'fr' } }
+      );
+      const data = await res.json();
+      if (data[0]) {
+        const lat = parseFloat(data[0].lat);
+        const lng = parseFloat(data[0].lon);
+        updateActivityFields(dayIdx, actIdx, { latitude: lat, longitude: lng });
+        setResult({ lat, lng });
+        toast.success('Coordonnées trouvées !');
+      } else {
+        toast.error('Adresse introuvable');
+      }
+    } catch { toast.error('Erreur de géolocalisation'); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div style={{ marginTop: 4 }}>
+      <div className="address-geocode-row">
+        <input
+          type="text"
+          value={act.address || ''}
+          onChange={e => {
+            updateActivityFields(dayIdx, actIdx, { address: e.target.value || null });
+            setResult(null);
+          }}
+          placeholder="Adresse ou nom du lieu"
+          className="input-xs"
+          style={{ flex: 1 }}
+        />
+        <button
+          type="button"
+          className="geocode-btn"
+          onClick={geocode}
+          disabled={loading || !act.address?.trim()}
+          style={{ padding: '0 10px', fontSize: 12, gap: 4 }}
+        >
+          {loading ? <Loader2 size={13} className="spin" /> : <Search size={13} />}
+          {!loading && ' Géo'}
+        </button>
+      </div>
+      {result && (
+        <div className="geocode-result" style={{ fontSize: 10, padding: '4px 8px', marginTop: 4 }}>
+          <CheckCircle size={11} />
+          <span className="geocode-coords">{result.lat.toFixed(4)}, {result.lng.toFixed(4)}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ============================================================
 // ADMIN GUIDE FORM
 // ============================================================
@@ -1895,6 +1961,16 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
       const itinerary = [...prev.itinerary];
       const activities = [...itinerary[dayIdx].activities];
       activities[actIdx] = { ...activities[actIdx], [field]: value || null };
+      itinerary[dayIdx] = { ...itinerary[dayIdx], activities };
+      return { ...prev, itinerary };
+    });
+  };
+
+  const updateActivityFields = (dayIdx, actIdx, fields) => {
+    setGuideFormData(prev => {
+      const itinerary = [...prev.itinerary];
+      const activities = [...itinerary[dayIdx].activities];
+      activities[actIdx] = { ...activities[actIdx], ...fields };
       itinerary[dayIdx] = { ...itinerary[dayIdx], activities };
       return { ...prev, itinerary };
     });
@@ -2027,10 +2103,7 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
                         <label className="form-label-xs">Titre & description</label>
                         <input type="text" value={act.title} onChange={e => updateActivity(dayIdx, actIdx, 'title', e.target.value)} placeholder="Nom de l'activité" required className="input-xs" />
                         <textarea value={act.description || ''} onChange={e => updateActivity(dayIdx, actIdx, 'description', e.target.value)} placeholder="Description (optionnel)" rows={2} className="input-xs" style={{ marginTop: 4, resize: 'none' }} />
-                        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                          <input type="number" step="any" value={act.latitude || ''} onChange={e => updateActivity(dayIdx, actIdx, 'latitude', e.target.value ? parseFloat(e.target.value) : null)} placeholder="Latitude" className="input-xs" />
-                          <input type="number" step="any" value={act.longitude || ''} onChange={e => updateActivity(dayIdx, actIdx, 'longitude', e.target.value ? parseFloat(e.target.value) : null)} placeholder="Longitude" className="input-xs" />
-                        </div>
+                        <ActivityAddressGeo act={act} dayIdx={dayIdx} actIdx={actIdx} updateActivityFields={updateActivityFields} />
                       </div>
                       {/* Supprimer */}
                       <button type="button" onClick={() => removeActivity(dayIdx, actIdx)} style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: 18, alignSelf: 'start', paddingTop: 20 }}>×</button>
@@ -2125,12 +2198,10 @@ const AdminPage = () => {
   const [draggedPhotoIdx, setDraggedPhotoIdx] = useState(null);
   const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     if (token) verifyToken(token);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const verifyToken = async (token) => {
     try {
