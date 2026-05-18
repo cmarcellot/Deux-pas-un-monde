@@ -1849,7 +1849,7 @@ const ActivityAddressGeo = ({ act, dayIdx, actIdx, updateActivityFields }) => {
         const lat = parseFloat(data[0].lat);
         const lng = parseFloat(data[0].lon);
         updateActivityFields(dayIdx, actIdx, { latitude: lat, longitude: lng });
-        setResult({ lat, lng });
+        setResult({ lat, lng, display_name: data[0].display_name });
         toast.success('Coordonnées trouvées !');
       } else {
         toast.error('Adresse introuvable');
@@ -1886,7 +1886,8 @@ const ActivityAddressGeo = ({ act, dayIdx, actIdx, updateActivityFields }) => {
       {result && (
         <div className="geocode-result" style={{ fontSize: 10, padding: '4px 8px', marginTop: 4 }}>
           <CheckCircle size={11} />
-          <span className="geocode-coords">{result.lat.toFixed(4)}, {result.lng.toFixed(4)}</span>
+          {result.display_name}
+          <span className="geocode-coords">{result.lat.toFixed(5)}, {result.lng.toFixed(5)}</span>
         </div>
       )}
     </div>
