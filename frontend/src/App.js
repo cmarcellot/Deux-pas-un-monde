@@ -128,6 +128,33 @@ const createMarkerIcon = (category) => {
   });
 };
 
+// Numbered circle marker for guide trip map (one per activity)
+const ACTIVITY_MARKER_COLORS = {
+  visite:    '#3d7a55',
+  repas:     '#a05a35',
+  nuit:      '#4a5e8a',
+  transport: '#6d8030',
+  conseil:   '#6a4a88',
+  nature:    '#327848',
+  shopping:  '#8a4030',
+};
+const createActivityMarkerIcon = (num, typeKey) => {
+  const bg = ACTIVITY_MARKER_COLORS[typeKey] || '#8a7060';
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:32px;height:32px;border-radius:50%;
+      background:${bg};border:2.5px solid #fff;
+      box-shadow:0 2px 8px rgba(0,0,0,0.28);
+      display:flex;align-items:center;justify-content:center;
+      font-family:Jost,sans-serif;font-size:13px;font-weight:700;color:#fff;line-height:1;
+    ">${num}</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -18],
+  });
+};
+
 const getPhotoSrc = (photo) => photo.startsWith('/api') ? `${API_URL}${photo}` : photo;
 
 // ============================================================
@@ -451,6 +478,15 @@ const GuideCard = ({ guide, onClick }) => (
 const MapRecenter = ({ center }) => {
   const map = useMap();
   useEffect(() => { if (center) map.setView(center, map.getZoom()); }, [center, map]);
+  return null;
+};
+
+const FitBoundsToMarkers = ({ positions }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (positions.length === 1) { map.setView(positions[0], 14); return; }
+    if (positions.length > 1) { map.fitBounds(L.latLngBounds(positions), { padding: [40, 40] }); }
+  }, [map, positions]);
   return null;
 };
 
@@ -1346,7 +1382,7 @@ const GuideDetailPage = () => {
     ['itinerary', 'Itinéraire'],
     ['practical', 'Infos pratiques'],
     ['photos',    'Photos'],
-    ['map',       'Carte'],
+    ['map',       'Carte du séjour'],
   ];
 
   const PRACTICAL_BLOCKS = [
@@ -1592,25 +1628,81 @@ const GuideDetailPage = () => {
             </div>
           )}
 
-          {/* ── Carte ── */}
-          {activeSection === 'map' && (
-            <div className="guide-map-section">
-              {places.length === 0
-                ? <p className="guide-empty-section">Aucun lieu lié à ce guide.</p>
-                : (
-                  <MapContainer center={mapCenter} zoom={7}
-                    style={{ height: '420px', width: '100%', borderRadius: '10px', border: '1px solid #e5e0d5' }}
-                    scrollWheelZoom={false}>
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
-                    {places.map(place => (
-                      <Marker key={place.id} position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)}>
-                        <Popup><div className="map-popup"><h4>{place.title}</h4><p>{place.address}</p></div></Popup>
-                      </Marker>
-                    ))}
-                  </MapContainer>
+          {/* ── Carte du séjour ── */}
+          {activeSection === 'map' && (() => {
+            // Numérotation séquentielle de toutes les activités
+            let counter = 0;
+            const allActs = guide.itinerary.flatMap(day =>
+              (day.activities || []).map(act => ({
+                ...act, dayNumber: day.day_number, dayTitle: day.title, num: ++counter,
+              }))
+            );
+            const mappable = allActs.filter(a => a.latitude && a.longitude);
+            const positions = mappable.map(a => [a.latitude, a.longitude]);
+            const center = positions.length > 0
+              ? [positions.reduce((s, p) => s + p[0], 0) / positions.length,
+                 positions.reduce((s, p) => s + p[1], 0) / positions.length]
+              : mapCenter;
+            return (
+              <div>
+                {mappable.length === 0
+                  ? <p className="guide-empty-section">Aucune activité géolocalisée — ajoutez des adresses dans l'éditeur.</p>
+                  : (
+                    <MapContainer center={center} zoom={13}
+                      style={{ height: '440px', width: '100%', borderRadius: '10px', border: '1px solid #e5e0d5', marginBottom: 24 }}
+                      scrollWheelZoom={false}>
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
+                      <FitBoundsToMarkers positions={positions} />
+                      {mappable.map(act => (
+                        <Marker key={act.num} position={[act.latitude, act.longitude]}
+                          icon={createActivityMarkerIcon(act.num, act.type)}>
+                          <Popup>
+                            <div style={{ fontFamily: 'Jost, sans-serif', minWidth: 140 }}>
+                              <div style={{ fontSize: 10, color: '#999', marginBottom: 2 }}>Jour {act.dayNumber}</div>
+                              <div style={{ fontFamily: "'Cormorant Garant', serif", fontSize: 15, fontWeight: 600, color: '#252826' }}>{act.title}</div>
+                            </div>
+                          </Popup>
+                        </Marker>
+                      ))}
+                    </MapContainer>
+                  )
+                }
+                {/* Grille des activités */}
+                {allActs.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 10 }}>
+                    {allActs.map(act => {
+                      const bg = ACTIVITY_MARKER_COLORS[act.type] || '#8a7060';
+                      const hasCoords = !!(act.latitude && act.longitude);
+                      return (
+                        <div key={act.num} style={{
+                          background: '#faf8f3', borderRadius: 8, padding: '10px 14px',
+                          border: '1px solid #e5e0d5', display: 'flex', alignItems: 'center', gap: 12,
+                          opacity: hasCoords ? 1 : 0.5,
+                        }}>
+                          <div style={{
+                            width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                            background: hasCoords ? bg : '#ccc',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontFamily: 'Jost, sans-serif', fontSize: 12, fontWeight: 700, color: '#fff',
+                          }}>{act.num}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: '#bbb', marginBottom: 2 }}>
+                              Jour {act.dayNumber}
+                            </div>
+                            <div style={{
+                              fontFamily: "'Cormorant Garant', serif", fontWeight: 600,
+                              fontSize: 14, color: '#252826', lineHeight: 1.2,
+                              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                            }}>{act.title}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
-            </div>
-          )}
+              </div>
+            );
+          })()}
 
           {/* Tags */}
           {guide.tags?.length > 0 && (
