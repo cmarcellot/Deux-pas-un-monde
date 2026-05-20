@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import * as THREE from 'three';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
@@ -127,6 +127,9 @@ const createMarkerIcon = (category) => {
     popupAnchor: [0, -36],
   });
 };
+
+// Palette de couleurs par jour pour les polylignes de la carte du séjour
+const DAY_POLYLINE_COLORS = ['#c17c5a','#5B7A8A','#5A7A60','#8A7845','#7B5A8A','#8A5A5A','#5A6A8A','#6A8A5A'];
 
 // Numbered circle marker for guide trip map (one per activity)
 const ACTIVITY_MARKER_COLORS = {
@@ -1630,13 +1633,19 @@ const GuideDetailPage = () => {
 
           {/* ── Carte du séjour ── */}
           {activeSection === 'map' && (() => {
-            // Numérotation séquentielle de toutes les activités
+            // Numérotation séquentielle + regroupement par jour
             let counter = 0;
-            const allActs = guide.itinerary.flatMap(day =>
-              (day.activities || []).map(act => ({
-                ...act, dayNumber: day.day_number, dayTitle: day.title, num: ++counter,
-              }))
-            );
+            const dayGroups = guide.itinerary.map((day, dayIdx) => ({
+              dayNumber: day.day_number,
+              dayTitle: day.title,
+              color: DAY_POLYLINE_COLORS[dayIdx % DAY_POLYLINE_COLORS.length],
+              acts: (day.activities || []).map(act => ({
+                ...act, dayNumber: day.day_number, dayTitle: day.title,
+                dayIdx, color: DAY_POLYLINE_COLORS[dayIdx % DAY_POLYLINE_COLORS.length],
+                num: ++counter,
+              })),
+            }));
+            const allActs = dayGroups.flatMap(g => g.acts);
             const mappable = allActs.filter(a => a.latitude && a.longitude);
             const positions = mappable.map(a => [a.latitude, a.longitude]);
             const center = positions.length > 0
@@ -1648,40 +1657,65 @@ const GuideDetailPage = () => {
                 {mappable.length === 0
                   ? <p className="guide-empty-section">Aucune activité géolocalisée — ajoutez des adresses dans l'éditeur.</p>
                   : (
-                    <MapContainer center={center} zoom={13}
-                      style={{ height: '440px', width: '100%', borderRadius: '10px', border: '1px solid #e5e0d5', marginBottom: 24 }}
-                      scrollWheelZoom={false}>
-                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
-                      <FitBoundsToMarkers positions={positions} />
-                      {mappable.map(act => (
-                        <Marker key={act.num} position={[act.latitude, act.longitude]}
-                          icon={createActivityMarkerIcon(act.num, act.type)}>
-                          <Popup>
-                            <div style={{ fontFamily: 'Jost, sans-serif', minWidth: 140 }}>
-                              <div style={{ fontSize: 10, color: '#999', marginBottom: 2 }}>Jour {act.dayNumber}</div>
-                              <div style={{ fontFamily: "'Cormorant Garant', serif", fontSize: 15, fontWeight: 600, color: '#252826' }}>{act.title}</div>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      ))}
-                    </MapContainer>
+                    <>
+                      {/* Légende des jours */}
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                        {dayGroups.map(g => g.acts.some(a => a.latitude && a.longitude) && (
+                          <div key={g.dayNumber} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{ width: 24, height: 3, borderRadius: 2, background: g.color }} />
+                            <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#777' }}>
+                              Jour {g.dayNumber}{g.dayTitle ? ` — ${g.dayTitle}` : ''}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <MapContainer center={center} zoom={13}
+                        style={{ height: '440px', width: '100%', borderRadius: '10px', border: '1px solid #e5e0d5', marginBottom: 24 }}
+                        scrollWheelZoom={false}>
+                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
+                        <FitBoundsToMarkers positions={positions} />
+                        {/* Polylignes par jour */}
+                        {dayGroups.map(g => {
+                          const pts = g.acts.filter(a => a.latitude && a.longitude).map(a => [a.latitude, a.longitude]);
+                          return pts.length > 1 && (
+                            <Polyline key={g.dayNumber} positions={pts}
+                              pathOptions={{ color: g.color, weight: 3, opacity: 0.75, dashArray: null }} />
+                          );
+                        })}
+                        {/* Marqueurs numérotés */}
+                        {mappable.map(act => (
+                          <Marker key={act.num} position={[act.latitude, act.longitude]}
+                            icon={createActivityMarkerIcon(act.num, act.type)}>
+                            <Popup>
+                              <div style={{ fontFamily: 'Jost, sans-serif', minWidth: 140 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: act.color, flexShrink: 0 }} />
+                                  <span style={{ fontSize: 10, color: '#999' }}>Jour {act.dayNumber}</span>
+                                </div>
+                                <div style={{ fontFamily: "'Cormorant Garant', serif", fontSize: 15, fontWeight: 600, color: '#252826' }}>{act.title}</div>
+                              </div>
+                            </Popup>
+                          </Marker>
+                        ))}
+                      </MapContainer>
+                    </>
                   )
                 }
                 {/* Grille des activités */}
                 {allActs.length > 0 && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 10 }}>
                     {allActs.map(act => {
-                      const bg = ACTIVITY_MARKER_COLORS[act.type] || '#8a7060';
                       const hasCoords = !!(act.latitude && act.longitude);
                       return (
                         <div key={act.num} style={{
                           background: '#faf8f3', borderRadius: 8, padding: '10px 14px',
-                          border: '1px solid #e5e0d5', display: 'flex', alignItems: 'center', gap: 12,
-                          opacity: hasCoords ? 1 : 0.5,
+                          border: `1px solid ${hasCoords ? act.color + '44' : '#e5e0d5'}`,
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          opacity: hasCoords ? 1 : 0.45,
                         }}>
                           <div style={{
                             width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                            background: hasCoords ? bg : '#ccc',
+                            background: hasCoords ? act.color : '#ccc',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontFamily: 'Jost, sans-serif', fontSize: 12, fontWeight: 700, color: '#fff',
                           }}>{act.num}</div>
