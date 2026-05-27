@@ -184,7 +184,7 @@ REACT_APP_API_URL=http://localhost:8001
 
 ## Auteurs
 
-Créé avec passion par le duo derrière [@deuxpas_unmonde](https://www.instagram.com/deuxpas_unmonde)
+Créé avec passion par le duo [@deuxpas_unmonde](https://www.instagram.com/deuxpas_unmonde)
 
 ## Licence
 
