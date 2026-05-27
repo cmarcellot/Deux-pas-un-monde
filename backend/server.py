@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -7,11 +8,10 @@ from datetime import datetime, timezone, timedelta
 from jose import JWTError, jwt
 import os
 import uuid
-import base64
+import shutil
+import pathlib
 from dotenv import load_dotenv
 from pymongo import MongoClient
-import cloudinary
-import cloudinary.uploader
 
 load_dotenv()
 
@@ -24,7 +24,6 @@ app.add_middleware(
         "https://deuxpasunmonde.fr",
         "http://www.deuxpasunmonde.fr",
         "http://deuxpasunmonde.fr",
-        "http://deuxpaz.cluster121.hosting.ovh.net",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -36,12 +35,9 @@ DB_NAME = os.environ.get("DB_NAME", "deux_pas_un_monde")
 JWT_SECRET = os.environ.get("JWT_SECRET", "default_secret")
 DEFAULT_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
-# Configuration Cloudinary
-cloudinary.config(
-    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.environ.get("CLOUDINARY_API_KEY"),
-    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
-)
+UPLOAD_DIR = pathlib.Path("/app/uploads")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
@@ -112,7 +108,6 @@ class PlaceResponse(BaseModel):
     photos: List[str]
     created_at: str
 
-# ---------- Guide models ----------
 class ItineraryActivity(BaseModel):
     time: Optional[str] = None
     type: Optional[str] = None
@@ -277,29 +272,28 @@ def delete_place(place_id: str, payload: dict = Depends(verify_token)):
 async def upload_image(file: UploadFile = File(...), payload: dict = Depends(verify_token)):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Seules les images sont acceptées")
-    
-    content = await file.read()
-    result = cloudinary.uploader.upload(
-        content,
-        folder="deuxpasunmonde",
-        public_id=str(uuid.uuid4()),
-    )
-    return {"url": result["secure_url"]}
+    ext = pathlib.Path(file.filename).suffix if file.filename else ".jpg"
+    filename = f"{uuid.uuid4()}{ext}"
+    file_path = UPLOAD_DIR / filename
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {"url": f"/uploads/{filename}"}
 
 @app.post("/api/upload-base64")
 async def upload_base64(data: dict, payload: dict = Depends(verify_token)):
     if "image" not in data:
         raise HTTPException(status_code=400, detail="Image manquante")
-    
     image_data = data["image"]
-    result = cloudinary.uploader.upload(
-        image_data,
-        folder="deuxpasunmonde",
-        public_id=str(uuid.uuid4()),
-    )
-    return {"url": result["secure_url"]}
+    if "," in image_data:
+        image_data = image_data.split(",")[1]
+    import base64
+    image_bytes = base64.b64decode(image_data)
+    filename = f"{uuid.uuid4()}.jpg"
+    file_path = UPLOAD_DIR / filename
+    with open(file_path, "wb") as f:
+        f.write(image_bytes)
+    return {"url": f"/uploads/{filename}"}
 
-# ---------- Guide endpoints ----------
 @app.get("/api/guides", response_model=List[GuideResponse])
 def get_guides(tag: Optional[str] = None, destination: Optional[str] = None):
     query: dict = {"published": True}
