@@ -155,7 +155,7 @@ const createActivityMarkerIcon = (num, typeKey) => {
   });
 };
 
-const getPhotoSrc = (photo) => photo.startsWith('/api') ? `${API_URL}${photo}` : photo;
+const getPhotoSrc = (photo) => (photo.startsWith('/api') || photo.startsWith('/uploads')) ? `${API_URL}${photo}` : photo;
 
 // ============================================================
 // LOGO (4 SVG tiles)
