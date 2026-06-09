@@ -324,6 +324,15 @@ async def upload_base64(
         f.write(image_bytes)
     return {"url": url}
 
+@app.delete("/api/upload")
+async def delete_upload(url: str, payload: dict = Depends(verify_token)):
+    if not url.startswith("/uploads/"):
+        raise HTTPException(status_code=400, detail="URL invalide")
+    file_path = UPLOAD_DIR / url[len("/uploads/"):]
+    if file_path.exists() and file_path.is_file():
+        file_path.unlink()
+    return {"message": "Fichier supprimé"}
+
 @app.get("/api/guides", response_model=List[GuideResponse])
 def get_guides(tag: Optional[str] = None, destination: Optional[str] = None):
     query: dict = {"published": True}
