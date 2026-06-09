@@ -1816,6 +1816,7 @@ const PlaceDetailPage = () => {
 // ============================================================
 const DropZone = ({ onFiles, multiple = true, label = 'Glisser des photos ici', inputId }) => {
   const [dragging, setDragging] = useState(false);
+  const inputRef = useRef(null);
   const handleDrop = (e) => {
     e.preventDefault(); setDragging(false);
     const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
@@ -1827,9 +1828,9 @@ const DropZone = ({ onFiles, multiple = true, label = 'Glisser des photos ici', 
       onDragEnter={e => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}>
-      <input type="file" accept="image/*" multiple={multiple} id={inputId} className="hidden"
-        onChange={e => onFiles(Array.from(e.target.files))} />
-      <label htmlFor={inputId} className="drop-zone-label">
+      <input ref={inputRef} type="file" accept="image/*" multiple={multiple} id={inputId} className="hidden"
+        onChange={e => { onFiles(Array.from(e.target.files)); e.target.value = ''; }} />
+      <label className="drop-zone-label" onClick={() => inputRef.current?.click()}>
         <Upload size={28} />
         <span>{label}</span>
         <span className="drop-zone-hint">ou cliquer pour sélectionner</span>
@@ -1990,33 +1991,43 @@ const ActivityAddressGeo = ({ act, dayIdx, actIdx, updateActivityFields }) => {
 // ADMIN GUIDE FORM
 // ============================================================
 const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, onSubmit, onClose, loading, places, entityId }) => {
+  const [pendingCover, setPendingCover] = useState(null);
+  const [pendingPhotos, setPendingPhotos] = useState([]);
+  const [removedGuidePhotos, setRemovedGuidePhotos] = useState([]);
+
   if (!show) return null;
 
-  const deleteUpload = async (url) => {
-    if (!url || !url.startsWith('/uploads/')) return;
-    const token = localStorage.getItem('admin_token');
-    try {
-      await fetch(`${API_URL}/api/upload?url=${encodeURIComponent(url)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-    } catch {}
+  const addFiles = (files, field) => {
+    if (field === 'cover_image') {
+      if (pendingCover) URL.revokeObjectURL(pendingCover.preview);
+      setPendingCover({ file: files[0], preview: URL.createObjectURL(files[0]) });
+    } else {
+      setPendingPhotos(prev => [...prev, ...files.map(f => ({ file: f, preview: URL.createObjectURL(f) }))]);
+    }
   };
 
-  const uploadFiles = async (files, field) => {
+  const handleSubmitWithUpload = async (e) => {
+    e.preventDefault();
     const token = localStorage.getItem('admin_token');
-    for (const file of files) {
+    let finalCover = guideFormData.cover_image;
+    if (pendingCover) {
+      const fd = new FormData(); fd.append('file', pendingCover.file);
+      try {
+        const r = await fetch(`${API_URL}/api/upload?entity_type=guides&entity_id=${entityId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+        const d = await r.json();
+        if (r.ok) finalCover = d.url;
+      } catch {}
+    }
+    const finalPhotos = [...guideFormData.photos];
+    for (const { file } of pendingPhotos) {
       const fd = new FormData(); fd.append('file', file);
       try {
-        const res = await fetch(`${API_URL}/api/upload?entity_type=guides&entity_id=${entityId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
-        const data = await res.json();
-        if (res.ok) {
-          if (field === 'cover_image') {
-            setGuideFormData(prev => ({ ...prev, cover_image: data.url }));
-          } else {
-            setGuideFormData(prev => ({ ...prev, photos: [...prev.photos, data.url] }));
-          }
-          toast.success('Image uploadée');
-        }
-      } catch { toast.error('Erreur upload image'); }
+        const r = await fetch(`${API_URL}/api/upload?entity_type=guides&entity_id=${entityId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+        const d = await r.json();
+        if (r.ok) finalPhotos.push(d.url);
+      } catch {}
     }
+    onSubmit(e, { ...guideFormData, cover_image: finalCover, photos: finalPhotos, removedPhotos: removedGuidePhotos });
   };
 
   const addDay = () => {
@@ -2103,7 +2114,7 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
         <h2>{editingGuide ? 'Modifier le guide' : 'Nouveau guide de voyage'}</h2>
         <button onClick={onClose} className="close-btn"><X size={24} /></button>
       </div>
-      <form onSubmit={onSubmit} className="place-form">
+      <form onSubmit={handleSubmitWithUpload} className="place-form">
           {/* Informations de base */}
           <h3 className="form-section-title"><Globe size={16} />Informations générales</h3>
           <div className="form-grid">
@@ -2141,12 +2152,12 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
           <div className="form-group">
             <div className="photo-upload-area">
               <DropZone inputId="cover-upload" multiple={false} label="Glisser l'image de couverture ici"
-                onFiles={files => uploadFiles(files, 'cover_image')} />
-              {guideFormData.cover_image && (
+                onFiles={files => addFiles(files, 'cover_image')} />
+              {(pendingCover || guideFormData.cover_image) && (
                 <div className="uploaded-photos">
                   <div className="uploaded-photo">
-                    <img src={guideFormData.cover_image} alt="Couverture" />
-                    <button type="button" onClick={() => { deleteUpload(guideFormData.cover_image); setGuideFormData(p => ({ ...p, cover_image: '' })); }} className="remove-photo"><X size={14} /></button>
+                    <img src={pendingCover ? pendingCover.preview : getPhotoSrc(guideFormData.cover_image)} alt="Couverture" />
+                    <button type="button" onClick={() => { if (pendingCover) { URL.revokeObjectURL(pendingCover.preview); setPendingCover(null); } else { setRemovedGuidePhotos(prev => [...prev, guideFormData.cover_image]); setGuideFormData(p => ({ ...p, cover_image: '' })); } }} className="remove-photo"><X size={14} /></button>
                   </div>
                 </div>
               )}
@@ -2248,12 +2259,18 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
           <div className="form-group full-width">
             <div className="photo-upload-area">
               <DropZone inputId="guide-photos-upload" label="Glisser des photos ici"
-                onFiles={files => uploadFiles(files, 'photos')} />
+                onFiles={files => addFiles(files, 'photos')} />
               <div className="uploaded-photos">
                 {guideFormData.photos.map((photo, idx) => (
                   <div key={idx} className="uploaded-photo">
-                    <img src={photo} alt="" />
-                    <button type="button" onClick={() => { deleteUpload(photo); setGuideFormData(p => ({ ...p, photos: p.photos.filter((_, i) => i !== idx) })); }} className="remove-photo"><X size={14} /></button>
+                    <img src={getPhotoSrc(photo)} alt="" />
+                    <button type="button" onClick={() => { setRemovedGuidePhotos(prev => [...prev, photo]); setGuideFormData(p => ({ ...p, photos: p.photos.filter((_, i) => i !== idx) })); }} className="remove-photo"><X size={14} /></button>
+                  </div>
+                ))}
+                {pendingPhotos.map(({ preview }, idx) => (
+                  <div key={`pending-${idx}`} className="uploaded-photo">
+                    <img src={preview} alt="" />
+                    <button type="button" onClick={() => { URL.revokeObjectURL(preview); setPendingPhotos(prev => prev.filter((_, i) => i !== idx)); }} className="remove-photo"><X size={14} /></button>
                   </div>
                 ))}
               </div>
@@ -2297,16 +2314,8 @@ const AdminPage = () => {
   const [guideFormId, setGuideFormId] = useState(() => crypto.randomUUID());
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeResult, setGeocodeResult] = useState(null);
-  const originalPlacePhotosRef = useRef([]);
-  const originalGuideRef = useRef({ photos: [], cover_image: '' });
-
-  const deleteUploadFile = async (url) => {
-    if (!url || !url.startsWith('/uploads/')) return;
-    const token = localStorage.getItem('admin_token');
-    try {
-      await fetch(`${API_URL}/api/upload?url=${encodeURIComponent(url)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-    } catch {}
-  };
+  const [pendingPlaceFiles, setPendingPlaceFiles] = useState([]);
+  const [removedPlacePhotos, setRemovedPlacePhotos] = useState([]);
   const [showManualCoords, setShowManualCoords] = useState(false);
   const [draggedPhotoIdx, setDraggedPhotoIdx] = useState(null);
   const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState(null);
@@ -2367,28 +2376,32 @@ const AdminPage = () => {
     } catch { toast.error('Erreur lors du chargement des guides'); }
   };
 
-  const handleGuideSubmit = async (e) => {
+  const handleGuideSubmit = async (e, uploadedData = null) => {
     e.preventDefault();
     const token = localStorage.getItem('admin_token'); setLoading(true);
+    const data = uploadedData || guideFormData;
+    const removedPhotos = uploadedData?.removedPhotos || [];
     try {
       const url = editingGuide ? `${API_URL}/api/guides/${editingGuide.id}` : `${API_URL}/api/guides`;
       const method = editingGuide ? 'PUT' : 'POST';
       const payload = {
-        ...guideFormData,
+        ...data,
         ...(editingGuide ? {} : { id: guideFormId }),
-        tags: Array.isArray(guideFormData.tags) ? guideFormData.tags : (guideFormData.tags || '').split(',').map(t => t.trim()).filter(Boolean),
+        tags: Array.isArray(data.tags) ? data.tags : (data.tags || '').split(',').map(t => t.trim()).filter(Boolean),
         practical_info: {
-          ...guideFormData.practical_info,
-          budget_min: guideFormData.practical_info.budget_min ? parseInt(guideFormData.practical_info.budget_min) : null,
-          budget_max: guideFormData.practical_info.budget_max ? parseInt(guideFormData.practical_info.budget_max) : null,
+          ...data.practical_info,
+          budget_min: data.practical_info.budget_min ? parseInt(data.practical_info.budget_min) : null,
+          budget_max: data.practical_info.budget_max ? parseInt(data.practical_info.budget_max) : null,
         }
       };
-      const res = await fetch(url, {
-        method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) { toast.success(editingGuide ? 'Guide modifié !' : 'Guide créé !'); resetGuideForm(); fetchGuides(token); }
-      else { const err = await res.json(); toast.error(err.detail || 'Erreur'); }
+      delete payload.removedPhotos;
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
+      if (res.ok) {
+        for (const photoUrl of removedPhotos) {
+          if (photoUrl.startsWith('/uploads/')) await fetch(`${API_URL}/api/upload?url=${encodeURIComponent(photoUrl)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+        }
+        toast.success(editingGuide ? 'Guide modifié !' : 'Guide créé !'); resetGuideForm(); fetchGuides(token);
+      } else { const err = await res.json(); toast.error(err.detail || 'Erreur'); }
     } catch { toast.error('Erreur lors de la sauvegarde'); }
     finally { setLoading(false); }
   };
@@ -2402,17 +2415,7 @@ const AdminPage = () => {
     } catch { toast.error('Erreur lors de la suppression'); }
   };
 
-  const resetGuideForm = () => { originalGuideRef.current = { photos: [], cover_image: '' }; setEditingGuide(null); setShowGuideForm(false); setGuideFormData({ ...EMPTY_GUIDE }); setGuideFormId(crypto.randomUUID()); };
-
-  const cancelGuideForm = async () => {
-    const original = originalGuideRef.current;
-    const photosToDelete = guideFormData.photos.filter(p => !original.photos.includes(p));
-    for (const url of photosToDelete) await deleteUploadFile(url);
-    if (guideFormData.cover_image && guideFormData.cover_image !== original.cover_image) {
-      await deleteUploadFile(guideFormData.cover_image);
-    }
-    resetGuideForm();
-  };
+  const resetGuideForm = () => { setEditingGuide(null); setShowGuideForm(false); setGuideFormData({ ...EMPTY_GUIDE }); setGuideFormId(crypto.randomUUID()); };
 
   const geocodeAddress = async () => {
     if (!formData.address.trim()) return;
@@ -2439,27 +2442,19 @@ const AdminPage = () => {
     finally { setGeocoding(false); }
   };
 
-  const uploadFiles = async (files) => {
-    const token = localStorage.getItem('admin_token');
-    for (const file of files) {
-      const fd = new FormData(); fd.append('file', file);
-      try {
-        const res = await fetch(`${API_URL}/api/upload?entity_type=places&entity_id=${placeFormId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
-        const data = await res.json();
-        if (res.ok) { setFormData(prev => ({ ...prev, photos: [...prev.photos, data.url] })); toast.success('Image uploadée'); }
-      } catch { toast.error('Erreur upload image'); }
-    }
+  const addFiles = (files) => {
+    setPendingPlaceFiles(prev => [...prev, ...files.map(f => ({ file: f, preview: URL.createObjectURL(f) }))]);
   };
 
-  const removePhoto = async (index) => {
-    const url = formData.photos[index];
-    if (url && url.startsWith('/uploads/')) {
-      const token = localStorage.getItem('admin_token');
-      try {
-        await fetch(`${API_URL}/api/upload?url=${encodeURIComponent(url)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-      } catch {}
+  const removePhoto = (index) => {
+    if (index < formData.photos.length) {
+      setRemovedPlacePhotos(prev => [...prev, formData.photos[index]]);
+      setFormData(prev => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }));
+    } else {
+      const pendingIdx = index - formData.photos.length;
+      URL.revokeObjectURL(pendingPlaceFiles[pendingIdx].preview);
+      setPendingPlaceFiles(prev => prev.filter((_, i) => i !== pendingIdx));
     }
-    setFormData(prev => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }));
   };
 
   const reorderPhotos = (fromIdx, toIdx) => {
@@ -2476,17 +2471,30 @@ const AdminPage = () => {
     e.preventDefault();
     const token = localStorage.getItem('admin_token'); setLoading(true);
     try {
+      const placeId = editingPlace ? editingPlace.id : placeFormId;
+      const newUrls = [];
+      for (const { file } of pendingPlaceFiles) {
+        const fd = new FormData(); fd.append('file', file);
+        const r = await fetch(`${API_URL}/api/upload?entity_type=places&entity_id=${placeId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+        const d = await r.json();
+        if (r.ok) newUrls.push(d.url);
+      }
+      const finalPhotos = [...formData.photos, ...newUrls];
       const url = editingPlace ? `${API_URL}/api/places/${editingPlace.id}` : `${API_URL}/api/places`;
-      const payload = editingPlace ? formData : { ...formData, id: placeFormId };
+      const payload = editingPlace ? { ...formData, photos: finalPhotos } : { ...formData, id: placeFormId, photos: finalPhotos };
       const res = await fetch(url, { method: editingPlace ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
-      if (res.ok) { toast.success(editingPlace ? 'Lieu modifié !' : 'Lieu créé !'); resetForm(); fetchPlaces(token); }
-      else { const error = await res.json(); toast.error(error.detail || 'Erreur'); }
+      if (res.ok) {
+        for (const photoUrl of removedPlacePhotos) {
+          if (photoUrl.startsWith('/uploads/')) await fetch(`${API_URL}/api/upload?url=${encodeURIComponent(photoUrl)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+        }
+        toast.success(editingPlace ? 'Lieu modifié !' : 'Lieu créé !'); resetForm(); fetchPlaces(token);
+      } else { const error = await res.json(); toast.error(error.detail || 'Erreur'); }
     } catch { toast.error('Erreur lors de la sauvegarde'); }
     finally { setLoading(false); }
   };
 
   const handleEdit = (place) => {
-    originalPlacePhotosRef.current = place.photos || [];
+    setPendingPlaceFiles([]); setRemovedPlacePhotos([]);
     setEditingPlace(place);
     setPlaceFormId(place.id);
     setFormData({ title: place.title, address: place.address, city: place.city || '', country: place.country || '', date: place.date || '', description: place.description, category: place.category, rating: place.rating, latitude: place.latitude, longitude: place.longitude, photos: place.photos || [] });
@@ -2503,18 +2511,12 @@ const AdminPage = () => {
   };
 
   const resetForm = () => {
-    originalPlacePhotosRef.current = [];
+    pendingPlaceFiles.forEach(p => URL.revokeObjectURL(p.preview));
+    setPendingPlaceFiles([]); setRemovedPlacePhotos([]);
     setEditingPlace(null); setShowForm(false);
     setPlaceFormId(crypto.randomUUID());
     setFormData({ title: '', address: '', city: '', country: '', date: '', description: '', category: 'accommodation', rating: 3, latitude: 48.8566, longitude: 2.3522, photos: [] });
     setGeocodeResult(null); setShowManualCoords(false);
-  };
-
-  const cancelForm = async () => {
-    const original = originalPlacePhotosRef.current;
-    const toDelete = formData.photos.filter(p => !original.includes(p));
-    for (const url of toDelete) await deleteUploadFile(url);
-    resetForm();
   };
 
   if (!isAuthenticated) {
@@ -2595,7 +2597,7 @@ const AdminPage = () => {
           <div className="admin-inline-form">
             <div className="form-header">
               <h2>{editingPlace ? 'Modifier le lieu' : 'Nouveau lieu'}</h2>
-              <button onClick={cancelForm} className="close-btn" data-testid="close-form-btn"><X size={24} /></button>
+              <button onClick={resetForm} className="close-btn" data-testid="close-form-btn"><X size={24} /></button>
             </div>
             <form onSubmit={handleSubmit} className="place-form" data-testid="place-form">
                     <div className="form-grid">
@@ -2645,7 +2647,7 @@ const AdminPage = () => {
                       <div className="form-group full-width"><label>Note</label><StarRating rating={formData.rating} onChange={(rating) => setFormData({ ...formData, rating })} readonly={false} /></div>
                       <div className="form-group full-width"><label>Photos</label>
                         <div className="photo-upload-area">
-                          <DropZone inputId="photo-upload" label="Glisser des photos ici" onFiles={uploadFiles} />
+                          <DropZone inputId="photo-upload" label="Glisser des photos ici" onFiles={addFiles} />
                           <div className="uploaded-photos">
                             {formData.photos.map((photo, idx) => (
                               <div key={idx}
@@ -2661,12 +2663,18 @@ const AdminPage = () => {
                                 <button type="button" onClick={() => removePhoto(idx)} className="remove-photo"><X size={14} /></button>
                               </div>
                             ))}
+                            {pendingPlaceFiles.map(({ preview }, idx) => (
+                              <div key={`pending-${idx}`} className="uploaded-photo">
+                                <img src={preview} alt="" />
+                                <button type="button" onClick={() => removePhoto(formData.photos.length + idx)} className="remove-photo"><X size={14} /></button>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
                     </div>
                     <div className="form-actions">
-                      <button type="button" onClick={cancelForm} className="btn-secondary" data-testid="cancel-btn">Annuler</button>
+                      <button type="button" onClick={resetForm} className="btn-secondary" data-testid="cancel-btn">Annuler</button>
                       <button type="submit" className="btn-primary" disabled={loading} data-testid="save-btn"><Save size={18} />{loading ? 'Enregistrement...' : 'Enregistrer'}</button>
                     </div>
                   </form>
@@ -2677,7 +2685,7 @@ const AdminPage = () => {
         {adminTab === 'places' && !showForm && (
           <>
             <div className="admin-toolbar">
-              <button className="btn-primary" onClick={async () => { await cancelForm(); setShowForm(true); }} data-testid="add-place-btn"><Plus size={20} />Ajouter un lieu</button>
+              <button className="btn-primary" onClick={() => { resetForm(); setShowForm(true); }} data-testid="add-place-btn"><Plus size={20} />Ajouter un lieu</button>
             </div>
 
             <div className="admin-places-list" data-testid="admin-places-list">
@@ -2722,7 +2730,7 @@ const AdminPage = () => {
             setGuideFormData={setGuideFormData}
             editingGuide={editingGuide}
             onSubmit={handleGuideSubmit}
-            onClose={cancelGuideForm}
+            onClose={resetGuideForm}
             loading={loading}
             places={places}
             entityId={guideFormId}
@@ -2754,7 +2762,7 @@ const AdminPage = () => {
                     </div>
                   </div>
                   <div className="admin-place-actions">
-                    <button onClick={() => { originalGuideRef.current = { photos: guide.photos || [], cover_image: guide.cover_image || '' }; setEditingGuide(guide); setGuideFormId(guide.id); setGuideFormData({ ...guide }); setShowGuideForm(true); }} className="action-btn"><Edit3 size={18} /></button>
+                    <button onClick={() => { setEditingGuide(guide); setGuideFormId(guide.id); setGuideFormData({ ...guide }); setShowGuideForm(true); }} className="action-btn"><Edit3 size={18} /></button>
                     <button onClick={() => handleDeleteGuide(guide.id)} className="action-btn delete"><Trash2 size={18} /></button>
                   </div>
                 </motion.div>
