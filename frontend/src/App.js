@@ -1989,7 +1989,7 @@ const ActivityAddressGeo = ({ act, dayIdx, actIdx, updateActivityFields }) => {
 // ============================================================
 // ADMIN GUIDE FORM
 // ============================================================
-const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, onSubmit, onClose, loading, places }) => {
+const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, onSubmit, onClose, loading, places, entityId }) => {
   if (!show) return null;
 
   const uploadFiles = async (files, field) => {
@@ -1997,7 +1997,7 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
     for (const file of files) {
       const fd = new FormData(); fd.append('file', file);
       try {
-        const res = await fetch(`${API_URL}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+        const res = await fetch(`${API_URL}/api/upload?entity_type=guides&entity_id=${entityId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
         const data = await res.json();
         if (res.ok) {
           if (field === 'cover_image') {
@@ -2280,11 +2280,13 @@ const AdminPage = () => {
     description: '', category: 'accommodation',
     rating: 3, latitude: 48.8566, longitude: 2.3522, photos: [],
   });
+  const [placeFormId, setPlaceFormId] = useState(() => crypto.randomUUID());
   const [adminTab, setAdminTab] = useState('places');
   const [guides, setGuides] = useState([]);
   const [editingGuide, setEditingGuide] = useState(null);
   const [showGuideForm, setShowGuideForm] = useState(false);
   const [guideFormData, setGuideFormData] = useState({ ...EMPTY_GUIDE });
+  const [guideFormId, setGuideFormId] = useState(() => crypto.randomUUID());
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeResult, setGeocodeResult] = useState(null);
   const [showManualCoords, setShowManualCoords] = useState(false);
@@ -2355,6 +2357,7 @@ const AdminPage = () => {
       const method = editingGuide ? 'PUT' : 'POST';
       const payload = {
         ...guideFormData,
+        ...(editingGuide ? {} : { id: guideFormId }),
         tags: Array.isArray(guideFormData.tags) ? guideFormData.tags : (guideFormData.tags || '').split(',').map(t => t.trim()).filter(Boolean),
         practical_info: {
           ...guideFormData.practical_info,
@@ -2381,7 +2384,7 @@ const AdminPage = () => {
     } catch { toast.error('Erreur lors de la suppression'); }
   };
 
-  const resetGuideForm = () => { setEditingGuide(null); setShowGuideForm(false); setGuideFormData({ ...EMPTY_GUIDE }); };
+  const resetGuideForm = () => { setEditingGuide(null); setShowGuideForm(false); setGuideFormData({ ...EMPTY_GUIDE }); setGuideFormId(crypto.randomUUID()); };
 
   const geocodeAddress = async () => {
     if (!formData.address.trim()) return;
@@ -2413,7 +2416,7 @@ const AdminPage = () => {
     for (const file of files) {
       const fd = new FormData(); fd.append('file', file);
       try {
-        const res = await fetch(`${API_URL}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+        const res = await fetch(`${API_URL}/api/upload?entity_type=places&entity_id=${placeFormId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
         const data = await res.json();
         if (res.ok) { setFormData(prev => ({ ...prev, photos: [...prev.photos, data.url] })); toast.success('Image uploadée'); }
       } catch { toast.error('Erreur upload image'); }
@@ -2437,7 +2440,8 @@ const AdminPage = () => {
     const token = localStorage.getItem('admin_token'); setLoading(true);
     try {
       const url = editingPlace ? `${API_URL}/api/places/${editingPlace.id}` : `${API_URL}/api/places`;
-      const res = await fetch(url, { method: editingPlace ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(formData) });
+      const payload = editingPlace ? formData : { ...formData, id: placeFormId };
+      const res = await fetch(url, { method: editingPlace ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
       if (res.ok) { toast.success(editingPlace ? 'Lieu modifié !' : 'Lieu créé !'); resetForm(); fetchPlaces(token); }
       else { const error = await res.json(); toast.error(error.detail || 'Erreur'); }
     } catch { toast.error('Erreur lors de la sauvegarde'); }
@@ -2446,6 +2450,7 @@ const AdminPage = () => {
 
   const handleEdit = (place) => {
     setEditingPlace(place);
+    setPlaceFormId(place.id);
     setFormData({ title: place.title, address: place.address, city: place.city || '', country: place.country || '', date: place.date || '', description: place.description, category: place.category, rating: place.rating, latitude: place.latitude, longitude: place.longitude, photos: place.photos || [] });
     setShowForm(true);
   };
@@ -2461,6 +2466,7 @@ const AdminPage = () => {
 
   const resetForm = () => {
     setEditingPlace(null); setShowForm(false);
+    setPlaceFormId(crypto.randomUUID());
     setFormData({ title: '', address: '', city: '', country: '', date: '', description: '', category: 'accommodation', rating: 3, latitude: 48.8566, longitude: 2.3522, photos: [] });
     setGeocodeResult(null); setShowManualCoords(false);
   };
@@ -2673,6 +2679,7 @@ const AdminPage = () => {
             onClose={resetGuideForm}
             loading={loading}
             places={places}
+            entityId={guideFormId}
           />
         )}
 
@@ -2701,7 +2708,7 @@ const AdminPage = () => {
                     </div>
                   </div>
                   <div className="admin-place-actions">
-                    <button onClick={() => { setEditingGuide(guide); setGuideFormData({ ...guide }); setShowGuideForm(true); }} className="action-btn"><Edit3 size={18} /></button>
+                    <button onClick={() => { setEditingGuide(guide); setGuideFormId(guide.id); setGuideFormData({ ...guide }); setShowGuideForm(true); }} className="action-btn"><Edit3 size={18} /></button>
                     <button onClick={() => handleDeleteGuide(guide.id)} className="action-btn delete"><Trash2 size={18} /></button>
                   </div>
                 </motion.div>
