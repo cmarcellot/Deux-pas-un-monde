@@ -69,6 +69,7 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
 
 class PlaceCreate(BaseModel):
+    id: Optional[str] = None
     title: str
     address: str
     city: Optional[str] = ''
@@ -138,6 +139,7 @@ class PracticalInfo(BaseModel):
     currency: Optional[str] = None
 
 class GuideCreate(BaseModel):
+    id: Optional[str] = None
     title: str
     destination: str
     country: str
@@ -245,7 +247,7 @@ def get_place(place_id: str):
 @app.post("/api/places", response_model=PlaceResponse)
 def create_place(place: PlaceCreate, payload: dict = Depends(verify_token)):
     place_dict = place.model_dump()
-    place_dict["id"] = str(uuid.uuid4())
+    place_dict["id"] = place_dict.pop("id") or str(uuid.uuid4())
     place_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     places_collection.insert_one(place_dict)
     del place_dict["_id"]
@@ -267,21 +269,41 @@ def delete_place(place_id: str, payload: dict = Depends(verify_token)):
     result = places_collection.delete_one({"id": place_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Lieu non trouvé")
+    place_dir = UPLOAD_DIR / "places" / place_id
+    if place_dir.exists():
+        shutil.rmtree(place_dir)
     return {"message": "Lieu supprimé"}
 
 @app.post("/api/upload")
-async def upload_image(file: UploadFile = File(...), payload: dict = Depends(verify_token)):
+async def upload_image(
+    file: UploadFile = File(...),
+    entity_type: Optional[str] = None,
+    entity_id: Optional[str] = None,
+    payload: dict = Depends(verify_token),
+):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Seules les images sont acceptées")
     ext = pathlib.Path(file.filename).suffix if file.filename else ".jpg"
     filename = f"{uuid.uuid4()}{ext}"
-    file_path = UPLOAD_DIR / filename
+    if entity_type and entity_id:
+        target_dir = UPLOAD_DIR / entity_type / entity_id
+        target_dir.mkdir(parents=True, exist_ok=True)
+        file_path = target_dir / filename
+        url = f"/uploads/{entity_type}/{entity_id}/{filename}"
+    else:
+        file_path = UPLOAD_DIR / filename
+        url = f"/uploads/{filename}"
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    return {"url": f"/uploads/{filename}"}
+    return {"url": url}
 
 @app.post("/api/upload-base64")
-async def upload_base64(data: dict, payload: dict = Depends(verify_token)):
+async def upload_base64(
+    data: dict,
+    entity_type: Optional[str] = None,
+    entity_id: Optional[str] = None,
+    payload: dict = Depends(verify_token),
+):
     if "image" not in data:
         raise HTTPException(status_code=400, detail="Image manquante")
     image_data = data["image"]
@@ -290,10 +312,17 @@ async def upload_base64(data: dict, payload: dict = Depends(verify_token)):
     import base64
     image_bytes = base64.b64decode(image_data)
     filename = f"{uuid.uuid4()}.jpg"
-    file_path = UPLOAD_DIR / filename
+    if entity_type and entity_id:
+        target_dir = UPLOAD_DIR / entity_type / entity_id
+        target_dir.mkdir(parents=True, exist_ok=True)
+        file_path = target_dir / filename
+        url = f"/uploads/{entity_type}/{entity_id}/{filename}"
+    else:
+        file_path = UPLOAD_DIR / filename
+        url = f"/uploads/{filename}"
     with open(file_path, "wb") as f:
         f.write(image_bytes)
-    return {"url": f"/uploads/{filename}"}
+    return {"url": url}
 
 @app.get("/api/guides", response_model=List[GuideResponse])
 def get_guides(tag: Optional[str] = None, destination: Optional[str] = None):
@@ -320,7 +349,7 @@ def get_guide(guide_id: str):
 @app.post("/api/guides", response_model=GuideResponse)
 def create_guide(guide: GuideCreate, payload: dict = Depends(verify_token)):
     guide_dict = guide.model_dump()
-    guide_dict["id"] = str(uuid.uuid4())
+    guide_dict["id"] = guide_dict.pop("id") or str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     guide_dict["created_at"] = now
     guide_dict["updated_at"] = now
@@ -345,6 +374,9 @@ def delete_guide(guide_id: str, payload: dict = Depends(verify_token)):
     result = guides_collection.delete_one({"id": guide_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Guide non trouvé")
+    guide_dir = UPLOAD_DIR / "guides" / guide_id
+    if guide_dir.exists():
+        shutil.rmtree(guide_dir)
     return {"message": "Guide supprimé"}
 
 if __name__ == "__main__":
