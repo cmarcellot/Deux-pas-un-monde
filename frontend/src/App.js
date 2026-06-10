@@ -537,6 +537,7 @@ const PlaceDetailModal = ({ place, onClose }) => {
               <StarRating rating={place.rating} readonly size={15} />
             </div>
             <div className="modal-address"><MapPin size={16} /><span>{place.address}</span></div>
+            {place.date && <div className="modal-address"><Calendar size={16} /><span>{formatMonthYear(place.date)}</span></div>}
             <div className="modal-description" dangerouslySetInnerHTML={{ __html: place.description }} />
             <div className="modal-map">
               <MapContainer center={[place.latitude, place.longitude]} zoom={14}
@@ -1792,6 +1793,7 @@ const PlaceDetailPage = () => {
             <StarRating rating={place.rating} readonly />
           </div>
           <div className="detail-address"><MapPin size={18} /><span>{place.address}</span></div>
+          {place.date && <div className="detail-address"><Calendar size={18} /><span>{formatMonthYear(place.date)}</span></div>}
           <div className="detail-description" dangerouslySetInnerHTML={{ __html: place.description }} />
           <div className="detail-map" data-testid="detail-map">
             <MapContainer center={[place.latitude, place.longitude]} zoom={14}
