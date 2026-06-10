@@ -1,6 +1,6 @@
 # Deux pas un monde
 
-Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.com/deuxpas_unmonde) — Un carnet de voyage interactif pour partager nos bonnes adresses et guides de voyage.
+Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.com/deuxpas_unmonde) — Un carnet de voyage interactif pour partager bonnes adresses et guides de voyage.
 
 ## Aperçu
 
@@ -18,25 +18,28 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
   - 🧭 Découvrir (vert)
   - ✈️ Partir (ocre)
 - **Recherche textuelle** : Filtrer les lieux par nom en temps réel
-- **Détails en modal** : Informations complètes d'un lieu avec galerie photos
+- **Détails en modal** : Informations complètes d'un lieu avec galerie photos, note, adresse et date de visite
+- **Page détail** dédiée par lieu (`/place/:id`)
 - **Galerie photos** : Lightbox avec navigation clavier et tactile
 - **Notation par étoiles** : Appréciation de chaque lieu (1 à 5 étoiles)
 
 ### Guides de Voyage
-- **Page `/guides`** : Bibliothèque de guides
+- **Page `/guides`** : Bibliothèque de guides publiés
 - **Page détail guide** avec 4 onglets :
   - **Itinéraire** : Accordéons jour par jour avec activités, horaires et conseils
   - **Infos pratiques** : Budget estimé, meilleures saisons, transports, visa, monnaie, langue
   - **Photos** : Galerie avec lightbox
   - **Carte** : Visualisation des lieux liés sur Leaflet
-- **Statut publié/brouillon** : Préparer un guide sans le rendre public
+- **Statut publié / brouillon** : Préparer un guide sans le rendre public
 
 ### Pour les administrateurs
 - **Interface d'administration sécurisée** : Accès protégé par JWT (`/admin`)
 - **Gestion des lieux** :
   - Ajouter, modifier, supprimer des lieux
-  - Champs : titre, adresse, **ville**, **pays**, **date de visite**, description, catégorie, note, coordonnées GPS
-  - Upload de photos multiples par drag & drop ou sélection (Cloudinary)
+  - Champs : titre, adresse, ville, pays, date de visite, description, catégorie, note, coordonnées GPS
+  - Upload de photos multiples par drag & drop ou sélection
+  - Prévisualisation locale avant upload (les fichiers ne sont envoyés qu'à la sauvegarde)
+  - Suppression des fichiers du stockage lors de la suppression d'une photo ou d'un lieu
   - Géolocalisation automatique depuis l'adresse
   - Description enrichie (éditeur Quill)
 - **Gestion des guides** :
@@ -44,6 +47,7 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
   - Ajout d'activités avec horaires et lieux liés
   - Infos pratiques (budget, transport, visa, monnaie, langue)
   - Upload de cover image et photos supplémentaires
+  - Suppression des fichiers du stockage lors de la suppression d'une photo ou d'un guide
   - Toggle publié / brouillon
 - **Changement de mot de passe** depuis l'interface
 
@@ -51,7 +55,7 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 
 ### Frontend
 - **React 18** — Interface utilisateur (SPA monolithique `App.js`)
-- **React Router** — Navigation SPA
+- **React Router 6** — Navigation SPA
 - **Leaflet / React-Leaflet** — Carte interactive OpenStreetMap
 - **Framer Motion** — Animations fluides
 - **React Quill** — Éditeur de texte enrichi
@@ -60,12 +64,18 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 
 ### Backend
 - **FastAPI** — API REST Python
-- **MongoDB** — Base de données NoSQL
-- **Cloudinary** — Hébergement et CDN des images
-- **JWT** — Authentification sécurisée
+- **MongoDB** — Base de données NoSQL (via PyMongo)
+- **Stockage local** — Images hébergées sur le serveur (`/app/uploads/{type}/{id}/`)
+- **JWT** — Authentification sécurisée (python-jose)
 - **Uvicorn** — Serveur ASGI
 
-### Design (v3.0.0)
+### Déploiement
+- **Dokploy** sur VPS
+- Frontend : build nginx statique
+- Backend : conteneur Python / Uvicorn
+- Uploads : volume persistant monté sur `/app/uploads`
+
+### Design
 - Thème clair élégant
 - Fond : `#f5f1ea` / Surface : `#faf8f3`
 - Accent : `#c17c5a` (terracotta doux)
@@ -80,7 +90,6 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 - Node.js 18+
 - Python 3.9+
 - MongoDB
-- Compte Cloudinary (pour les uploads d'images)
 
 ### Backend
 ```bash
@@ -105,9 +114,6 @@ MONGO_URL=mongodb://localhost:27017
 DB_NAME=deux_pas_un_monde
 JWT_SECRET=votre_secret_jwt
 ADMIN_PASSWORD=votre_mot_de_passe_admin
-CLOUDINARY_CLOUD_NAME=votre_cloud_name
-CLOUDINARY_API_KEY=votre_api_key
-CLOUDINARY_API_SECRET=votre_api_secret
 ```
 
 ### Frontend (`/frontend/.env`)
@@ -120,14 +126,13 @@ REACT_APP_API_URL=http://localhost:8001
 ```
 /
 ├── backend/
-│   ├── server.py          # API FastAPI (lieux + guides)
+│   ├── server.py          # API FastAPI (lieux, guides, uploads)
 │   ├── requirements.txt   # Dépendances Python
 │   └── .env               # Variables d'environnement
 ├── frontend/
 │   ├── public/
 │   │   ├── index.html     # HTML avec meta SEO + fonts
-│   │   ├── logo.png       # Favicon
-│   │   └── .htaccess      # Redirection SPA (Apache/OVH)
+│   │   └── logo.png       # Favicon
 │   ├── src/
 │   │   ├── App.js         # Composant principal (toutes les pages)
 │   │   ├── App.css        # Styles et animations
@@ -135,6 +140,7 @@ REACT_APP_API_URL=http://localhost:8001
 │   │   └── index.css      # Variables CSS globales + thème
 │   ├── package.json
 │   └── .env
+├── docker-compose.yml
 └── README.md
 ```
 
@@ -154,7 +160,7 @@ REACT_APP_API_URL=http://localhost:8001
 | GET | `/api/places/:id` | — | Détails d'un lieu |
 | POST | `/api/places` | ✓ | Créer un lieu |
 | PUT | `/api/places/:id` | ✓ | Modifier un lieu |
-| DELETE | `/api/places/:id` | ✓ | Supprimer un lieu |
+| DELETE | `/api/places/:id` | ✓ | Supprimer un lieu + ses fichiers |
 
 ### Guides de Voyage
 | Méthode | Endpoint | Auth | Description |
@@ -164,14 +170,17 @@ REACT_APP_API_URL=http://localhost:8001
 | GET | `/api/guides/:id` | — | Détails d'un guide |
 | POST | `/api/guides` | ✓ | Créer un guide |
 | PUT | `/api/guides/:id` | ✓ | Modifier un guide |
-| DELETE | `/api/guides/:id` | ✓ | Supprimer un guide |
+| DELETE | `/api/guides/:id` | ✓ | Supprimer un guide + ses fichiers |
 
 ### Upload
 | Méthode | Endpoint | Auth | Description |
 |---------|----------|------|-------------|
-| POST | `/api/upload` | ✓ | Upload image (multipart) vers Cloudinary |
-| POST | `/api/upload-base64` | ✓ | Upload image base64 vers Cloudinary |
+| POST | `/api/upload` | ✓ | Upload image (`?entity_type=X&entity_id=Y`) |
+| POST | `/api/upload-base64` | ✓ | Upload image base64 |
+| DELETE | `/api/upload` | ✓ | Supprimer un fichier (`?url=/uploads/...`) |
 | GET | `/api/health` | — | Vérification du serveur |
+
+Les fichiers sont stockés dans `/app/uploads/{entity_type}/{entity_id}/{uuid}.ext`.
 
 ## Catégories de lieux
 
