@@ -216,6 +216,8 @@ const CategoryBadge = ({ categoryId, small = false }) => {
 // LIGHTBOX
 // ============================================================
 const Lightbox = ({ photos, initialIndex, onClose }) => {
+  // Normalise: accepte des strings (photos seules) ou des {url, isVideo}
+  const media = photos.map(p => typeof p === 'string' ? { url: p, isVideo: false } : p);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [direction, setDirection] = useState(0);
   const [touchStartX, setTouchStartX] = useState(null);
@@ -230,8 +232,8 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
   }, [currentIndex, goTo]);
 
   const goNext = useCallback(() => {
-    if (currentIndex < photos.length - 1) goTo(currentIndex + 1, 1);
-  }, [currentIndex, photos.length, goTo]);
+    if (currentIndex < media.length - 1) goTo(currentIndex + 1, 1);
+  }, [currentIndex, media.length, goTo]);
 
   useEffect(() => {
     const handleKey = (e) => {
@@ -273,7 +275,7 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
     >
       {/* Top bar */}
       <div className="lightbox-topbar" onClick={(e) => e.stopPropagation()}>
-        <span className="lightbox-counter">{currentIndex + 1} / {photos.length}</span>
+        <span className="lightbox-counter">{currentIndex + 1} / {media.length}</span>
         <button className="lightbox-close" onClick={onClose} aria-label="Fermer" data-testid="lightbox-close">
           <X size={24} />
         </button>
@@ -303,16 +305,14 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
             exit="exit"
             transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <img
-              src={getPhotoSrc(photos[currentIndex])}
-              alt=""
-              className="lightbox-image"
-              draggable={false}
-            />
+            {media[currentIndex].isVideo
+              ? <video key={media[currentIndex].url} src={getPhotoSrc(media[currentIndex].url)} controls autoPlay className="lightbox-image" style={{ objectFit: 'contain', background: '#000' }} />
+              : <img src={getPhotoSrc(media[currentIndex].url)} alt="" className="lightbox-image" draggable={false} />
+            }
           </motion.div>
         </AnimatePresence>
 
-        {currentIndex < photos.length - 1 && (
+        {currentIndex < media.length - 1 && (
           <button className="lightbox-arrow lightbox-arrow-next" onClick={goNext} aria-label="Suivante" data-testid="lightbox-next">
             <ChevronRight size={36} />
           </button>
@@ -320,15 +320,20 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
       </div>
 
       {/* Thumbnails */}
-      {photos.length > 1 && (
+      {media.length > 1 && (
         <div className="lightbox-thumbnails" onClick={(e) => e.stopPropagation()}>
-          {photos.map((photo, idx) => (
+          {media.map((item, idx) => (
             <button
               key={idx}
               className={`lightbox-thumb ${idx === currentIndex ? 'active' : ''}`}
               onClick={() => goTo(idx, idx > currentIndex ? 1 : -1)}
             >
-              <img src={getPhotoSrc(photo)} alt="" draggable={false} />
+              {item.isVideo
+                ? <div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                  </div>
+                : <img src={getPhotoSrc(item.url)} alt="" draggable={false} />
+              }
             </button>
           ))}
         </div>
@@ -507,8 +512,7 @@ const PlaceDetailModal = ({ place, onClose }) => {
     ...(place.videos || []).map(url => ({ url, isVideo: true })),
   ];
   const current = allMedia[currentIdx];
-  const photoOnlyIdx = (place.photos || []).indexOf(current?.url);
-  const openLightbox = () => { if (!current?.isVideo) { setLightboxIndex(photoOnlyIdx); setLightboxOpen(true); } };
+  const openLightbox = () => { setLightboxIndex(currentIdx); setLightboxOpen(true); };
 
   return (
     <>
@@ -525,7 +529,7 @@ const PlaceDetailModal = ({ place, onClose }) => {
                     <video key={current.url} src={getPhotoSrc(current.url)} controls style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', borderRadius: '12px' }} />
                   </div>
                 ) : (
-                  <div className="modal-main-image clickable-photo" onClick={openLightbox} title="Cliquer pour agrandir">
+                  <div className="modal-main-image clickable-photo" onClick={() => { setLightboxIndex(currentIdx); setLightboxOpen(true); }} title="Cliquer pour agrandir">
                     <img src={getPhotoSrc(current.url)} alt={place.title} />
                     <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
                   </div>
@@ -571,7 +575,7 @@ const PlaceDetailModal = ({ place, onClose }) => {
       </motion.div>
 
       <AnimatePresence>
-        {lightboxOpen && <Lightbox photos={place.photos} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />}
+        {lightboxOpen && <Lightbox photos={allMedia} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />}
       </AnimatePresence>
     </>
   );
@@ -1809,6 +1813,10 @@ const PlaceDetailPage = () => {
   if (loading || !place) return <div className="loading-page">Chargement...</div>;
 
   const openLightbox = (idx) => { setLightboxIndex(idx); setLightboxOpen(true); };
+  const allMedia = [
+    ...(place.photos || []).map(url => ({ url, isVideo: false })),
+    ...(place.videos || []).map(url => ({ url, isVideo: true })),
+  ];
 
   return (
     <>
@@ -1819,42 +1827,34 @@ const PlaceDetailPage = () => {
         </header>
 
         <div className="detail-gallery" data-testid="detail-gallery">
-          {(() => {
-            const allMedia = [
-              ...(place.photos || []).map(url => ({ url, isVideo: false })),
-              ...(place.videos || []).map(url => ({ url, isVideo: true })),
-            ];
-            const current = allMedia[currentImage];
-            if (allMedia.length === 0) return <div className="no-image"><MapPin size={64} /></div>;
-            return (
-              <>
-                {current.isVideo ? (
-                  <div className="main-image">
-                    <video key={current.url} src={getPhotoSrc(current.url)} controls style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', borderRadius: '0' }} />
-                  </div>
-                ) : (
-                  <div className="main-image clickable-photo" onClick={() => openLightbox(currentImage)} title="Cliquer pour agrandir">
-                    <img src={getPhotoSrc(current.url)} alt={place.title} />
-                    <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
-                  </div>
-                )}
-                {allMedia.length > 1 && (
-                  <div className="thumbnail-strip">
-                    {allMedia.map((media, idx) => (
-                      <button key={idx} className={`thumbnail ${idx === currentImage ? 'active' : ''}`} onClick={() => setCurrentImage(idx)}>
-                        {media.isVideo
-                          ? <div style={{ width: '100%', height: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
-                            </div>
-                          : <img src={getPhotoSrc(media.url)} alt={`${place.title} ${idx + 1}`} />
-                        }
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </>
-            );
-          })()}
+          {allMedia.length === 0 ? <div className="no-image"><MapPin size={64} /></div> : (
+            <>
+              {allMedia[currentImage].isVideo ? (
+                <div className="main-image">
+                  <video key={allMedia[currentImage].url} src={getPhotoSrc(allMedia[currentImage].url)} controls style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', borderRadius: '0' }} />
+                </div>
+              ) : (
+                <div className="main-image clickable-photo" onClick={() => openLightbox(currentImage)} title="Cliquer pour agrandir">
+                  <img src={getPhotoSrc(allMedia[currentImage].url)} alt={place.title} />
+                  <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
+                </div>
+              )}
+              {allMedia.length > 1 && (
+                <div className="thumbnail-strip">
+                  {allMedia.map((item, idx) => (
+                    <button key={idx} className={`thumbnail ${idx === currentImage ? 'active' : ''}`} onClick={() => setCurrentImage(idx)}>
+                      {item.isVideo
+                        ? <div style={{ width: '100%', height: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                          </div>
+                        : <img src={getPhotoSrc(item.url)} alt={`${place.title} ${idx + 1}`} />
+                      }
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         <div className="detail-content">
@@ -1877,7 +1877,7 @@ const PlaceDetailPage = () => {
       </motion.div>
 
       <AnimatePresence>
-        {lightboxOpen && <Lightbox photos={place.photos} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />}
+        {lightboxOpen && <Lightbox photos={allMedia} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />}
       </AnimatePresence>
     </>
   );
