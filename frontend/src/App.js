@@ -512,7 +512,6 @@ const PlaceDetailModal = ({ place, onClose }) => {
     ...(place.videos || []).map(url => ({ url, isVideo: true })),
   ];
   const current = allMedia[currentIdx];
-  const openLightbox = () => { setLightboxIndex(currentIdx); setLightboxOpen(true); };
 
   return (
     <>
