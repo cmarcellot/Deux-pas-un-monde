@@ -497,12 +497,18 @@ const FitBoundsToMarkers = ({ positions }) => {
 // PLACE DETAIL MODAL — with lightbox
 // ============================================================
 const PlaceDetailModal = ({ place, onClose }) => {
-  const [currentImage, setCurrentImage] = useState(0);
+  const [currentIdx, setCurrentIdx] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
   if (!place) return null;
-  const openLightbox = (idx) => { setLightboxIndex(idx); setLightboxOpen(true); };
+  const allMedia = [
+    ...(place.photos || []).map(url => ({ url, isVideo: false })),
+    ...(place.videos || []).map(url => ({ url, isVideo: true })),
+  ];
+  const current = allMedia[currentIdx];
+  const photoOnlyIdx = (place.photos || []).indexOf(current?.url);
+  const openLightbox = () => { if (!current?.isVideo) { setLightboxIndex(photoOnlyIdx); setLightboxOpen(true); } };
 
   return (
     <>
@@ -512,17 +518,28 @@ const PlaceDetailModal = ({ place, onClose }) => {
           <button className="modal-close-btn" onClick={onClose} data-testid="close-modal-btn"><X size={24} /></button>
 
           <div className="modal-gallery">
-            {place.photos?.length > 0 ? (
+            {allMedia.length > 0 ? (
               <>
-                <div className="modal-main-image clickable-photo" onClick={() => openLightbox(currentImage)} title="Cliquer pour agrandir">
-                  <img src={getPhotoSrc(place.photos[currentImage])} alt={place.title} />
-                  <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
-                </div>
-                {place.photos.length > 1 && (
+                {current.isVideo ? (
+                  <div className="modal-main-image">
+                    <video key={current.url} src={getPhotoSrc(current.url)} controls style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', borderRadius: '12px' }} />
+                  </div>
+                ) : (
+                  <div className="modal-main-image clickable-photo" onClick={openLightbox} title="Cliquer pour agrandir">
+                    <img src={getPhotoSrc(current.url)} alt={place.title} />
+                    <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
+                  </div>
+                )}
+                {allMedia.length > 1 && (
                   <div className="modal-thumbnails">
-                    {place.photos.map((photo, idx) => (
-                      <button key={idx} className={`modal-thumb ${idx === currentImage ? 'active' : ''}`} onClick={() => setCurrentImage(idx)}>
-                        <img src={getPhotoSrc(photo)} alt={`${place.title} ${idx + 1}`} />
+                    {allMedia.map((media, idx) => (
+                      <button key={idx} className={`modal-thumb ${idx === currentIdx ? 'active' : ''}`} onClick={() => setCurrentIdx(idx)}>
+                        {media.isVideo
+                          ? <div style={{ width: '100%', height: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                            </div>
+                          : <img src={getPhotoSrc(media.url)} alt={`${place.title} ${idx + 1}`} />
+                        }
                       </button>
                     ))}
                   </div>
@@ -532,14 +549,6 @@ const PlaceDetailModal = ({ place, onClose }) => {
               <div className="modal-no-image"><MapPin size={48} /></div>
             )}
           </div>
-
-          {place.videos?.length > 0 && (
-            <div className="modal-videos" style={{ padding: '0 24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {place.videos.map((video, idx) => (
-                <video key={idx} src={getPhotoSrc(video)} controls style={{ width: '100%', borderRadius: '10px', maxHeight: '320px', background: '#000' }} />
-              ))}
-            </div>
-          )}
 
           <div className="modal-body">
             <h2 className="modal-title">{place.title}</h2>
@@ -1810,32 +1819,43 @@ const PlaceDetailPage = () => {
         </header>
 
         <div className="detail-gallery" data-testid="detail-gallery">
-          {place.photos?.length > 0 ? (
-            <>
-              <div className="main-image clickable-photo" onClick={() => openLightbox(currentImage)} title="Cliquer pour agrandir">
-                <img src={getPhotoSrc(place.photos[currentImage])} alt={place.title} />
-                <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
-              </div>
-              {place.photos.length > 1 && (
-                <div className="thumbnail-strip">
-                  {place.photos.map((photo, idx) => (
-                    <button key={idx} className={`thumbnail ${idx === currentImage ? 'active' : ''}`} onClick={() => setCurrentImage(idx)}>
-                      <img src={getPhotoSrc(photo)} alt={`${place.title} ${idx + 1}`} />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : <div className="no-image"><MapPin size={64} /></div>}
+          {(() => {
+            const allMedia = [
+              ...(place.photos || []).map(url => ({ url, isVideo: false })),
+              ...(place.videos || []).map(url => ({ url, isVideo: true })),
+            ];
+            const current = allMedia[currentImage];
+            if (allMedia.length === 0) return <div className="no-image"><MapPin size={64} /></div>;
+            return (
+              <>
+                {current.isVideo ? (
+                  <div className="main-image">
+                    <video key={current.url} src={getPhotoSrc(current.url)} controls style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', borderRadius: '0' }} />
+                  </div>
+                ) : (
+                  <div className="main-image clickable-photo" onClick={() => openLightbox(currentImage)} title="Cliquer pour agrandir">
+                    <img src={getPhotoSrc(current.url)} alt={place.title} />
+                    <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
+                  </div>
+                )}
+                {allMedia.length > 1 && (
+                  <div className="thumbnail-strip">
+                    {allMedia.map((media, idx) => (
+                      <button key={idx} className={`thumbnail ${idx === currentImage ? 'active' : ''}`} onClick={() => setCurrentImage(idx)}>
+                        {media.isVideo
+                          ? <div style={{ width: '100%', height: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                            </div>
+                          : <img src={getPhotoSrc(media.url)} alt={`${place.title} ${idx + 1}`} />
+                        }
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
-
-        {place.videos?.length > 0 && (
-          <div className="detail-videos" style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {place.videos.map((video, idx) => (
-              <video key={idx} src={getPhotoSrc(video)} controls style={{ width: '100%', borderRadius: '12px', maxHeight: '400px', background: '#000' }} />
-            ))}
-          </div>
-        )}
 
         <div className="detail-content">
           <div className="detail-meta">
