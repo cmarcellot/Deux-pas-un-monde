@@ -81,6 +81,7 @@ class PlaceCreate(BaseModel):
     latitude: float
     longitude: float
     photos: List[str] = []
+    videos: List[str] = []
 
 class PlaceUpdate(BaseModel):
     title: Optional[str] = None
@@ -94,6 +95,7 @@ class PlaceUpdate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     photos: Optional[List[str]] = None
+    videos: Optional[List[str]] = None
 
 class PlaceResponse(BaseModel):
     id: str
@@ -108,6 +110,7 @@ class PlaceResponse(BaseModel):
     latitude: float
     longitude: float
     photos: List[str]
+    videos: List[str] = []
     created_at: str
 
 class ItineraryActivity(BaseModel):
@@ -281,8 +284,8 @@ async def upload_image(
     entity_id: Optional[str] = None,
     payload: dict = Depends(verify_token),
 ):
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Seules les images sont acceptées")
+    if not (file.content_type.startswith("image/") or file.content_type.startswith("video/")):
+        raise HTTPException(status_code=400, detail="Seules les images et vidéos sont acceptées")
     ext = pathlib.Path(file.filename).suffix if file.filename else ".jpg"
     filename = f"{uuid.uuid4()}{ext}"
     if entity_type and entity_id:

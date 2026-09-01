@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import * as THREE from 'three';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
@@ -128,6 +128,9 @@ const createMarkerIcon = (category) => {
   });
 };
 
+// Palette de couleurs par jour pour les polylignes de la carte du séjour
+const DAY_POLYLINE_COLORS = ['#c17c5a','#5B7A8A','#5A7A60','#8A7845','#7B5A8A','#8A5A5A','#5A6A8A','#6A8A5A'];
+
 // Numbered circle marker for guide trip map (one per activity)
 const ACTIVITY_MARKER_COLORS = {
   visite:    '#3d7a55',
@@ -213,6 +216,8 @@ const CategoryBadge = ({ categoryId, small = false }) => {
 // LIGHTBOX
 // ============================================================
 const Lightbox = ({ photos, initialIndex, onClose }) => {
+  // Normalise: accepte des strings (photos seules) ou des {url, isVideo}
+  const media = photos.map(p => typeof p === 'string' ? { url: p, isVideo: false } : p);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [direction, setDirection] = useState(0);
   const [touchStartX, setTouchStartX] = useState(null);
@@ -227,8 +232,8 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
   }, [currentIndex, goTo]);
 
   const goNext = useCallback(() => {
-    if (currentIndex < photos.length - 1) goTo(currentIndex + 1, 1);
-  }, [currentIndex, photos.length, goTo]);
+    if (currentIndex < media.length - 1) goTo(currentIndex + 1, 1);
+  }, [currentIndex, media.length, goTo]);
 
   useEffect(() => {
     const handleKey = (e) => {
@@ -270,7 +275,7 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
     >
       {/* Top bar */}
       <div className="lightbox-topbar" onClick={(e) => e.stopPropagation()}>
-        <span className="lightbox-counter">{currentIndex + 1} / {photos.length}</span>
+        <span className="lightbox-counter">{currentIndex + 1} / {media.length}</span>
         <button className="lightbox-close" onClick={onClose} aria-label="Fermer" data-testid="lightbox-close">
           <X size={24} />
         </button>
@@ -300,16 +305,14 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
             exit="exit"
             transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <img
-              src={getPhotoSrc(photos[currentIndex])}
-              alt=""
-              className="lightbox-image"
-              draggable={false}
-            />
+            {media[currentIndex].isVideo
+              ? <video key={media[currentIndex].url} src={getPhotoSrc(media[currentIndex].url)} controls autoPlay className="lightbox-image" style={{ objectFit: 'contain', background: '#000' }} />
+              : <img src={getPhotoSrc(media[currentIndex].url)} alt="" className="lightbox-image" draggable={false} />
+            }
           </motion.div>
         </AnimatePresence>
 
-        {currentIndex < photos.length - 1 && (
+        {currentIndex < media.length - 1 && (
           <button className="lightbox-arrow lightbox-arrow-next" onClick={goNext} aria-label="Suivante" data-testid="lightbox-next">
             <ChevronRight size={36} />
           </button>
@@ -317,15 +320,20 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
       </div>
 
       {/* Thumbnails */}
-      {photos.length > 1 && (
+      {media.length > 1 && (
         <div className="lightbox-thumbnails" onClick={(e) => e.stopPropagation()}>
-          {photos.map((photo, idx) => (
+          {media.map((item, idx) => (
             <button
               key={idx}
               className={`lightbox-thumb ${idx === currentIndex ? 'active' : ''}`}
               onClick={() => goTo(idx, idx > currentIndex ? 1 : -1)}
             >
-              <img src={getPhotoSrc(photo)} alt="" draggable={false} />
+              {item.isVideo
+                ? <div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                  </div>
+                : <img src={getPhotoSrc(item.url)} alt="" draggable={false} />
+              }
             </button>
           ))}
         </div>
@@ -494,12 +502,16 @@ const FitBoundsToMarkers = ({ positions }) => {
 // PLACE DETAIL MODAL — with lightbox
 // ============================================================
 const PlaceDetailModal = ({ place, onClose }) => {
-  const [currentImage, setCurrentImage] = useState(0);
+  const [currentIdx, setCurrentIdx] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
   if (!place) return null;
-  const openLightbox = (idx) => { setLightboxIndex(idx); setLightboxOpen(true); };
+  const allMedia = [
+    ...(place.photos || []).map(url => ({ url, isVideo: false })),
+    ...(place.videos || []).map(url => ({ url, isVideo: true })),
+  ];
+  const current = allMedia[currentIdx];
 
   return (
     <>
@@ -509,17 +521,28 @@ const PlaceDetailModal = ({ place, onClose }) => {
           <button className="modal-close-btn" onClick={onClose} data-testid="close-modal-btn"><X size={24} /></button>
 
           <div className="modal-gallery">
-            {place.photos?.length > 0 ? (
+            {allMedia.length > 0 ? (
               <>
-                <div className="modal-main-image clickable-photo" onClick={() => openLightbox(currentImage)} title="Cliquer pour agrandir">
-                  <img src={getPhotoSrc(place.photos[currentImage])} alt={place.title} />
-                  <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
-                </div>
-                {place.photos.length > 1 && (
+                {current.isVideo ? (
+                  <div className="modal-main-image">
+                    <video key={current.url} src={getPhotoSrc(current.url)} controls style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', borderRadius: '12px' }} />
+                  </div>
+                ) : (
+                  <div className="modal-main-image clickable-photo" onClick={() => { setLightboxIndex(currentIdx); setLightboxOpen(true); }} title="Cliquer pour agrandir">
+                    <img src={getPhotoSrc(current.url)} alt={place.title} />
+                    <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
+                  </div>
+                )}
+                {allMedia.length > 1 && (
                   <div className="modal-thumbnails">
-                    {place.photos.map((photo, idx) => (
-                      <button key={idx} className={`modal-thumb ${idx === currentImage ? 'active' : ''}`} onClick={() => setCurrentImage(idx)}>
-                        <img src={getPhotoSrc(photo)} alt={`${place.title} ${idx + 1}`} />
+                    {allMedia.map((media, idx) => (
+                      <button key={idx} className={`modal-thumb ${idx === currentIdx ? 'active' : ''}`} onClick={() => setCurrentIdx(idx)}>
+                        {media.isVideo
+                          ? <div style={{ width: '100%', height: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                            </div>
+                          : <img src={getPhotoSrc(media.url)} alt={`${place.title} ${idx + 1}`} />
+                        }
                       </button>
                     ))}
                   </div>
@@ -551,7 +574,7 @@ const PlaceDetailModal = ({ place, onClose }) => {
       </motion.div>
 
       <AnimatePresence>
-        {lightboxOpen && <Lightbox photos={place.photos} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />}
+        {lightboxOpen && <Lightbox photos={allMedia} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />}
       </AnimatePresence>
     </>
   );
@@ -1631,13 +1654,19 @@ const GuideDetailPage = () => {
 
           {/* ── Carte du séjour ── */}
           {activeSection === 'map' && (() => {
-            // Numérotation séquentielle de toutes les activités
+            // Numérotation séquentielle + regroupement par jour
             let counter = 0;
-            const allActs = guide.itinerary.flatMap(day =>
-              (day.activities || []).map(act => ({
-                ...act, dayNumber: day.day_number, dayTitle: day.title, num: ++counter,
-              }))
-            );
+            const dayGroups = guide.itinerary.map((day, dayIdx) => ({
+              dayNumber: day.day_number,
+              dayTitle: day.title,
+              color: DAY_POLYLINE_COLORS[dayIdx % DAY_POLYLINE_COLORS.length],
+              acts: (day.activities || []).map(act => ({
+                ...act, dayNumber: day.day_number, dayTitle: day.title,
+                dayIdx, color: DAY_POLYLINE_COLORS[dayIdx % DAY_POLYLINE_COLORS.length],
+                num: ++counter,
+              })),
+            }));
+            const allActs = dayGroups.flatMap(g => g.acts);
             const mappable = allActs.filter(a => a.latitude && a.longitude);
             const positions = mappable.map(a => [a.latitude, a.longitude]);
             const center = positions.length > 0
@@ -1649,40 +1678,65 @@ const GuideDetailPage = () => {
                 {mappable.length === 0
                   ? <p className="guide-empty-section">Aucune activité géolocalisée — ajoutez des adresses dans l'éditeur.</p>
                   : (
-                    <MapContainer center={center} zoom={13}
-                      style={{ height: '440px', width: '100%', borderRadius: '10px', border: '1px solid #e5e0d5', marginBottom: 24 }}
-                      scrollWheelZoom={false}>
-                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
-                      <FitBoundsToMarkers positions={positions} />
-                      {mappable.map(act => (
-                        <Marker key={act.num} position={[act.latitude, act.longitude]}
-                          icon={createActivityMarkerIcon(act.num, act.type)}>
-                          <Popup>
-                            <div style={{ fontFamily: 'Jost, sans-serif', minWidth: 140 }}>
-                              <div style={{ fontSize: 10, color: '#999', marginBottom: 2 }}>Jour {act.dayNumber}</div>
-                              <div style={{ fontFamily: "'Cormorant Garant', serif", fontSize: 15, fontWeight: 600, color: '#252826' }}>{act.title}</div>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      ))}
-                    </MapContainer>
+                    <>
+                      {/* Légende des jours */}
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                        {dayGroups.map(g => g.acts.some(a => a.latitude && a.longitude) && (
+                          <div key={g.dayNumber} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{ width: 24, height: 3, borderRadius: 2, background: g.color }} />
+                            <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#777' }}>
+                              Jour {g.dayNumber}{g.dayTitle ? ` — ${g.dayTitle}` : ''}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <MapContainer center={center} zoom={13}
+                        style={{ height: '440px', width: '100%', borderRadius: '10px', border: '1px solid #e5e0d5', marginBottom: 24 }}
+                        scrollWheelZoom={false}>
+                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
+                        <FitBoundsToMarkers positions={positions} />
+                        {/* Polylignes par jour */}
+                        {dayGroups.map(g => {
+                          const pts = g.acts.filter(a => a.latitude && a.longitude).map(a => [a.latitude, a.longitude]);
+                          return pts.length > 1 && (
+                            <Polyline key={g.dayNumber} positions={pts}
+                              pathOptions={{ color: g.color, weight: 3, opacity: 0.75, dashArray: null }} />
+                          );
+                        })}
+                        {/* Marqueurs numérotés */}
+                        {mappable.map(act => (
+                          <Marker key={act.num} position={[act.latitude, act.longitude]}
+                            icon={createActivityMarkerIcon(act.num, act.type)}>
+                            <Popup>
+                              <div style={{ fontFamily: 'Jost, sans-serif', minWidth: 140 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: act.color, flexShrink: 0 }} />
+                                  <span style={{ fontSize: 10, color: '#999' }}>Jour {act.dayNumber}</span>
+                                </div>
+                                <div style={{ fontFamily: "'Cormorant Garant', serif", fontSize: 15, fontWeight: 600, color: '#252826' }}>{act.title}</div>
+                              </div>
+                            </Popup>
+                          </Marker>
+                        ))}
+                      </MapContainer>
+                    </>
                   )
                 }
                 {/* Grille des activités */}
                 {allActs.length > 0 && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 10 }}>
                     {allActs.map(act => {
-                      const bg = ACTIVITY_MARKER_COLORS[act.type] || '#8a7060';
                       const hasCoords = !!(act.latitude && act.longitude);
                       return (
                         <div key={act.num} style={{
                           background: '#faf8f3', borderRadius: 8, padding: '10px 14px',
-                          border: '1px solid #e5e0d5', display: 'flex', alignItems: 'center', gap: 12,
-                          opacity: hasCoords ? 1 : 0.5,
+                          border: `1px solid ${hasCoords ? act.color + '44' : '#e5e0d5'}`,
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          opacity: hasCoords ? 1 : 0.45,
                         }}>
                           <div style={{
                             width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                            background: hasCoords ? bg : '#ccc',
+                            background: hasCoords ? act.color : '#ccc',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontFamily: 'Jost, sans-serif', fontSize: 12, fontWeight: 700, color: '#fff',
                           }}>{act.num}</div>
@@ -1758,6 +1812,10 @@ const PlaceDetailPage = () => {
   if (loading || !place) return <div className="loading-page">Chargement...</div>;
 
   const openLightbox = (idx) => { setLightboxIndex(idx); setLightboxOpen(true); };
+  const allMedia = [
+    ...(place.photos || []).map(url => ({ url, isVideo: false })),
+    ...(place.videos || []).map(url => ({ url, isVideo: true })),
+  ];
 
   return (
     <>
@@ -1768,23 +1826,34 @@ const PlaceDetailPage = () => {
         </header>
 
         <div className="detail-gallery" data-testid="detail-gallery">
-          {place.photos?.length > 0 ? (
+          {allMedia.length === 0 ? <div className="no-image"><MapPin size={64} /></div> : (
             <>
-              <div className="main-image clickable-photo" onClick={() => openLightbox(currentImage)} title="Cliquer pour agrandir">
-                <img src={getPhotoSrc(place.photos[currentImage])} alt={place.title} />
-                <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
-              </div>
-              {place.photos.length > 1 && (
+              {allMedia[currentImage].isVideo ? (
+                <div className="main-image">
+                  <video key={allMedia[currentImage].url} src={getPhotoSrc(allMedia[currentImage].url)} controls style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', borderRadius: '0' }} />
+                </div>
+              ) : (
+                <div className="main-image clickable-photo" onClick={() => openLightbox(currentImage)} title="Cliquer pour agrandir">
+                  <img src={getPhotoSrc(allMedia[currentImage].url)} alt={place.title} />
+                  <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
+                </div>
+              )}
+              {allMedia.length > 1 && (
                 <div className="thumbnail-strip">
-                  {place.photos.map((photo, idx) => (
+                  {allMedia.map((item, idx) => (
                     <button key={idx} className={`thumbnail ${idx === currentImage ? 'active' : ''}`} onClick={() => setCurrentImage(idx)}>
-                      <img src={getPhotoSrc(photo)} alt={`${place.title} ${idx + 1}`} />
+                      {item.isVideo
+                        ? <div style={{ width: '100%', height: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                          </div>
+                        : <img src={getPhotoSrc(item.url)} alt={`${place.title} ${idx + 1}`} />
+                      }
                     </button>
                   ))}
                 </div>
               )}
             </>
-          ) : <div className="no-image"><MapPin size={64} /></div>}
+          )}
         </div>
 
         <div className="detail-content">
@@ -1807,7 +1876,7 @@ const PlaceDetailPage = () => {
       </motion.div>
 
       <AnimatePresence>
-        {lightboxOpen && <Lightbox photos={place.photos} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />}
+        {lightboxOpen && <Lightbox photos={allMedia} initialIndex={lightboxIndex} onClose={() => setLightboxOpen(false)} />}
       </AnimatePresence>
     </>
   );
@@ -1816,12 +1885,18 @@ const PlaceDetailPage = () => {
 // ============================================================
 // DROP ZONE — composant réutilisable pour l'upload par glisser-déposer
 // ============================================================
-const DropZone = ({ onFiles, multiple = true, label = 'Glisser des photos ici', inputId }) => {
+const DropZone = ({ onFiles, multiple = true, label = 'Glisser des photos ici', inputId, accept = 'image/*' }) => {
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef(null);
+  const matchesAccept = (file) => {
+    if (accept === 'image/*') return file.type.startsWith('image/');
+    if (accept === 'video/*') return file.type.startsWith('video/');
+    if (accept === 'image/*,video/*') return file.type.startsWith('image/') || file.type.startsWith('video/');
+    return true;
+  };
   const handleDrop = (e) => {
     e.preventDefault(); setDragging(false);
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    const files = Array.from(e.dataTransfer.files).filter(matchesAccept);
     if (files.length) onFiles(files);
   };
   return (
@@ -1830,7 +1905,7 @@ const DropZone = ({ onFiles, multiple = true, label = 'Glisser des photos ici', 
       onDragEnter={e => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}>
-      <input ref={inputRef} type="file" accept="image/*" multiple={multiple} id={inputId} className="hidden"
+      <input ref={inputRef} type="file" accept={accept} multiple={multiple} id={inputId} className="hidden"
         onChange={e => { onFiles(Array.from(e.target.files)); e.target.value = ''; }} />
       <label className="drop-zone-label" onClick={() => inputRef.current?.click()}>
         <Upload size={28} />
@@ -2317,7 +2392,9 @@ const AdminPage = () => {
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeResult, setGeocodeResult] = useState(null);
   const [pendingPlaceFiles, setPendingPlaceFiles] = useState([]);
+  const [pendingPlaceVideos, setPendingPlaceVideos] = useState([]);
   const [removedPlacePhotos, setRemovedPlacePhotos] = useState([]);
+  const [removedPlaceVideos, setRemovedPlaceVideos] = useState([]);
   const [showManualCoords, setShowManualCoords] = useState(false);
   const [draggedPhotoIdx, setDraggedPhotoIdx] = useState(null);
   const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState(null);
@@ -2445,7 +2522,10 @@ const AdminPage = () => {
   };
 
   const addFiles = (files) => {
-    setPendingPlaceFiles(prev => [...prev, ...files.map(f => ({ file: f, preview: URL.createObjectURL(f) }))]);
+    const images = files.filter(f => f.type.startsWith('image/'));
+    const videos = files.filter(f => f.type.startsWith('video/'));
+    if (images.length) setPendingPlaceFiles(prev => [...prev, ...images.map(f => ({ file: f, preview: URL.createObjectURL(f) }))]);
+    if (videos.length) setPendingPlaceVideos(prev => [...prev, ...videos.map(f => ({ file: f, preview: URL.createObjectURL(f) }))]);
   };
 
   const removePhoto = (index) => {
@@ -2456,6 +2536,17 @@ const AdminPage = () => {
       const pendingIdx = index - formData.photos.length;
       URL.revokeObjectURL(pendingPlaceFiles[pendingIdx].preview);
       setPendingPlaceFiles(prev => prev.filter((_, i) => i !== pendingIdx));
+    }
+  };
+
+  const removeVideo = (index) => {
+    if (index < formData.videos.length) {
+      setRemovedPlaceVideos(prev => [...prev, formData.videos[index]]);
+      setFormData(prev => ({ ...prev, videos: prev.videos.filter((_, i) => i !== index) }));
+    } else {
+      const pendingIdx = index - formData.videos.length;
+      URL.revokeObjectURL(pendingPlaceVideos[pendingIdx].preview);
+      setPendingPlaceVideos(prev => prev.filter((_, i) => i !== pendingIdx));
     }
   };
 
@@ -2474,20 +2565,31 @@ const AdminPage = () => {
     const token = localStorage.getItem('admin_token'); setLoading(true);
     try {
       const placeId = editingPlace ? editingPlace.id : placeFormId;
-      const newUrls = [];
+      const newPhotoUrls = [];
       for (const { file } of pendingPlaceFiles) {
         const fd = new FormData(); fd.append('file', file);
         const r = await fetch(`${API_URL}/api/upload?entity_type=places&entity_id=${placeId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
         const d = await r.json();
-        if (r.ok) newUrls.push(d.url);
+        if (r.ok) newPhotoUrls.push(d.url);
       }
-      const finalPhotos = [...formData.photos, ...newUrls];
+      const newVideoUrls = [];
+      for (const { file } of pendingPlaceVideos) {
+        const fd = new FormData(); fd.append('file', file);
+        const r = await fetch(`${API_URL}/api/upload?entity_type=places&entity_id=${placeId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+        const d = await r.json();
+        if (r.ok) newVideoUrls.push(d.url);
+      }
+      const finalPhotos = [...formData.photos, ...newPhotoUrls];
+      const finalVideos = [...formData.videos, ...newVideoUrls];
       const url = editingPlace ? `${API_URL}/api/places/${editingPlace.id}` : `${API_URL}/api/places`;
-      const payload = editingPlace ? { ...formData, photos: finalPhotos } : { ...formData, id: placeFormId, photos: finalPhotos };
+      const payload = editingPlace ? { ...formData, photos: finalPhotos, videos: finalVideos } : { ...formData, id: placeFormId, photos: finalPhotos, videos: finalVideos };
       const res = await fetch(url, { method: editingPlace ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
       if (res.ok) {
         for (const photoUrl of removedPlacePhotos) {
           if (photoUrl.startsWith('/uploads/')) await fetch(`${API_URL}/api/upload?url=${encodeURIComponent(photoUrl)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+        }
+        for (const videoUrl of removedPlaceVideos) {
+          if (videoUrl.startsWith('/uploads/')) await fetch(`${API_URL}/api/upload?url=${encodeURIComponent(videoUrl)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
         }
         toast.success(editingPlace ? 'Lieu modifié !' : 'Lieu créé !'); resetForm(); fetchPlaces(token);
       } else { const error = await res.json(); toast.error(error.detail || 'Erreur'); }
@@ -2496,10 +2598,10 @@ const AdminPage = () => {
   };
 
   const handleEdit = (place) => {
-    setPendingPlaceFiles([]); setRemovedPlacePhotos([]);
+    setPendingPlaceFiles([]); setPendingPlaceVideos([]); setRemovedPlacePhotos([]); setRemovedPlaceVideos([]);
     setEditingPlace(place);
     setPlaceFormId(place.id);
-    setFormData({ title: place.title, address: place.address, city: place.city || '', country: place.country || '', date: place.date || '', description: place.description, category: place.category, rating: place.rating, latitude: place.latitude, longitude: place.longitude, photos: place.photos || [] });
+    setFormData({ title: place.title, address: place.address, city: place.city || '', country: place.country || '', date: place.date || '', description: place.description, category: place.category, rating: place.rating, latitude: place.latitude, longitude: place.longitude, photos: place.photos || [], videos: place.videos || [] });
     setShowForm(true);
   };
 
@@ -2514,10 +2616,11 @@ const AdminPage = () => {
 
   const resetForm = () => {
     pendingPlaceFiles.forEach(p => URL.revokeObjectURL(p.preview));
-    setPendingPlaceFiles([]); setRemovedPlacePhotos([]);
+    pendingPlaceVideos.forEach(p => URL.revokeObjectURL(p.preview));
+    setPendingPlaceFiles([]); setPendingPlaceVideos([]); setRemovedPlacePhotos([]); setRemovedPlaceVideos([]);
     setEditingPlace(null); setShowForm(false);
     setPlaceFormId(crypto.randomUUID());
-    setFormData({ title: '', address: '', city: '', country: '', date: '', description: '', category: 'accommodation', rating: 3, latitude: 48.8566, longitude: 2.3522, photos: [] });
+    setFormData({ title: '', address: '', city: '', country: '', date: '', description: '', category: 'accommodation', rating: 3, latitude: 48.8566, longitude: 2.3522, photos: [], videos: [] });
     setGeocodeResult(null); setShowManualCoords(false);
   };
 
@@ -2647,9 +2750,9 @@ const AdminPage = () => {
                         </div>
                       </div>
                       <div className="form-group full-width"><label>Note</label><StarRating rating={formData.rating} onChange={(rating) => setFormData({ ...formData, rating })} readonly={false} /></div>
-                      <div className="form-group full-width"><label>Photos</label>
+                      <div className="form-group full-width"><label>Photos et vidéos</label>
                         <div className="photo-upload-area">
-                          <DropZone inputId="photo-upload" label="Glisser des photos ici" onFiles={addFiles} />
+                          <DropZone inputId="photo-upload" label="Glisser des photos ou vidéos ici" accept="image/*,video/*" onFiles={addFiles} />
                           <div className="uploaded-photos">
                             {formData.photos.map((photo, idx) => (
                               <div key={idx}
@@ -2672,6 +2775,22 @@ const AdminPage = () => {
                               </div>
                             ))}
                           </div>
+                          {(formData.videos.length > 0 || pendingPlaceVideos.length > 0) && (
+                            <div className="uploaded-videos" style={{ marginTop: '12px' }}>
+                              {formData.videos.map((video, idx) => (
+                                <div key={idx} className="uploaded-video" style={{ position: 'relative', display: 'inline-block', marginRight: '8px', marginBottom: '8px' }}>
+                                  <video src={getPhotoSrc(video)} controls style={{ height: '120px', borderRadius: '6px', display: 'block' }} />
+                                  <button type="button" onClick={() => removeVideo(idx)} className="remove-photo"><X size={14} /></button>
+                                </div>
+                              ))}
+                              {pendingPlaceVideos.map(({ preview }, idx) => (
+                                <div key={`vpending-${idx}`} className="uploaded-video" style={{ position: 'relative', display: 'inline-block', marginRight: '8px', marginBottom: '8px' }}>
+                                  <video src={preview} controls style={{ height: '120px', borderRadius: '6px', display: 'block' }} />
+                                  <button type="button" onClick={() => removeVideo(formData.videos.length + idx)} className="remove-photo"><X size={14} /></button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
