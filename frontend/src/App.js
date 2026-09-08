@@ -2520,14 +2520,6 @@ const AdminPage = () => {
     finally { setGeocoding(false); }
   };
 
-  const updateMediaItems = (updater) => {
-    setMediaItems(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      mediaItemsRef.current = next;
-      return next;
-    });
-  };
-
   const addFiles = (files) => {
     const newItems = files.map(f => ({
       id: crypto.randomUUID(),
@@ -2535,27 +2527,28 @@ const AdminPage = () => {
       preview: URL.createObjectURL(f),
       isVideo: f.type.startsWith('video/'),
     }));
-    updateMediaItems(prev => [...prev, ...newItems]);
+    const next = [...mediaItemsRef.current, ...newItems];
+    mediaItemsRef.current = next;
+    setMediaItems(next);
   };
 
   const removeMedia = (id) => {
-    updateMediaItems(prev => {
-      const item = prev.find(i => i.id === id);
-      if (!item) return prev;
-      if (item.preview) URL.revokeObjectURL(item.preview);
-      if (item.url) setRemovedMedia(r => [...r, item.url]);
-      return prev.filter(i => i.id !== id);
-    });
+    const item = mediaItemsRef.current.find(i => i.id === id);
+    if (!item) return;
+    if (item.preview) URL.revokeObjectURL(item.preview);
+    if (item.url) setRemovedMedia(r => [...r, item.url]);
+    const next = mediaItemsRef.current.filter(i => i.id !== id);
+    mediaItemsRef.current = next;
+    setMediaItems(next);
   };
 
   const reorderMedia = (fromIdx, toIdx) => {
     if (fromIdx == null || fromIdx === toIdx) return;
-    updateMediaItems(prev => {
-      const items = [...prev];
-      const [moved] = items.splice(fromIdx, 1);
-      items.splice(toIdx, 0, moved);
-      return items;
-    });
+    const items = [...mediaItemsRef.current];
+    const [moved] = items.splice(fromIdx, 1);
+    items.splice(toIdx, 0, moved);
+    mediaItemsRef.current = items;
+    setMediaItems(items);
   };
 
   const handleSubmit = async (e) => {
