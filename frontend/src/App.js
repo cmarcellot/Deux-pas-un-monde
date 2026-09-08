@@ -2601,10 +2601,13 @@ const AdminPage = () => {
   };
 
   const handleEdit = (place) => {
-    const initial = [
-      ...(place.photos || []).map(url => ({ id: crypto.randomUUID(), url, isVideo: false })),
-      ...(place.videos || []).map(url => ({ id: crypto.randomUUID(), url, isVideo: true })),
-    ];
+    const videoSet = new Set(place.videos || []);
+    const initial = (place.media_order && place.media_order.length > 0)
+      ? place.media_order.map(url => ({ id: crypto.randomUUID(), url, isVideo: videoSet.has(url) }))
+      : [
+          ...(place.photos || []).map(url => ({ id: crypto.randomUUID(), url, isVideo: false })),
+          ...(place.videos || []).map(url => ({ id: crypto.randomUUID(), url, isVideo: true })),
+        ];
     mediaItemsRef.current = initial;
     setMediaItems(initial);
     setRemovedMedia([]);
