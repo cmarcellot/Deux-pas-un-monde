@@ -507,10 +507,17 @@ const PlaceDetailModal = ({ place, onClose }) => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
   if (!place) return null;
-  const allMedia = [
-    ...(place.photos || []).map(url => ({ url, isVideo: false })),
-    ...(place.videos || []).map(url => ({ url, isVideo: true })),
-  ];
+  const buildAllMedia = (p) => {
+    if (p.media_order && p.media_order.length > 0) {
+      const videoSet = new Set(p.videos || []);
+      return p.media_order.map(url => ({ url, isVideo: videoSet.has(url) }));
+    }
+    return [
+      ...(p.photos || []).map(url => ({ url, isVideo: false })),
+      ...(p.videos || []).map(url => ({ url, isVideo: true })),
+    ];
+  };
+  const allMedia = buildAllMedia(place);
   const current = allMedia[currentIdx];
 
   return (
@@ -1812,10 +1819,17 @@ const PlaceDetailPage = () => {
   if (loading || !place) return <div className="loading-page">Chargement...</div>;
 
   const openLightbox = (idx) => { setLightboxIndex(idx); setLightboxOpen(true); };
-  const allMedia = [
-    ...(place.photos || []).map(url => ({ url, isVideo: false })),
-    ...(place.videos || []).map(url => ({ url, isVideo: true })),
-  ];
+  const buildAllMedia = (p) => {
+    if (p.media_order && p.media_order.length > 0) {
+      const videoSet = new Set(p.videos || []);
+      return p.media_order.map(url => ({ url, isVideo: videoSet.has(url) }));
+    }
+    return [
+      ...(p.photos || []).map(url => ({ url, isVideo: false })),
+      ...(p.videos || []).map(url => ({ url, isVideo: true })),
+    ];
+  };
+  const allMedia = buildAllMedia(place);
 
   return (
     <>
@@ -2570,10 +2584,11 @@ const AdminPage = () => {
       }
       const finalPhotos = resolvedItems.filter(i => !i.isVideo).map(i => i.url);
       const finalVideos = resolvedItems.filter(i => i.isVideo).map(i => i.url);
+      const finalMediaOrder = resolvedItems.map(i => i.url);
       const url = editingPlace ? `${API_URL}/api/places/${editingPlace.id}` : `${API_URL}/api/places`;
       const payload = editingPlace
-        ? { ...formData, photos: finalPhotos, videos: finalVideos }
-        : { ...formData, id: placeFormId, photos: finalPhotos, videos: finalVideos };
+        ? { ...formData, photos: finalPhotos, videos: finalVideos, media_order: finalMediaOrder }
+        : { ...formData, id: placeFormId, photos: finalPhotos, videos: finalVideos, media_order: finalMediaOrder };
       const res = await fetch(url, { method: editingPlace ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
       if (res.ok) {
         for (const mediaUrl of removedMedia) {
