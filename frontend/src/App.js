@@ -2380,7 +2380,7 @@ const AdminPage = () => {
   const [formData, setFormData] = useState({
     title: '', address: '', city: '', country: '', date: '',
     description: '', category: 'accommodation',
-    rating: 3, latitude: 48.8566, longitude: 2.3522, photos: [],
+    rating: 3, latitude: 48.8566, longitude: 2.3522,
   });
   const [placeFormId, setPlaceFormId] = useState(() => crypto.randomUUID());
   const [adminTab, setAdminTab] = useState('places');
@@ -2391,13 +2391,11 @@ const AdminPage = () => {
   const [guideFormId, setGuideFormId] = useState(() => crypto.randomUUID());
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeResult, setGeocodeResult] = useState(null);
-  const [pendingPlaceFiles, setPendingPlaceFiles] = useState([]);
-  const [pendingPlaceVideos, setPendingPlaceVideos] = useState([]);
-  const [removedPlacePhotos, setRemovedPlacePhotos] = useState([]);
-  const [removedPlaceVideos, setRemovedPlaceVideos] = useState([]);
+  const [mediaItems, setMediaItems] = useState([]); // {id, url?, file?, preview?, isVideo}
+  const [removedMedia, setRemovedMedia] = useState([]);
   const [showManualCoords, setShowManualCoords] = useState(false);
-  const [draggedPhotoIdx, setDraggedPhotoIdx] = useState(null);
-  const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState(null);
+  const [draggedMediaIdx, setDraggedMediaIdx] = useState(null);
+  const [dragOverMediaIdx, setDragOverMediaIdx] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -2522,41 +2520,32 @@ const AdminPage = () => {
   };
 
   const addFiles = (files) => {
-    const images = files.filter(f => f.type.startsWith('image/'));
-    const videos = files.filter(f => f.type.startsWith('video/'));
-    if (images.length) setPendingPlaceFiles(prev => [...prev, ...images.map(f => ({ file: f, preview: URL.createObjectURL(f) }))]);
-    if (videos.length) setPendingPlaceVideos(prev => [...prev, ...videos.map(f => ({ file: f, preview: URL.createObjectURL(f) }))]);
+    const newItems = files.map(f => ({
+      id: crypto.randomUUID(),
+      file: f,
+      preview: URL.createObjectURL(f),
+      isVideo: f.type.startsWith('video/'),
+    }));
+    setMediaItems(prev => [...prev, ...newItems]);
   };
 
-  const removePhoto = (index) => {
-    if (index < formData.photos.length) {
-      setRemovedPlacePhotos(prev => [...prev, formData.photos[index]]);
-      setFormData(prev => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }));
-    } else {
-      const pendingIdx = index - formData.photos.length;
-      URL.revokeObjectURL(pendingPlaceFiles[pendingIdx].preview);
-      setPendingPlaceFiles(prev => prev.filter((_, i) => i !== pendingIdx));
-    }
+  const removeMedia = (id) => {
+    setMediaItems(prev => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      if (item.preview) URL.revokeObjectURL(item.preview);
+      if (item.url) setRemovedMedia(r => [...r, item.url]);
+      return prev.filter(i => i.id !== id);
+    });
   };
 
-  const removeVideo = (index) => {
-    if (index < formData.videos.length) {
-      setRemovedPlaceVideos(prev => [...prev, formData.videos[index]]);
-      setFormData(prev => ({ ...prev, videos: prev.videos.filter((_, i) => i !== index) }));
-    } else {
-      const pendingIdx = index - formData.videos.length;
-      URL.revokeObjectURL(pendingPlaceVideos[pendingIdx].preview);
-      setPendingPlaceVideos(prev => prev.filter((_, i) => i !== pendingIdx));
-    }
-  };
-
-  const reorderPhotos = (fromIdx, toIdx) => {
+  const reorderMedia = (fromIdx, toIdx) => {
     if (fromIdx === toIdx) return;
-    setFormData(prev => {
-      const photos = [...prev.photos];
-      const [moved] = photos.splice(fromIdx, 1);
-      photos.splice(toIdx, 0, moved);
-      return { ...prev, photos };
+    setMediaItems(prev => {
+      const items = [...prev];
+      const [moved] = items.splice(fromIdx, 1);
+      items.splice(toIdx, 0, moved);
+      return items;
     });
   };
 
@@ -2565,31 +2554,28 @@ const AdminPage = () => {
     const token = localStorage.getItem('admin_token'); setLoading(true);
     try {
       const placeId = editingPlace ? editingPlace.id : placeFormId;
-      const newPhotoUrls = [];
-      for (const { file } of pendingPlaceFiles) {
-        const fd = new FormData(); fd.append('file', file);
-        const r = await fetch(`${API_URL}/api/upload?entity_type=places&entity_id=${placeId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
-        const d = await r.json();
-        if (r.ok) newPhotoUrls.push(d.url);
+      // Upload pending files and build ordered resolved items
+      const resolvedItems = [];
+      for (const item of mediaItems) {
+        if (item.file) {
+          const fd = new FormData(); fd.append('file', item.file);
+          const r = await fetch(`${API_URL}/api/upload?entity_type=places&entity_id=${placeId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+          const d = await r.json();
+          if (r.ok) resolvedItems.push({ url: d.url, isVideo: item.isVideo });
+        } else if (item.url) {
+          resolvedItems.push({ url: item.url, isVideo: item.isVideo });
+        }
       }
-      const newVideoUrls = [];
-      for (const { file } of pendingPlaceVideos) {
-        const fd = new FormData(); fd.append('file', file);
-        const r = await fetch(`${API_URL}/api/upload?entity_type=places&entity_id=${placeId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
-        const d = await r.json();
-        if (r.ok) newVideoUrls.push(d.url);
-      }
-      const finalPhotos = [...formData.photos, ...newPhotoUrls];
-      const finalVideos = [...formData.videos, ...newVideoUrls];
+      const finalPhotos = resolvedItems.filter(i => !i.isVideo).map(i => i.url);
+      const finalVideos = resolvedItems.filter(i => i.isVideo).map(i => i.url);
       const url = editingPlace ? `${API_URL}/api/places/${editingPlace.id}` : `${API_URL}/api/places`;
-      const payload = editingPlace ? { ...formData, photos: finalPhotos, videos: finalVideos } : { ...formData, id: placeFormId, photos: finalPhotos, videos: finalVideos };
+      const payload = editingPlace
+        ? { ...formData, photos: finalPhotos, videos: finalVideos }
+        : { ...formData, id: placeFormId, photos: finalPhotos, videos: finalVideos };
       const res = await fetch(url, { method: editingPlace ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
       if (res.ok) {
-        for (const photoUrl of removedPlacePhotos) {
-          if (photoUrl.startsWith('/uploads/')) await fetch(`${API_URL}/api/upload?url=${encodeURIComponent(photoUrl)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
-        }
-        for (const videoUrl of removedPlaceVideos) {
-          if (videoUrl.startsWith('/uploads/')) await fetch(`${API_URL}/api/upload?url=${encodeURIComponent(videoUrl)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+        for (const mediaUrl of removedMedia) {
+          if (mediaUrl.startsWith('/uploads/')) await fetch(`${API_URL}/api/upload?url=${encodeURIComponent(mediaUrl)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
         }
         toast.success(editingPlace ? 'Lieu modifié !' : 'Lieu créé !'); resetForm(); fetchPlaces(token);
       } else { const error = await res.json(); toast.error(error.detail || 'Erreur'); }
@@ -2598,10 +2584,14 @@ const AdminPage = () => {
   };
 
   const handleEdit = (place) => {
-    setPendingPlaceFiles([]); setPendingPlaceVideos([]); setRemovedPlacePhotos([]); setRemovedPlaceVideos([]);
+    setMediaItems([
+      ...(place.photos || []).map(url => ({ id: crypto.randomUUID(), url, isVideo: false })),
+      ...(place.videos || []).map(url => ({ id: crypto.randomUUID(), url, isVideo: true })),
+    ]);
+    setRemovedMedia([]);
     setEditingPlace(place);
     setPlaceFormId(place.id);
-    setFormData({ title: place.title, address: place.address, city: place.city || '', country: place.country || '', date: place.date || '', description: place.description, category: place.category, rating: place.rating, latitude: place.latitude, longitude: place.longitude, photos: place.photos || [], videos: place.videos || [] });
+    setFormData({ title: place.title, address: place.address, city: place.city || '', country: place.country || '', date: place.date || '', description: place.description, category: place.category, rating: place.rating, latitude: place.latitude, longitude: place.longitude });
     setShowForm(true);
   };
 
@@ -2615,12 +2605,11 @@ const AdminPage = () => {
   };
 
   const resetForm = () => {
-    pendingPlaceFiles.forEach(p => URL.revokeObjectURL(p.preview));
-    pendingPlaceVideos.forEach(p => URL.revokeObjectURL(p.preview));
-    setPendingPlaceFiles([]); setPendingPlaceVideos([]); setRemovedPlacePhotos([]); setRemovedPlaceVideos([]);
+    mediaItems.forEach(i => { if (i.preview) URL.revokeObjectURL(i.preview); });
+    setMediaItems([]); setRemovedMedia([]);
     setEditingPlace(null); setShowForm(false);
     setPlaceFormId(crypto.randomUUID());
-    setFormData({ title: '', address: '', city: '', country: '', date: '', description: '', category: 'accommodation', rating: 3, latitude: 48.8566, longitude: 2.3522, photos: [], videos: [] });
+    setFormData({ title: '', address: '', city: '', country: '', date: '', description: '', category: 'accommodation', rating: 3, latitude: 48.8566, longitude: 2.3522 });
     setGeocodeResult(null); setShowManualCoords(false);
   };
 
@@ -2753,40 +2742,28 @@ const AdminPage = () => {
                       <div className="form-group full-width"><label>Photos et vidéos</label>
                         <div className="photo-upload-area">
                           <DropZone inputId="photo-upload" label="Glisser des photos ou vidéos ici" accept="image/*,video/*" onFiles={addFiles} />
-                          <div className="uploaded-photos">
-                            {formData.photos.map((photo, idx) => (
-                              <div key={idx}
-                                className={`uploaded-photo draggable-photo ${dragOverPhotoIdx === idx ? 'drag-over' : ''}`}
-                                draggable
-                                onDragStart={() => setDraggedPhotoIdx(idx)}
-                                onDragOver={e => { e.preventDefault(); setDragOverPhotoIdx(idx); }}
-                                onDragLeave={() => setDragOverPhotoIdx(null)}
-                                onDrop={e => { e.preventDefault(); reorderPhotos(draggedPhotoIdx, idx); setDraggedPhotoIdx(null); setDragOverPhotoIdx(null); }}
-                                onDragEnd={() => { setDraggedPhotoIdx(null); setDragOverPhotoIdx(null); }}>
-                                <img src={getPhotoSrc(photo)} alt="" />
-                                <div className="photo-drag-handle"><GripVertical size={14} /></div>
-                                <button type="button" onClick={() => removePhoto(idx)} className="remove-photo"><X size={14} /></button>
-                              </div>
-                            ))}
-                            {pendingPlaceFiles.map(({ preview }, idx) => (
-                              <div key={`pending-${idx}`} className="uploaded-photo">
-                                <img src={preview} alt="" />
-                                <button type="button" onClick={() => removePhoto(formData.photos.length + idx)} className="remove-photo"><X size={14} /></button>
-                              </div>
-                            ))}
-                          </div>
-                          {(formData.videos.length > 0 || pendingPlaceVideos.length > 0) && (
-                            <div className="uploaded-videos" style={{ marginTop: '12px' }}>
-                              {formData.videos.map((video, idx) => (
-                                <div key={idx} className="uploaded-video" style={{ position: 'relative', display: 'inline-block', marginRight: '8px', marginBottom: '8px' }}>
-                                  <video src={getPhotoSrc(video)} controls style={{ height: '120px', borderRadius: '6px', display: 'block' }} />
-                                  <button type="button" onClick={() => removeVideo(idx)} className="remove-photo"><X size={14} /></button>
-                                </div>
-                              ))}
-                              {pendingPlaceVideos.map(({ preview }, idx) => (
-                                <div key={`vpending-${idx}`} className="uploaded-video" style={{ position: 'relative', display: 'inline-block', marginRight: '8px', marginBottom: '8px' }}>
-                                  <video src={preview} controls style={{ height: '120px', borderRadius: '6px', display: 'block' }} />
-                                  <button type="button" onClick={() => removeVideo(formData.videos.length + idx)} className="remove-photo"><X size={14} /></button>
+                          {mediaItems.length > 0 && (
+                            <div className="uploaded-photos">
+                              {mediaItems.map((item, idx) => (
+                                <div key={item.id}
+                                  className={`uploaded-photo draggable-photo ${dragOverMediaIdx === idx ? 'drag-over' : ''}`}
+                                  draggable
+                                  onDragStart={() => setDraggedMediaIdx(idx)}
+                                  onDragOver={e => { e.preventDefault(); setDragOverMediaIdx(idx); }}
+                                  onDragLeave={() => setDragOverMediaIdx(null)}
+                                  onDrop={e => { e.preventDefault(); reorderMedia(draggedMediaIdx, idx); setDraggedMediaIdx(null); setDragOverMediaIdx(null); }}
+                                  onDragEnd={() => { setDraggedMediaIdx(null); setDragOverMediaIdx(null); }}>
+                                  {item.isVideo
+                                    ? <video src={item.preview || getPhotoSrc(item.url)} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }} />
+                                    : <img src={item.preview || getPhotoSrc(item.url)} alt="" />
+                                  }
+                                  {item.isVideo && (
+                                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }}>
+                                      <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }}><polygon points="5,3 19,12 5,21"/></svg>
+                                    </div>
+                                  )}
+                                  <div className="photo-drag-handle"><GripVertical size={14} /></div>
+                                  <button type="button" onClick={() => removeMedia(item.id)} className="remove-photo"><X size={14} /></button>
                                 </div>
                               ))}
                             </div>
