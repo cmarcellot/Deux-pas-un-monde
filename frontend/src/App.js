@@ -329,8 +329,11 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
               onClick={() => goTo(idx, idx > currentIndex ? 1 : -1)}
             >
               {item.isVideo
-                ? <div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                ? <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                    <video src={getPhotoSrc(item.url)} preload="metadata" muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                    </div>
                   </div>
                 : <img src={getPhotoSrc(item.url)} alt="" draggable={false} />
               }
@@ -545,8 +548,11 @@ const PlaceDetailModal = ({ place, onClose }) => {
                     {allMedia.map((media, idx) => (
                       <button key={idx} className={`modal-thumb ${idx === currentIdx ? 'active' : ''}`} onClick={() => setCurrentIdx(idx)}>
                         {media.isVideo
-                          ? <div style={{ width: '100%', height: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}>
-                              <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                          ? <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '6px', overflow: 'hidden' }}>
+                              <video src={getPhotoSrc(media.url)} preload="metadata" muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                              </div>
                             </div>
                           : <img src={getPhotoSrc(media.url)} alt={`${place.title} ${idx + 1}`} />
                         }
@@ -1857,8 +1863,11 @@ const PlaceDetailPage = () => {
                   {allMedia.map((item, idx) => (
                     <button key={idx} className={`thumbnail ${idx === currentImage ? 'active' : ''}`} onClick={() => setCurrentImage(idx)}>
                       {item.isVideo
-                        ? <div style={{ width: '100%', height: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                        ? <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+                            <video src={getPhotoSrc(item.url)} preload="metadata" muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                            </div>
                           </div>
                         : <img src={getPhotoSrc(item.url)} alt={`${place.title} ${idx + 1}`} />
                       }
