@@ -82,6 +82,7 @@ class PlaceCreate(BaseModel):
     longitude: float
     photos: List[str] = []
     videos: List[str] = []
+    media_order: List[str] = []
 
 class PlaceUpdate(BaseModel):
     title: Optional[str] = None
@@ -96,6 +97,7 @@ class PlaceUpdate(BaseModel):
     longitude: Optional[float] = None
     photos: Optional[List[str]] = None
     videos: Optional[List[str]] = None
+    media_order: Optional[List[str]] = None
 
 class PlaceResponse(BaseModel):
     id: str
@@ -111,6 +113,7 @@ class PlaceResponse(BaseModel):
     longitude: float
     photos: List[str]
     videos: List[str] = []
+    media_order: List[str] = []
     created_at: str
 
 class ItineraryActivity(BaseModel):
