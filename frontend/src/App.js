@@ -2392,9 +2392,10 @@ const AdminPage = () => {
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeResult, setGeocodeResult] = useState(null);
   const [mediaItems, setMediaItems] = useState([]); // {id, url?, file?, preview?, isVideo}
+  const mediaItemsRef = useRef([]);
   const [removedMedia, setRemovedMedia] = useState([]);
   const [showManualCoords, setShowManualCoords] = useState(false);
-  const [draggedMediaIdx, setDraggedMediaIdx] = useState(null);
+  const draggedMediaIdxRef = useRef(null);
   const [dragOverMediaIdx, setDragOverMediaIdx] = useState(null);
 
   useEffect(() => {
@@ -2519,6 +2520,14 @@ const AdminPage = () => {
     finally { setGeocoding(false); }
   };
 
+  const updateMediaItems = (updater) => {
+    setMediaItems(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      mediaItemsRef.current = next;
+      return next;
+    });
+  };
+
   const addFiles = (files) => {
     const newItems = files.map(f => ({
       id: crypto.randomUUID(),
@@ -2526,11 +2535,11 @@ const AdminPage = () => {
       preview: URL.createObjectURL(f),
       isVideo: f.type.startsWith('video/'),
     }));
-    setMediaItems(prev => [...prev, ...newItems]);
+    updateMediaItems(prev => [...prev, ...newItems]);
   };
 
   const removeMedia = (id) => {
-    setMediaItems(prev => {
+    updateMediaItems(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
       if (item.preview) URL.revokeObjectURL(item.preview);
@@ -2540,8 +2549,8 @@ const AdminPage = () => {
   };
 
   const reorderMedia = (fromIdx, toIdx) => {
-    if (fromIdx === toIdx) return;
-    setMediaItems(prev => {
+    if (fromIdx == null || fromIdx === toIdx) return;
+    updateMediaItems(prev => {
       const items = [...prev];
       const [moved] = items.splice(fromIdx, 1);
       items.splice(toIdx, 0, moved);
@@ -2556,7 +2565,7 @@ const AdminPage = () => {
       const placeId = editingPlace ? editingPlace.id : placeFormId;
       // Upload pending files and build ordered resolved items
       const resolvedItems = [];
-      for (const item of mediaItems) {
+      for (const item of mediaItemsRef.current) {
         if (item.file) {
           const fd = new FormData(); fd.append('file', item.file);
           const r = await fetch(`${API_URL}/api/upload?entity_type=places&entity_id=${placeId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
@@ -2584,10 +2593,12 @@ const AdminPage = () => {
   };
 
   const handleEdit = (place) => {
-    setMediaItems([
+    const initial = [
       ...(place.photos || []).map(url => ({ id: crypto.randomUUID(), url, isVideo: false })),
       ...(place.videos || []).map(url => ({ id: crypto.randomUUID(), url, isVideo: true })),
-    ]);
+    ];
+    mediaItemsRef.current = initial;
+    setMediaItems(initial);
     setRemovedMedia([]);
     setEditingPlace(place);
     setPlaceFormId(place.id);
@@ -2605,7 +2616,8 @@ const AdminPage = () => {
   };
 
   const resetForm = () => {
-    mediaItems.forEach(i => { if (i.preview) URL.revokeObjectURL(i.preview); });
+    mediaItemsRef.current.forEach(i => { if (i.preview) URL.revokeObjectURL(i.preview); });
+    mediaItemsRef.current = [];
     setMediaItems([]); setRemovedMedia([]);
     setEditingPlace(null); setShowForm(false);
     setPlaceFormId(crypto.randomUUID());
@@ -2748,14 +2760,14 @@ const AdminPage = () => {
                                 <div key={item.id}
                                   className={`uploaded-photo draggable-photo ${dragOverMediaIdx === idx ? 'drag-over' : ''}`}
                                   draggable
-                                  onDragStart={() => setDraggedMediaIdx(idx)}
+                                  onDragStart={() => { draggedMediaIdxRef.current = idx; }}
                                   onDragOver={e => { e.preventDefault(); setDragOverMediaIdx(idx); }}
                                   onDragLeave={() => setDragOverMediaIdx(null)}
-                                  onDrop={e => { e.preventDefault(); reorderMedia(draggedMediaIdx, idx); setDraggedMediaIdx(null); setDragOverMediaIdx(null); }}
-                                  onDragEnd={() => { setDraggedMediaIdx(null); setDragOverMediaIdx(null); }}>
+                                  onDrop={e => { e.preventDefault(); reorderMedia(draggedMediaIdxRef.current, idx); draggedMediaIdxRef.current = null; setDragOverMediaIdx(null); }}
+                                  onDragEnd={() => { draggedMediaIdxRef.current = null; setDragOverMediaIdx(null); }}>
                                   {item.isVideo
-                                    ? <video src={item.preview || getPhotoSrc(item.url)} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }} />
-                                    : <img src={item.preview || getPhotoSrc(item.url)} alt="" />
+                                    ? <video src={item.preview || getPhotoSrc(item.url)} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px', pointerEvents: 'none' }} />
+                                    : <img src={item.preview || getPhotoSrc(item.url)} alt="" draggable={false} />
                                   }
                                   {item.isVideo && (
                                     <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }}>
