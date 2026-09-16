@@ -237,7 +237,7 @@
 .place-card-body h3 {
   font-family: 'EB Garamond', Georgia, serif;
   font-weight: 700;
-  font-size: 17px;
+  font-size: 19px;
   color: var(--text);
   margin: 0 0 4px;
   line-height: 1.2;
@@ -250,12 +250,14 @@
   margin: 0 0 10px;
   letter-spacing: 0.03em;
   line-height: 1.4;
+  display: flex;
+  align-items: center;
 }
 
 .place-card-desc {
   font-family: 'Jost', sans-serif;
   font-size: 12px;
-  font-weight: 300;
+  font-weight: 400;
   color: #555;
   margin: 0;
   line-height: 1.6;
@@ -1943,8 +1945,8 @@
 
 .v2-hero-title {
   font-family: 'EB Garamond', Georgia, serif;
-  font-size: 52px;
-  font-weight: 400;
+  font-size: 58px;
+  font-weight: 500;
   line-height: 1.1;
   color: white;
   margin: 0 0 14px;
@@ -2135,8 +2137,8 @@
 
 .v2-adresses-title {
   font-family: 'EB Garamond', Georgia, serif;
-  font-size: 34px;
-  font-weight: 400;
+  font-size: 38px;
+  font-weight: 500;
   color: #243b32;
   margin: 0 0 10px;
   line-height: 1;
@@ -2147,10 +2149,9 @@
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   font-weight: 400;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.04em;
   color: #4c5a5b;
   line-height: 1.85;
-  text-transform: uppercase;
   margin: 10px 0 17px;
 }
 
@@ -2234,8 +2235,8 @@
 
 .v2-guides-title {
   font-family: 'EB Garamond', Georgia, serif;
-  font-size: 26px;
-  font-weight: 400;
+  font-size: 30px;
+  font-weight: 500;
   color: #243b32;
   margin: 2px 0 0;
   line-height: 1.1;

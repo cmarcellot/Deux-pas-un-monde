@@ -385,6 +385,7 @@ const PlaceCard = ({ place, onClick }) => (
         <StarRating rating={place.rating} readonly size={13} />
       </div>
       <p className="place-card-location">
+        <MapPin size={11} strokeWidth={1.8} style={{ marginRight: 4, flexShrink: 0, position: 'relative', top: 1 }} />
         {place.city || place.address}{place.city && place.country ? `, ${place.country}` : ''}
       </p>
       <p className="place-card-desc">{stripHtml(place.description)}</p>
