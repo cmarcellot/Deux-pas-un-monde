@@ -394,6 +394,27 @@ def delete_guide(guide_id: str, payload: dict = Depends(verify_token)):
         shutil.rmtree(guide_dir)
     return {"message": "Guide supprimé"}
 
+
+
+@app.get("/sitemap.xml")
+def sitemap():
+    from fastapi.responses import Response
+    base = "https://www.deuxpasunmonde.fr"
+    urls = [
+        f"<url><loc>{base}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>",
+        f"<url><loc>{base}/guides</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>",
+    ]
+    for place in places_collection.find({}, {"id": 1, "_id": 0}):
+        pid = place["id"]
+        urls.append(f"<url><loc>{base}/place/{pid}</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>")
+    for guide in guides_collection.find({"published": True}, {"id": 1, "_id": 0}):
+        gid = guide["id"]
+        urls.append(f"<url><loc>{base}/guides/{gid}</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>")
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    xml += "\n".join(urls)
+    xml += "\n</urlset>"
+    return Response(content=xml, media_type="application/xml")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
