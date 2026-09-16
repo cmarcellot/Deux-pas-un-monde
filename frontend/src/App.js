@@ -494,10 +494,12 @@ const MapRecenter = ({ center }) => {
 
 const FitBoundsToMarkers = ({ positions }) => {
   const map = useMap();
+  const posKey = positions.map(p => p.join(',')).join('|');
   useEffect(() => {
     if (positions.length === 1) { map.setView(positions[0], 14); return; }
     if (positions.length > 1) { map.fitBounds(L.latLngBounds(positions), { padding: [40, 40] }); }
-  }, [map, positions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, posKey]);
   return null;
 };
 
@@ -863,6 +865,7 @@ const HomePage = () => {
             <MapContainer center={mapCenter} zoom={6} style={{ height: '100%', width: '100%' }}>
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
               <MapRecenter center={mapCenter} />
+              <FitBoundsToMarkers positions={filtered.map(p => [p.latitude, p.longitude])} />
               {filtered.map(place => (
                 <Marker key={place.id} position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)}
                   eventHandlers={{ click: () => setSelectedPlace(place) }}>
