@@ -3010,14 +3010,14 @@ const AdressesPage = () => {
       {/* BANDE CATÉGORIES */}
       <div className="v2-cat-strip">
         <div className="v2-cat-strip-inner">
-          {[{ id: 'all', line1: 'Tout', line2: 'voir', svg: 'pin' }, ...HOME_VISUAL_CATS].map((cat, i) => {
+          {HOME_VISUAL_CATS.map((cat, i) => {
             const isActive = activeCategory === cat.id;
             return (
               <React.Fragment key={i}>
                 {i > 0 && <div className="v2-cat-sep" />}
                 <button
                   className={`v2-cat-item${isActive ? ' active' : ''}`}
-                  onClick={() => setActiveCategory(isActive && cat.id !== 'all' ? 'all' : cat.id)}>
+                  onClick={() => setActiveCategory(isActive ? 'all' : cat.id)}>
                   <div className="v2-cat-icon">{CAT_SVG[cat.svg]}</div>
                   <span className="v2-cat-label">{cat.line1}<br />{cat.line2}</span>
                 </button>
