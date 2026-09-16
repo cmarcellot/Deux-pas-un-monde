@@ -791,8 +791,9 @@ const HomePage = () => {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
 
-      {/* NAVBAR */}
-      <nav className="v2-nav">
+      {/* HERO */}
+      <div className="v2-hero">
+        <nav className="v2-nav">
         <Link to="/" className="v2-nav-brand"><DpmLogo /></Link>
         <div className="v2-nav-links">
           <Link to="/"        className="v2-nav-link active">ACCUEIL</Link>
@@ -814,10 +815,7 @@ const HomePage = () => {
             </svg>
           </a>
         </div>
-      </nav>
-
-      {/* HERO */}
-      <div className="v2-hero">
+        </nav>
         <div className="v2-hero-overlay" />
         <div className="v2-hero-text">
           <p className="v2-hero-eyebrow">— DES LIEUX EXTRAORDINAIRES —</p>
