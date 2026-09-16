@@ -903,10 +903,6 @@ const HomePage = () => {
         </div>
       </footer>
 
-      <Link to="/admin" className="floating-admin-btn" data-testid="admin-link">
-        <Settings size={15} />Admin
-      </Link>
-
       <AnimatePresence>
         {selectedPlace && <PlaceDetailModal place={selectedPlace} onClose={() => setSelectedPlace(null)} />}
       </AnimatePresence>
