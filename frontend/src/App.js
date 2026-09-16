@@ -12,7 +12,7 @@ import {
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Eye, Save, Key, ZoomIn,
   BookOpen, Calendar, Globe, Wallet, Info, Plane,
-  Search, CheckCircle, Loader2, GripVertical
+  Search, CheckCircle, Loader2, GripVertical, Heart
 } from 'lucide-react';
 import './App.css';
 
@@ -733,6 +733,7 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
 // ============================================================
 const HomePage = () => {
   const [places, setPlaces] = useState([]);
+  const [guides, setGuides] = useState([]);
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [mapCenter, setMapCenter] = useState([46.603354, 1.888334]);
@@ -740,9 +741,11 @@ const HomePage = () => {
   const location = window.location;
   const [viewMode, setViewMode] = useState(new URLSearchParams(location.search).get('view') || 'grid');
   const [searchOpen, setSearchOpen] = useState(false);
+  const navigate = useNavigate();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchPlaces(); }, [activeCategory]);
+  useEffect(() => { fetchGuides(); }, []);
 
   useEffect(() => {
     const handler = (e) => {
@@ -763,129 +766,174 @@ const HomePage = () => {
     finally { setLoading(false); }
   };
 
+  const fetchGuides = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/guides`);
+      const data = await res.json();
+      setGuides(data.slice(0, 3));
+    } catch {}
+  };
+
   const filtered = places;
 
   const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
-  const igSvg = (
-    <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}>
-      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-    </svg>
-  );
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      {/* Dark hero */}
-      <div className="site-hero">
-        <Link to="/"><DpmLogo /></Link>
-        <p className="site-hero-tagline">NOS BONNES ADRESSES À TRAVERS LE MONDE</p>
-        <a href={igUrl} target="_blank" rel="noopener noreferrer" className="site-hero-instagram">
-          {igSvg}@deuxpas_unmonde
-        </a>
-        <div className="section-nav">
-          <Link to="/"><button className="section-nav-btn active">Adresses</button></Link>
-          <Link to="/guides"><button className="section-nav-btn">Guides voyage</button></Link>
-        </div>
-        {/* Search bar */}
-        <div className="hero-search-wrap">
-          <div className="hero-search" onClick={() => setSearchOpen(true)} role="button" tabIndex={0}
+      {/* ── HERO ── */}
+      <div className="v2-hero">
+        <nav className="v2-nav">
+          <Link to="/"><DpmLogo /></Link>
+          <div className="v2-nav-links">
+            <Link to="/" className="v2-nav-link">Accueil</Link>
+            <a href="#adresses" className="v2-nav-link">Nos Adresses</a>
+            <Link to="/guides" className="v2-nav-link">Guides Voyage</Link>
+          </div>
+          <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-ig">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            @deuxpas_unmonde
+          </a>
+        </nav>
+
+        <div className="v2-hero-content">
+          <p className="v2-hero-eyebrow">DES LIEUX EXTRAORDINAIRES</p>
+          <h1 className="v2-hero-title">Des expériences<br/>qui font voyager</h1>
+          <p className="v2-hero-sub">Nos bonnes adresses, nos coups de coeur et nos guides<br/>pour s'évader, proche ou loin.</p>
+          <div className="v2-hero-search" onClick={() => setSearchOpen(true)} role="button" tabIndex={0}
             onKeyDown={e => e.key === 'Enter' && setSearchOpen(true)}>
-            <Search size={15} style={{ color: '#b0ab9f', flexShrink: 0 }} />
-            <span className="hero-search-input" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              Rechercher adresses, guides, villes…
-            </span>
-            <span className="hero-search-kbd">⌘K</span>
+            <Search size={18} style={{ color: '#888', flexShrink: 0 }} />
+            <span>Rechercher adresses, guides, villes...</span>
+            <span className="v2-search-kbd">&#8984;K</span>
           </div>
         </div>
       </div>
 
-      <SearchOverlay
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        places={places}
-        onSelectPlace={setSelectedPlace}
-      />
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} places={places} onSelectPlace={setSelectedPlace} />
 
-      {/* Filter bar (sticky) */}
-      <div className="filter-bar" data-testid="header">
-        <div className="filter-bar-inner">
-          <div className="filter-pills">
-            {CATEGORIES.map(cat => (
+      {/* ── CATEGORY STRIP ── */}
+      <div className="v2-cat-strip" data-testid="header">
+        <div className="v2-cat-strip-inner">
+          {CATEGORIES.filter(c => c.id !== 'all').map(cat => {
+            const CatIcon = cat.icon;
+            return (
               <button key={cat.id}
-                className={`filter-pill ${cat.key} ${activeCategory === cat.id ? 'active' : ''}`}
-                onClick={() => setActiveCategory(cat.id)}
+                className={`v2-cat-item${activeCategory === cat.id ? ' active' : ''}`}
+                onClick={() => setActiveCategory(activeCategory === cat.id ? 'all' : cat.id)}
                 data-testid={`category-${cat.id}`}>
-                {cat.label}
+                <div className="v2-cat-icon"><CatIcon size={22} /></div>
+                <span>{cat.label}</span>
               </button>
-            ))}
-          </div>
-          <div className="view-toggles">
-            {[
-              ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
-              ['list', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>],
-              ['map',  <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>],
-            ].map(([mode, icon]) => (
-              <button key={mode}
-                className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
-                onClick={() => setViewMode(mode)}
-                data-testid={`view-${mode}-btn`}>
-                {icon}
-              </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="content-area">
-        <p className="results-count">{filtered.length} adresse{filtered.length > 1 ? 's' : ''}</p>
-        {viewMode === 'grid' ? (
-          <div className="places-grid" data-testid="places-grid">
-            {loading ? <div className="loading">Chargement…</div>
-              : filtered.length === 0 ? (
-                <div className="empty-state" data-testid="empty-state">
-                  <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
-                </div>
-              ) : filtered.map(place => (
-                <PlaceCard key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
-              ))}
+      {/* ── NOS BONNES ADRESSES ── */}
+      <section className="v2-section" id="adresses">
+        <div className="v2-section-inner">
+          <div className="v2-section-intro">
+            <div>
+              <p className="v2-section-eyebrow">NOS BONNES ADRESSES</p>
+              <h2 className="v2-section-title">Nos bonnes adresses</h2>
+              <p className="v2-section-desc">Des lieux authentiques, des hebergements insolites,<br/>des restos savoureux, des experiences inoubliables...</p>
+            </div>
+            <div className="v2-section-controls">
+              <p className="results-count">{filtered.length} adresse{filtered.length > 1 ? 's' : ''}</p>
+              <div className="view-toggles">
+                {[
+                  ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
+                  ['list', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>],
+                  ['map',  <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>],
+                ].map(([mode, icon]) => (
+                  <button key={mode} className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
+                    onClick={() => setViewMode(mode)} data-testid={`view-${mode}-btn`}>{icon}</button>
+                ))}
+              </div>
+            </div>
           </div>
-        ) : viewMode === 'list' ? (
-          <div data-testid="places-list">
-            {loading ? <div className="loading">Chargement…</div>
-              : filtered.length === 0 ? (
-                <div className="empty-state" data-testid="empty-state">
-                  <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
-                </div>
-              ) : filtered.map(place => (
-                <PlaceListRow key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
-              ))}
-          </div>
-        ) : (
-          <div className="map-wrapper" data-testid="map-wrapper">
-            <MapContainer center={mapCenter} zoom={6} style={{ height: '100%', width: '100%' }}>
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
-              <MapRecenter center={mapCenter} />
-              <FitBoundsToMarkers positions={filtered.map(p => [p.latitude, p.longitude])} />
-              {filtered.map(place => (
-                <Marker key={place.id} position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)}
-                  eventHandlers={{ click: () => setSelectedPlace(place) }}>
-                  <Popup>
-                    <div className="map-popup" onClick={() => setSelectedPlace(place)}>
-                      <h4>{place.title}</h4><p>{place.address}</p><StarRating rating={place.rating} readonly />
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-          </div>
-        )}
-      </div>
 
-      <footer className="footer">
-        <p>Deux pas un monde © 2026 — <a href={igUrl} target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
+          {viewMode === 'grid' ? (
+            <div className="places-grid" data-testid="places-grid">
+              {loading ? <div className="loading">Chargement...</div>
+                : filtered.length === 0 ? (
+                  <div className="empty-state" data-testid="empty-state">
+                    <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientot !</p>
+                  </div>
+                ) : filtered.map(place => (
+                  <PlaceCard key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
+                ))}
+            </div>
+          ) : viewMode === 'list' ? (
+            <div data-testid="places-list">
+              {loading ? <div className="loading">Chargement...</div>
+                : filtered.length === 0 ? (
+                  <div className="empty-state" data-testid="empty-state">
+                    <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientot !</p>
+                  </div>
+                ) : filtered.map(place => (
+                  <PlaceListRow key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
+                ))}
+            </div>
+          ) : (
+            <div className="map-wrapper v2-map-wrapper" data-testid="map-wrapper">
+              <MapContainer center={mapCenter} zoom={6} style={{ height: '100%', width: '100%' }}>
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
+                <MapRecenter center={mapCenter} />
+                <FitBoundsToMarkers positions={filtered.map(p => [p.latitude, p.longitude])} />
+                {filtered.map(place => (
+                  <Marker key={place.id} position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)}
+                    eventHandlers={{ click: () => setSelectedPlace(place) }}>
+                    <Popup>
+                      <div className="map-popup" onClick={() => setSelectedPlace(place)}>
+                        <h4>{place.title}</h4><p>{place.address}</p><StarRating rating={place.rating} readonly />
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── NOS GUIDES ── */}
+      {guides.length > 0 && (
+        <section className="v2-guides-section">
+          <div className="v2-guides-img">
+            {guides[0] && guides[0].cover_image
+              ? <img src={getPhotoSrc(guides[0].cover_image)} alt="" />
+              : <div className="v2-guides-img-placeholder"><BookOpen size={64} /></div>}
+          </div>
+          <div className="v2-guides-body">
+            <p className="v2-section-eyebrow">NOS GUIDES</p>
+            <h2 className="v2-section-title">Itineraires &amp; conseils de voyage</h2>
+            <p className="v2-section-desc">Des idees de parcours pour decouvrir une region, le temps d'un week-end ou d'un plus long voyage.</p>
+            <Link to="/guides" className="v2-see-all">Voir tous les guides</Link>
+            <div className="v2-guides-grid">
+              {guides.map(guide => (
+                <div key={guide.id} className="v2-guide-mini" onClick={() => navigate(`/guides/${guide.id}`)}>
+                  <div className="v2-guide-mini-img">
+                    {guide.cover_image
+                      ? <img src={getPhotoSrc(guide.cover_image)} alt={guide.title} />
+                      : <div className="v2-guide-mini-placeholder"><BookOpen size={24} /></div>}
+                    <span className="v2-guide-mini-dur">{guide.duration_days}J</span>
+                  </div>
+                  <p className="v2-guide-mini-title">{guide.title}</p>
+                  <p className="v2-guide-mini-dest"><MapPin size={11} />{guide.destination}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── FOOTER ── */}
+      <footer className="v2-footer">
+        <Heart size={14} />
+        <p>Le monde est plus beau a deux pas</p>
+        <p className="v2-footer-sub">Deux pas un monde &copy; 2026 &mdash; <a href={igUrl} target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
       </footer>
 
-      {/* Floating admin button */}
       <Link to="/admin" className="floating-admin-btn" data-testid="admin-link">
         <Settings size={15} />Admin
       </Link>
