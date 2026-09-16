@@ -18,7 +18,7 @@ import './App.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://deux-pas-un-monde.onrender.com';
 
-// Activity types â€” couleurs, labels et icÃ´nes SVG (identiques au prototype)
+// Activity types — couleurs, labels et icônes SVG (identiques au prototype)
 const ACTIVITY_TYPES = {
   visite:    { label: 'Visite',    color: 'oklch(0.52 0.08 155)', bg: 'oklch(0.92 0.04 155)', path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z' },
   repas:     { label: 'Repas',     color: 'oklch(0.58 0.09 35)',  bg: 'oklch(0.92 0.04 35)',  path: 'M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z' },
@@ -47,7 +47,7 @@ const quillModules = {
 
 const quillFormats = ['bold', 'italic', 'underline', 'list', 'bullet', 'link'];
 
-const SEASONS = ['Printemps', 'Ã‰tÃ©', 'Automne', 'Hiver'];
+const SEASONS = ['Printemps', 'Été', 'Automne', 'Hiver'];
 
 const EMPTY_GUIDE = {
   title: '', destination: '', country: '', duration_days: 3,
@@ -64,16 +64,16 @@ const EMPTY_GUIDE = {
 // Map backend slugs to new design labels and category keys
 const CATEGORIES = [
   { id: 'all',           key: 'all',        label: 'Tout',       badgeLabel: 'TOUS',                 icon: Filter },
-  { id: 'accommodation', key: 'dormir',     label: 'Dormir',     badgeLabel: 'HÃ‰BERGEMENT INSOLITE', icon: Bed },
+  { id: 'accommodation', key: 'dormir',     label: 'Dormir',     badgeLabel: 'HÉBERGEMENT INSOLITE', icon: Bed },
   { id: 'restaurant',    key: 'manger',     label: 'Manger',     badgeLabel: 'GASTRONOMIE',          icon: Utensils },
-  { id: 'activity',      key: 'decouvrir',  label: 'DÃ©couvrir',  badgeLabel: 'NATURE',               icon: Compass },
-  { id: 'gem',           key: 'partir',     label: 'Partir',     badgeLabel: 'COUP DE CÅ’UR',         icon: Gem },
+  { id: 'activity',      key: 'decouvrir',  label: 'Découvrir',  badgeLabel: 'NATURE',               icon: Compass },
+  { id: 'gem',           key: 'partir',     label: 'Partir',     badgeLabel: 'COUP DE CŒUR',         icon: Gem },
 ];
 
 const getCatInfo = (categoryId) => CATEGORIES.find(c => c.id === categoryId) || CATEGORIES[0];
 
-// Formate "2025-03" â†’ "Mars 2025"
-const MONTHS_FR = ['Janvier','FÃ©vrier','Mars','Avril','Mai','Juin','Juillet','AoÃ»t','Septembre','Octobre','Novembre','DÃ©cembre'];
+// Formate "2025-03" → "Mars 2025"
+const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const formatMonthYear = (value) => {
   if (!value) return '';
   const [year, month] = value.split('-');
@@ -83,7 +83,7 @@ const formatMonthYear = (value) => {
 };
 
 
-// Marker icons â€” inline SVG strings (14Ã—14, white fill)
+// Marker icons — inline SVG strings (14×14, white fill)
 const MARKER_SVG_ICONS = {
   accommodation: `<svg viewBox="0 0 24 24" fill="white" width="14" height="14"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>`,
   restaurant:    `<svg viewBox="0 0 24 24" fill="white" width="14" height="14"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>`,
@@ -121,7 +121,7 @@ const createMarkerIcon = (category) => {
   });
 };
 
-// Palette de couleurs par jour pour les polylignes de la carte du sÃ©jour
+// Palette de couleurs par jour pour les polylignes de la carte du séjour
 const DAY_POLYLINE_COLORS = ['#c17c5a','#5B7A8A','#5A7A60','#8A7845','#7B5A8A','#8A5A5A','#5A6A8A','#6A8A5A'];
 
 // Numbered circle marker for guide trip map (one per activity)
@@ -143,7 +143,7 @@ const createActivityMarkerIcon = (num, typeKey) => {
       background:${bg};border:2.5px solid #fff;
       box-shadow:0 2px 8px rgba(0,0,0,0.28);
       display:flex;align-items:center;justify-content:center;
-      font-family:Jost,sans-serif;font-size:13px;font-weight:700;color:#fff;line-height:1;
+      font-family:Montserrat,sans-serif;font-size:13px;font-weight:700;color:#fff;line-height:1;
     ">${num}</div>`,
     iconSize: [32, 32],
     iconAnchor: [16, 16],
@@ -192,7 +192,7 @@ const DpmLogo = ({ light = false }) => {
   );
 };
 
-// Category badge (mockup style â€” colored pill with label)
+// Category badge (mockup style — colored pill with label)
 const BADGE_COLORS = {
   accommodation: '#f8f6ef',
   restaurant:    '#f3d7ca',
@@ -287,7 +287,7 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
         onTouchEnd={handleTouchEnd}
       >
         {currentIndex > 0 && (
-          <button className="lightbox-arrow lightbox-arrow-prev" onClick={goPrev} aria-label="PrÃ©cÃ©dente" data-testid="lightbox-prev">
+          <button className="lightbox-arrow lightbox-arrow-prev" onClick={goPrev} aria-label="Précédente" data-testid="lightbox-prev">
             <ChevronLeft size={36} />
           </button>
         )}
@@ -358,7 +358,7 @@ const StarRating = ({ rating, onChange, readonly = true, size = 16 }) => (
 );
 
 // ============================================================
-// PHOTO PLACEHOLDER â€” gradient SVG with diagonal lines
+// PHOTO PLACEHOLDER — gradient SVG with diagonal lines
 // ============================================================
 const PHOTO_COLORS = {
   accommodation: ['#5B7A8A', '#6E8E9E', '#89A5B3'],
@@ -502,7 +502,7 @@ const FitBoundsToMarkers = ({ positions }) => {
 };
 
 // ============================================================
-// PLACE DETAIL MODAL â€” with lightbox
+// PLACE DETAIL MODAL — with lightbox
 // ============================================================
 const PlaceDetailModal = ({ place, onClose }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -653,7 +653,7 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
           <input
             ref={inputRef}
             className="search-overlay-input"
-            placeholder="Rechercher adresses, guides, villesâ€¦"
+            placeholder="Rechercher adresses, guides, villes…"
             value={query}
             onChange={e => setQuery(e.target.value)}
           />
@@ -667,7 +667,7 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
         <div className="search-overlay-results">
           {filteredPlaces.length > 0 && (
             <div className="search-section">
-              <p className="search-section-label">Adresses Â· {filteredPlaces.length}</p>
+              <p className="search-section-label">Adresses · {filteredPlaces.length}</p>
               {filteredPlaces.map(place => {
                 return (
                   <button key={place.id} className="search-result-row" onClick={() => { onSelectPlace(place); onClose(); }}>
@@ -693,7 +693,7 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
 
           {filteredGuides.length > 0 && (
             <div className="search-section">
-              <p className="search-section-label">Guides voyage Â· {filteredGuides.length}</p>
+              <p className="search-section-label">Guides voyage · {filteredGuides.length}</p>
               {filteredGuides.map(guide => (
                 <button key={guide.id} className="search-result-row" onClick={() => { navigate(`/guides/${guide.id}`); onClose(); }}>
                   <span className="search-result-thumb" style={{ background: 'var(--border)' }}>
@@ -703,7 +703,7 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
                     <span className="search-result-title"><Highlight text={guide.title} query={query} /></span>
                     <span className="search-result-sub">
                       <Highlight text={[guide.destination, guide.country].filter(Boolean).join(', ')} query={query} />
-                      {guide.duration_days ? ` Â· ${guide.duration_days} jour${guide.duration_days > 1 ? 's' : ''}` : ''}
+                      {guide.duration_days ? ` · ${guide.duration_days} jour${guide.duration_days > 1 ? 's' : ''}` : ''}
                     </span>
                   </span>
                   <span className="cat-badge all small">Guide</span>
@@ -713,13 +713,13 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
           )}
 
           {q && total === 0 && (
-            <p className="search-no-result">Aucun rÃ©sultat pour Â« {query} Â»</p>
+            <p className="search-no-result">Aucun résultat pour « {query} »</p>
           )}
         </div>
 
         <div className="search-overlay-footer">
-          {total > 0 ? `${total} rÃ©sultat${total > 1 ? 's' : ''}` : 'Commencez Ã  taperâ€¦'}
-          {' Â· '}Ã‰chap pour fermer
+          {total > 0 ? `${total} résultat${total > 1 ? 's' : ''}` : 'Commencez à taper…'}
+          {' · '}Échap pour fermer
         </div>
       </div>
     </div>
@@ -738,12 +738,12 @@ const CAT_SVG = {
   pin: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M25 12c0 7-9 18-9 18S7 19 7 12a9 9 0 1 1 18 0Z"/><circle cx="16" cy="12" r="3.5"/></svg>,
 };
 const HOME_VISUAL_CATS = [
-  { id: 'accommodation', line1: 'HÃ©bergements', line2: 'insolites', svg: 'bed' },
+  { id: 'accommodation', line1: 'Hébergements', line2: 'insolites', svg: 'bed' },
   { id: 'activity',      line1: 'Nature &',     line2: 'Aventure',  svg: 'tent' },
-  { id: 'activity',      line1: 'ExpÃ©riences',  line2: 'uniques',   svg: 'camera' },
+  { id: 'activity',      line1: 'Expériences',  line2: 'uniques',   svg: 'camera' },
   { id: 'restaurant',   line1: 'Gastronomie',  line2: '& Terroir', svg: 'food' },
-  { id: 'gem',           line1: 'Bien-Ãªtre',    line2: '& Spa',     svg: 'leaf' },
-  { id: 'gem',           line1: 'Week-ends',    line2: 'Ã  deux',    svg: 'pin' },
+  { id: 'gem',           line1: 'Bien-être',    line2: '& Spa',     svg: 'leaf' },
+  { id: 'gem',           line1: 'Week-ends',    line2: 'à deux',    svg: 'pin' },
 ];
 
 const HomePage = () => {
@@ -805,7 +805,7 @@ const HomePage = () => {
           <Link to="/"        className="v2-nav-link active">Accueil</Link>
           <a href="#adresses" className="v2-nav-link">Nos adresses</a>
           <Link to="/guides"  className="v2-nav-link">Guides voyage</Link>
-          <a href="#apropos"  className="v2-nav-link">Ã€ propos</a>
+          <a href="#apropos"  className="v2-nav-link">À propos</a>
         </div>
         <div className="v2-nav-actions">
           <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
@@ -824,15 +824,15 @@ const HomePage = () => {
         <div className="v2-hero-overlay" />
         <div className="v2-hero-text">
           <p className="v2-hero-eyebrow">Des lieux extraordinaires</p>
-          <h1 className="v2-hero-title">Des expÃ©riences<br />qui font voyager</h1>
-          <p className="v2-hero-sub">Nos bonnes adresses, nos coups de coeur et nos guides<br />pour s'Ã©vader, proche ou loin.</p>
+          <h1 className="v2-hero-title">Des expériences<br />qui font voyager</h1>
+          <p className="v2-hero-sub">Nos bonnes adresses, nos coups de coeur et nos guides<br />pour s'évader, proche ou loin.</p>
         </div>
         <div className="v2-searchbar-wrap">
           <div className="v2-searchbar" onClick={() => setSearchOpen(true)} role="button" tabIndex={0}
             onKeyDown={e => e.key === 'Enter' && setSearchOpen(true)}>
             <div className="v2-searchbar-field">
               <MapPin size={15} strokeWidth={1.5} />
-              <span>OÃ¹ souhaitez-vous partir ?</span>
+              <span>Où souhaitez-vous partir ?</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13" style={{marginLeft:'auto',flexShrink:0}}><path d="M6 9l6 6 6-6"/></svg>
             </div>
             <div className="v2-searchbar-sep" />
@@ -884,7 +884,7 @@ const HomePage = () => {
       <section className="v2-adresses-section" id="adresses">
         <div className="v2-adresses-left">
           <h2 className="v2-adresses-title">Nos bonnes adresses</h2>
-          <p className="v2-adresses-sub">DES LIEUX AUTHENTIQUES, DES HÃ‰BERGEMENTS INSOLITES, DES RESTOS SAVOUREUX, DES EXPÃ‰RIENCES INOUBLIABLES...</p>
+          <p className="v2-adresses-sub">DES LIEUX AUTHENTIQUES, DES HÉBERGEMENTS INSOLITES, DES RESTOS SAVOUREUX, DES EXPÉRIENCES INOUBLIABLES...</p>
           <a href="#adresses" className="v2-see-all" onClick={e => e.preventDefault()}>Voir toutes les adresses &#8594;</a>
           <div className="view-toggles" style={{ marginTop: 20 }}>
             {[
@@ -903,7 +903,7 @@ const HomePage = () => {
               {loading ? <div className="loading">Chargement...</div>
                 : filtered.length === 0 ? (
                   <div className="empty-state" data-testid="empty-state">
-                    <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientÃ´t !</p>
+                    <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
                   </div>
                 ) : filtered.map(place => (
                   <PlaceCard key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
@@ -914,7 +914,7 @@ const HomePage = () => {
               {loading ? <div className="loading">Chargement...</div>
                 : filtered.length === 0 ? (
                   <div className="empty-state" data-testid="empty-state">
-                    <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientÃ´t !</p>
+                    <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
                   </div>
                 ) : filtered.map(place => (
                   <PlaceListRow key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
@@ -982,7 +982,7 @@ const HomePage = () => {
       <footer className="v2-footer">
         <div className="v2-footer-inner">
           <span className="v2-footer-side" />
-          <p className="v2-footer-tagline">Le monde est plus beau Ã  deux pas <b style={{display:'block',textAlign:'center',fontFamily:'serif',fontWeight:400,fontSize:19}}>&#9825;</b></p>
+          <p className="v2-footer-tagline">Le monde est plus beau à deux pas <b style={{display:'block',textAlign:'center',fontFamily:'serif',fontWeight:400,fontSize:19}}>&#9825;</b></p>
           <span className="v2-footer-side" />
         </div>
       </footer>
@@ -1000,7 +1000,7 @@ const HomePage = () => {
 
 // ============================================================
 // ============================================================
-// 3D GLOBE VIEW â€” Three.js natif (identique au prototype)
+// 3D GLOBE VIEW — Three.js natif (identique au prototype)
 // ============================================================
 const GUIDE_COLORS = ['#c17c5a','#5B7A8A','#5A7A60','#8A7845','#7B5A8A','#8A5A5A','#5A6A8A','#6A8A5A'];
 
@@ -1154,9 +1154,9 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
         const g = hits[0].object.userData.guide;
         if (tooltipRef.current) {
           tooltipRef.current.innerHTML = `
-            <div style="font-family:'Libre Caslon Display',Georgia,serif;font-size:15px;font-weight:400;color:#252826;line-height:1.2">${g.title}</div>
-            <div style="font-family:Jost,sans-serif;font-size:11px;color:#888;margin-top:3px">${g.destination}, ${g.country}</div>
-            <div style="font-family:Jost,sans-serif;font-size:10px;color:#aaa;margin-top:2px">${g.duration_days} jour${g.duration_days > 1 ? 's' : ''}</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:#252826;line-height:1.2">${g.title}</div>
+            <div style="font-family:Montserrat,sans-serif;font-size:11px;color:#888;margin-top:3px">${g.destination}, ${g.country}</div>
+            <div style="font-family:Montserrat,sans-serif;font-size:10px;color:#aaa;margin-top:2px">${g.duration_days} jour${g.duration_days > 1 ? 's' : ''}</div>
           `;
           tooltipRef.current.style.display = 'block';
           tooltipRef.current.style.left = (evt.clientX - rect.left + 14) + 'px';
@@ -1296,7 +1296,7 @@ const GlobeView = ({ guides, navigate }) => {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em' }}>
-            Localisation des destinationsâ€¦
+            Localisation des destinations…
           </span>
         </div>
       ) : (
@@ -1322,14 +1322,14 @@ const GlobeView = ({ guides, navigate }) => {
         </div>
       )}
       <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 14 }}>
-        Cliquez et glissez pour faire tourner Â· Cliquez un marqueur pour ouvrir le guide
+        Cliquez et glissez pour faire tourner · Cliquez un marqueur pour ouvrir le guide
       </p>
     </div>
   );
 };
 
 // ============================================================
-// GUIDES LIST PAGE â€” /guides
+// GUIDES LIST PAGE — /guides
 // ============================================================
 const GuidesPage = () => {
   const [guides, setGuides]     = useState([]);
@@ -1392,10 +1392,10 @@ const GuidesPage = () => {
       <div className="guides-content">
         <SurpriseCountdown />
         {loading ? (
-          <div className="loading">Chargementâ€¦</div>
+          <div className="loading">Chargement…</div>
         ) : guides.length === 0 ? (
           <div className="empty-state">
-            <BookOpen size={40} /><h3>Aucun guide pour le moment</h3><p>Les guides arrivent bientÃ´t !</p>
+            <BookOpen size={40} /><h3>Aucun guide pour le moment</h3><p>Les guides arrivent bientôt !</p>
           </div>
         ) : viewMode === 'grid' ? (
           <div className="guides-grid">
@@ -1417,7 +1417,7 @@ const GuidesPage = () => {
       </div>
 
       <footer className="footer">
-        <p>Deux pas un monde Â© 2026 â€” <a href={igUrl} target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
+        <p>Deux pas un monde © 2026 — <a href={igUrl} target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
       </footer>
 
       <Link to="/admin" className="floating-admin-btn"><Settings size={15} />Admin</Link>
@@ -1426,7 +1426,7 @@ const GuidesPage = () => {
 };
 
 // ============================================================
-// SURPRISE COUNTDOWN â€” teaser pour le guide du 25 avril 2026
+// SURPRISE COUNTDOWN — teaser pour le guide du 25 avril 2026
 // ============================================================
 const REVEAL_DATE = new Date('2026-04-25T00:00:00');
 
@@ -1476,7 +1476,7 @@ const SurpriseCountdown = () => {
 
 // ============================================================
 // ============================================================
-// GUIDE DETAIL PAGE â€” /guides/:id (style prototype)
+// GUIDE DETAIL PAGE — /guides/:id (style prototype)
 // ============================================================
 const GuideDetailPage = () => {
   const { id } = useParams();
@@ -1509,7 +1509,7 @@ const GuideDetailPage = () => {
         );
         setPlaces(results.filter(Boolean));
       }
-    } catch { toast.error('Guide non trouvÃ©'); navigate('/guides'); }
+    } catch { toast.error('Guide non trouvé'); navigate('/guides'); }
     finally { setLoading(false); }
   };
 
@@ -1520,20 +1520,20 @@ const GuideDetailPage = () => {
   const placeMap = places.reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
 
   const TABS = [
-    ['itinerary', 'ItinÃ©raire'],
+    ['itinerary', 'Itinéraire'],
     ['practical', 'Infos pratiques'],
     ['photos',    'Photos'],
-    ['map',       'Carte du sÃ©jour'],
+    ['map',       'Carte du séjour'],
   ];
 
   const PRACTICAL_BLOCKS = [
-    { icon: <Wallet size={16} />, label: 'Budget estimÃ©', show: guide.practical_info?.budget_min || guide.practical_info?.budget_max,
-      content: `${guide.practical_info?.budget_min || '?'}â‚¬ â€“ ${guide.practical_info?.budget_max || '?'}â‚¬ / pers / jour` },
+    { icon: <Wallet size={16} />, label: 'Budget estimé', show: guide.practical_info?.budget_min || guide.practical_info?.budget_max,
+      content: `${guide.practical_info?.budget_min || '?'}€ – ${guide.practical_info?.budget_max || '?'}€ / pers / jour` },
     { icon: <Calendar size={16} />, label: 'Meilleures saisons', show: guide.practical_info?.best_seasons?.length > 0,
-      content: guide.practical_info?.best_seasons?.join(' Â· ') },
+      content: guide.practical_info?.best_seasons?.join(' · ') },
     { icon: <Plane size={16} />, label: 'Transports', show: guide.practical_info?.transport_tips,
       content: guide.practical_info?.transport_tips },
-    { icon: <Info size={16} />, label: 'Visa & formalitÃ©s', show: guide.practical_info?.visa_info,
+    { icon: <Info size={16} />, label: 'Visa & formalités', show: guide.practical_info?.visa_info,
       content: guide.practical_info?.visa_info },
     { icon: <Wallet size={16} />, label: 'Monnaie', show: guide.practical_info?.currency,
       content: guide.practical_info?.currency },
@@ -1545,7 +1545,7 @@ const GuideDetailPage = () => {
     <>
       <div className="guide-detail-page">
 
-        {/* â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Hero ─────────────────────────────────────────── */}
         <div style={{ position: 'relative', height: 300, overflow: 'hidden' }}>
           {guide.cover_image
             ? <img src={guide.cover_image} alt={guide.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1559,7 +1559,7 @@ const GuideDetailPage = () => {
             border: 'none', color: '#fff', borderRadius: 6, padding: '8px 16px',
             fontFamily: 'Montserrat, sans-serif', fontSize: 13, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 6, backdropFilter: 'blur(4px)',
-          }}>â† Retour</button>
+          }}>← Retour</button>
 
           {/* Photos shortcut */}
           {allPhotos.length > 0 && (
@@ -1574,7 +1574,7 @@ const GuideDetailPage = () => {
           {/* Title block */}
           <div style={{ position: 'absolute', bottom: 28, left: '50%', transform: 'translateX(-50%)', textAlign: 'center', width: '90%', maxWidth: 700 }}>
             <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
-              Guide voyage â€” {guide.destination}, {guide.country}
+              Guide voyage — {guide.destination}, {guide.country}
             </p>
             <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, fontSize: 42, color: '#fff', margin: 0, lineHeight: 1.1, textShadow: '0 2px 16px rgba(0,0,0,0.35)' }}>
               {guide.title}
@@ -1582,16 +1582,16 @@ const GuideDetailPage = () => {
             <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
               <span style={heroPill}>{guide.duration_days} jour{guide.duration_days > 1 ? 's' : ''}</span>
               {guide.practical_info?.best_seasons?.length > 0 && (
-                <span style={heroPill}>{guide.practical_info.best_seasons.join(' Â· ')}</span>
+                <span style={heroPill}>{guide.practical_info.best_seasons.join(' · ')}</span>
               )}
               {guide.practical_info?.budget_min && (
-                <span style={heroPill}>{guide.practical_info.budget_min}â€“{guide.practical_info.budget_max}â‚¬/j</span>
+                <span style={heroPill}>{guide.practical_info.budget_min}–{guide.practical_info.budget_max}€/j</span>
               )}
             </div>
           </div>
         </div>
 
-        {/* â”€â”€ Body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Body ─────────────────────────────────────────── */}
         <div style={{ maxWidth: 860, margin: '0 auto', padding: '48px 24px 80px' }}>
 
           {/* Intro */}
@@ -1614,10 +1614,10 @@ const GuideDetailPage = () => {
             ))}
           </div>
 
-          {/* â”€â”€ ItinÃ©raire â”€â”€ */}
+          {/* ── Itinéraire ── */}
           {activeSection === 'itinerary' && (
             guide.itinerary.length === 0
-              ? <p className="guide-empty-section">ItinÃ©raire Ã  venirâ€¦</p>
+              ? <p className="guide-empty-section">Itinéraire à venir…</p>
               : <>
                   {/* Day pills */}
                   <div style={{ display: 'flex', gap: 8, marginBottom: 36, flexWrap: 'wrap' }}>
@@ -1631,7 +1631,7 @@ const GuideDetailPage = () => {
                         fontWeight: activeDay === i ? 500 : 400,
                       }}>
                         Jour {day.day_number}
-                        {day.title && <span style={{ fontSize: 11, opacity: 0.65, marginLeft: 6 }}>â€” {day.title}</span>}
+                        {day.title && <span style={{ fontSize: 11, opacity: 0.65, marginLeft: 6 }}>— {day.title}</span>}
                       </button>
                     ))}
                   </div>
@@ -1643,7 +1643,7 @@ const GuideDetailPage = () => {
                       <div>
                         <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, fontSize: 30, color: '#252826', marginBottom: 8 }}>
                           Jour {day.day_number}
-                          {day.title && <span style={{ fontWeight: 400, color: '#aaa', fontSize: 24 }}> â€” {day.title}</span>}
+                          {day.title && <span style={{ fontWeight: 400, color: '#aaa', fontSize: 24 }}> — {day.title}</span>}
                         </h2>
                         {day.description && (
                           <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: '#777', lineHeight: 1.7, marginBottom: 32 }}
@@ -1732,10 +1732,10 @@ const GuideDetailPage = () => {
                 </>
           )}
 
-          {/* â”€â”€ Infos pratiques â”€â”€ */}
+          {/* ── Infos pratiques ── */}
           {activeSection === 'practical' && (
             PRACTICAL_BLOCKS.length === 0
-              ? <p className="guide-empty-section">Informations pratiques Ã  venirâ€¦</p>
+              ? <p className="guide-empty-section">Informations pratiques à venir…</p>
               : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
                   {PRACTICAL_BLOCKS.map((b, i) => (
                     <div key={i} style={{ background: '#faf8f3', borderRadius: 8, padding: '20px 22px', border: '1px solid #e5e0d5' }}>
@@ -1754,7 +1754,7 @@ const GuideDetailPage = () => {
                 </div>
           )}
 
-          {/* â”€â”€ Photos â”€â”€ */}
+          {/* ── Photos ── */}
           {activeSection === 'photos' && (
             <div className="guide-photos-grid">
               {allPhotos.length === 0
@@ -1769,9 +1769,9 @@ const GuideDetailPage = () => {
             </div>
           )}
 
-          {/* â”€â”€ Carte du sÃ©jour â”€â”€ */}
+          {/* ── Carte du séjour ── */}
           {activeSection === 'map' && (() => {
-            // NumÃ©rotation sÃ©quentielle + regroupement par jour
+            // Numérotation séquentielle + regroupement par jour
             let counter = 0;
             const dayGroups = guide.itinerary.map((day, dayIdx) => ({
               dayNumber: day.day_number,
@@ -1793,16 +1793,16 @@ const GuideDetailPage = () => {
             return (
               <div>
                 {mappable.length === 0
-                  ? <p className="guide-empty-section">Aucune activitÃ© gÃ©olocalisÃ©e â€” ajoutez des adresses dans l'Ã©diteur.</p>
+                  ? <p className="guide-empty-section">Aucune activité géolocalisée — ajoutez des adresses dans l'éditeur.</p>
                   : (
                     <>
-                      {/* LÃ©gende des jours */}
+                      {/* Légende des jours */}
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
                         {dayGroups.map(g => g.acts.some(a => a.latitude && a.longitude) && (
                           <div key={g.dayNumber} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <div style={{ width: 24, height: 3, borderRadius: 2, background: g.color }} />
                             <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: '#777' }}>
-                              Jour {g.dayNumber}{g.dayTitle ? ` â€” ${g.dayTitle}` : ''}
+                              Jour {g.dayNumber}{g.dayTitle ? ` — ${g.dayTitle}` : ''}
                             </span>
                           </div>
                         ))}
@@ -1820,7 +1820,7 @@ const GuideDetailPage = () => {
                               pathOptions={{ color: g.color, weight: 3, opacity: 0.75, dashArray: null }} />
                           );
                         })}
-                        {/* Marqueurs numÃ©rotÃ©s */}
+                        {/* Marqueurs numérotés */}
                         {mappable.map(act => (
                           <Marker key={act.num} position={[act.latitude, act.longitude]}
                             icon={createActivityMarkerIcon(act.num, act.type)}>
@@ -1839,7 +1839,7 @@ const GuideDetailPage = () => {
                     </>
                   )
                 }
-                {/* Grille des activitÃ©s */}
+                {/* Grille des activités */}
                 {allActs.length > 0 && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 10 }}>
                     {allActs.map(act => {
@@ -1903,7 +1903,7 @@ const GuideDetailPage = () => {
 };
 
 // ============================================================
-// PLACE DETAIL PAGE â€” with lightbox
+// PLACE DETAIL PAGE — with lightbox
 // ============================================================
 const PlaceDetailPage = () => {
   const { id } = useParams();
@@ -1920,9 +1920,9 @@ const PlaceDetailPage = () => {
   const fetchPlace = async () => {
     try {
       const res = await fetch(`${API_URL}/api/places/${id}`);
-      if (!res.ok) throw new Error('Lieu non trouvÃ©');
+      if (!res.ok) throw new Error('Lieu non trouvé');
       setPlace(await res.json());
-    } catch { toast.error('Lieu non trouvÃ©'); navigate('/'); }
+    } catch { toast.error('Lieu non trouvé'); navigate('/'); }
     finally { setLoading(false); }
   };
 
@@ -2010,7 +2010,7 @@ const PlaceDetailPage = () => {
 };
 
 // ============================================================
-// DROP ZONE â€” composant rÃ©utilisable pour l'upload par glisser-dÃ©poser
+// DROP ZONE — composant réutilisable pour l'upload par glisser-déposer
 // ============================================================
 const DropZone = ({ onFiles, multiple = true, label = 'Glisser des photos ici', inputId, accept = 'image/*' }) => {
   const [dragging, setDragging] = useState(false);
@@ -2037,14 +2037,14 @@ const DropZone = ({ onFiles, multiple = true, label = 'Glisser des photos ici', 
       <label className="drop-zone-label" onClick={() => inputRef.current?.click()}>
         <Upload size={28} />
         <span>{label}</span>
-        <span className="drop-zone-hint">ou cliquer pour sÃ©lectionner</span>
+        <span className="drop-zone-hint">ou cliquer pour sélectionner</span>
       </label>
     </div>
   );
 };
 
 // ============================================================
-// PLACE SEARCH â€” dropdown searchable pour lier une adresse Ã  une activitÃ©
+// PLACE SEARCH — dropdown searchable pour lier une adresse à une activité
 // ============================================================
 const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
   const [search, setSearch] = useState('');
@@ -2063,14 +2063,14 @@ const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
   return (
     <div style={{ marginTop: 10, position: 'relative' }}>
       <label style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 9, color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-        Adresse liÃ©e
+        Adresse liée
       </label>
       {!showSearch ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f0ece4', borderRadius: 6, padding: '6px 10px', border: '1px solid #e5e0d5', marginTop: 4 }}>
           <CategoryBadge categoryId={linked.category} small />
-          <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#252826', flex: 1 }}>{linked.title} â€” {linked.city}</span>
+          <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#252826', flex: 1 }}>{linked.title} — {linked.city}</span>
           <button type="button" onClick={() => { updateActivity(dayIdx, actIdx, 'place_id', null); setChanging(false); setSearch(''); }}
-            style={{ background: 'none', border: 'none', color: '#bbb', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '0 4px' }}>Ã—</button>
+            style={{ background: 'none', border: 'none', color: '#bbb', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '0 4px' }}>×</button>
           <button type="button" onClick={() => { setChanging(true); setOpen(true); setSearch(''); }}
             style={{ background: 'none', border: '1px solid #d0cbc0', color: '#888', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: 11, borderRadius: 4, padding: '2px 8px' }}>
             Changer
@@ -2097,7 +2097,7 @@ const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
           {open && (
             <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200, background: '#fff', border: '1px solid #ddd9d0', borderTop: 'none', borderRadius: '0 0 6px 6px', boxShadow: '0 8px 20px rgba(0,0,0,0.1)', maxHeight: 220, overflowY: 'auto' }}>
               {filtered.length === 0 ? (
-                <div style={{ padding: '10px 12px', fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#bbb' }}>Aucune adresse trouvÃ©e</div>
+                <div style={{ padding: '10px 12px', fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#bbb' }}>Aucune adresse trouvée</div>
               ) : filtered.map(p => (
                 <div key={p.id}
                   onMouseDown={e => { e.preventDefault(); updateActivity(dayIdx, actIdx, 'place_id', p.id); setSearch(''); setOpen(false); setChanging(false); }}
@@ -2124,7 +2124,7 @@ const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
   );
 };
 
-// ACTIVITY ADDRESS GEO â€” gÃ©olocalisation de l'adresse d'une activitÃ©
+// ACTIVITY ADDRESS GEO — géolocalisation de l'adresse d'une activité
 // ============================================================
 const ActivityAddressGeo = ({ act, dayIdx, actIdx, updateActivityFields }) => {
   const [loading, setLoading] = useState(false);
@@ -2147,11 +2147,11 @@ const ActivityAddressGeo = ({ act, dayIdx, actIdx, updateActivityFields }) => {
         const lng = parseFloat(data[0].lon);
         updateActivityFields(dayIdx, actIdx, { latitude: lat, longitude: lng });
         setResult({ lat, lng, display_name: data[0].display_name });
-        toast.success('CoordonnÃ©es trouvÃ©es !');
+        toast.success('Coordonnées trouvées !');
       } else {
         toast.error('Adresse introuvable');
       }
-    } catch { toast.error('Erreur de gÃ©olocalisation'); }
+    } catch { toast.error('Erreur de géolocalisation'); }
     finally { setLoading(false); }
   };
 
@@ -2177,7 +2177,7 @@ const ActivityAddressGeo = ({ act, dayIdx, actIdx, updateActivityFields }) => {
           style={{ padding: '0 10px', fontSize: 12, gap: 4 }}
         >
           {loading ? <Loader2 size={13} className="spin" /> : <Search size={13} />}
-          {!loading && ' GÃ©o'}
+          {!loading && ' Géo'}
         </button>
       </div>
       {result && (
@@ -2320,7 +2320,7 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
       </div>
       <form onSubmit={handleSubmitWithUpload} className="place-form">
           {/* Informations de base */}
-          <h3 className="form-section-title"><Globe size={16} />Informations gÃ©nÃ©rales</h3>
+          <h3 className="form-section-title"><Globe size={16} />Informations générales</h3>
           <div className="form-grid">
             <div className="form-group full-width"><label>Titre du guide *</label>
               <input type="text" value={guideFormData.title} onChange={e => setGuideFormData(p => ({ ...p, title: e.target.value }))} required placeholder="Ex: 10 jours au Japon" /></div>
@@ -2328,25 +2328,25 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
               <input type="text" value={guideFormData.destination} onChange={e => setGuideFormData(p => ({ ...p, destination: e.target.value }))} required placeholder="Ex: Tokyo" /></div>
             <div className="form-group"><label>Pays *</label>
               <input type="text" value={guideFormData.country} onChange={e => setGuideFormData(p => ({ ...p, country: e.target.value }))} required placeholder="Ex: Japon" /></div>
-            <div className="form-group"><label>DurÃ©e (jours) *</label>
+            <div className="form-group"><label>Durée (jours) *</label>
               <input type="number" min="1" max="365" value={guideFormData.duration_days} onChange={e => setGuideFormData(p => ({ ...p, duration_days: parseInt(e.target.value) || 1 }))} required /></div>
             <div className="form-group"><label>Date de publication</label>
               <input type="month" value={guideFormData.date || ''} onChange={e => setGuideFormData(p => ({ ...p, date: e.target.value }))} /></div>
-            <div className="form-group full-width"><label>Tags (sÃ©parÃ©s par des virgules)</label>
+            <div className="form-group full-width"><label>Tags (séparés par des virgules)</label>
               <input type="text" value={(guideFormData.tags || []).join(', ')} onChange={e => setGuideFormData(p => ({ ...p, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) }))} placeholder="italie, city-break, gastronomie" /></div>
             <div className="form-group">
               <label>Couleur du marqueur (globe)</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
                 <input type="color" value={guideFormData.marker_color || '#c1845a'} onChange={e => setGuideFormData(p => ({ ...p, marker_color: e.target.value }))}
                   style={{ width: 44, height: 34, padding: 2, borderRadius: 6, border: '1.5px solid var(--border)', cursor: 'pointer' }} />
-                <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#aaa' }}>Point affichÃ© sur le globe 3D</span>
+                <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#aaa' }}>Point affiché sur le globe 3D</span>
               </div>
             </div>
             <div className="form-group">
               <label>Statut</label>
               <div className="toggle-row">
                 <input type="checkbox" id="published" checked={guideFormData.published} onChange={e => setGuideFormData(p => ({ ...p, published: e.target.checked }))} />
-                <label htmlFor="published" className="toggle-label">PubliÃ©</label>
+                <label htmlFor="published" className="toggle-label">Publié</label>
               </div>
             </div>
           </div>
@@ -2372,12 +2372,12 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
           <h3 className="form-section-title"><BookOpen size={16} />Introduction</h3>
           <div className="form-group full-width">
             <div className="quill-wrapper">
-              <ReactQuill theme="snow" value={guideFormData.intro} onChange={v => setGuideFormData(p => ({ ...p, intro: v }))} modules={quillModules} formats={quillFormats} placeholder="PrÃ©sentez votre guide de voyage..." />
+              <ReactQuill theme="snow" value={guideFormData.intro} onChange={v => setGuideFormData(p => ({ ...p, intro: v }))} modules={quillModules} formats={quillFormats} placeholder="Présentez votre guide de voyage..." />
             </div>
           </div>
 
-          {/* ItinÃ©raire */}
-          <h3 className="form-section-title"><Calendar size={16} />ItinÃ©raire jour par jour</h3>
+          {/* Itinéraire */}
+          <h3 className="form-section-title"><Calendar size={16} />Itinéraire jour par jour</h3>
           {guideFormData.itinerary.map((day, dayIdx) => (
             <div key={dayIdx} className="day-form-block">
               <div className="day-form-header">
@@ -2385,15 +2385,15 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
                 <button type="button" onClick={() => removeDay(dayIdx)} className="action-btn delete" style={{ marginLeft: 'auto' }}><Trash2 size={16} /></button>
               </div>
               <div className="form-group"><label>Titre du jour *</label>
-                <input type="text" value={day.title} onChange={e => updateDay(dayIdx, 'title', e.target.value)} placeholder="Ex: ArrivÃ©e Ã  Tokyo & Shinjuku" required /></div>
+                <input type="text" value={day.title} onChange={e => updateDay(dayIdx, 'title', e.target.value)} placeholder="Ex: Arrivée à Tokyo & Shinjuku" required /></div>
               <div className="form-group"><label>Description</label>
-                <textarea value={day.description || ''} onChange={e => updateDay(dayIdx, 'description', e.target.value)} rows={2} placeholder="Description de la journÃ©e..." /></div>
+                <textarea value={day.description || ''} onChange={e => updateDay(dayIdx, 'description', e.target.value)} rows={2} placeholder="Description de la journée..." /></div>
               <div className="form-group"><label>Conseils du jour (un par ligne)</label>
                 <textarea value={day.tips.join('\n')} onChange={e => updateDayTips(dayIdx, e.target.value)} rows={3} placeholder="Conseil 1&#10;Conseil 2&#10;..." /></div>
 
               <div className="activities-section">
                 <div className="activities-header">
-                  <label>ActivitÃ©s</label>
+                  <label>Activités</label>
                   <button type="button" onClick={() => addActivity(dayIdx)} className="add-activity-btn"><Plus size={14} />Ajouter</button>
                 </div>
                 {day.activities.map((act, actIdx) => (
@@ -2408,7 +2408,7 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
                       <div>
                         <label className="form-label-xs">Type</label>
                         <select value={act.type || ''} onChange={e => updateActivity(dayIdx, actIdx, 'type', e.target.value || null)} className="input-xs">
-                          <option value="">â€” â€”</option>
+                          <option value="">— —</option>
                           {Object.entries(ACTIVITY_TYPES).map(([key, t]) => (
                             <option key={key} value={key}>{t.label}</option>
                           ))}
@@ -2417,12 +2417,12 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
                       {/* Titre + Description + Lat/Lng */}
                       <div>
                         <label className="form-label-xs">Titre & description</label>
-                        <input type="text" value={act.title} onChange={e => updateActivity(dayIdx, actIdx, 'title', e.target.value)} placeholder="Nom de l'activitÃ©" required className="input-xs" />
+                        <input type="text" value={act.title} onChange={e => updateActivity(dayIdx, actIdx, 'title', e.target.value)} placeholder="Nom de l'activité" required className="input-xs" />
                         <textarea value={act.description || ''} onChange={e => updateActivity(dayIdx, actIdx, 'description', e.target.value)} placeholder="Description (optionnel)" rows={2} className="input-xs" style={{ marginTop: 4, resize: 'none' }} />
                         <ActivityAddressGeo act={act} dayIdx={dayIdx} actIdx={actIdx} updateActivityFields={updateActivityFields} />
                       </div>
                       {/* Supprimer */}
-                      <button type="button" onClick={() => removeActivity(dayIdx, actIdx)} style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: 18, alignSelf: 'start', paddingTop: 20 }}>Ã—</button>
+                      <button type="button" onClick={() => removeActivity(dayIdx, actIdx)} style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: 18, alignSelf: 'start', paddingTop: 20 }}>×</button>
                     </div>
                     <PlaceSearch act={act} dayIdx={dayIdx} actIdx={actIdx} places={places} updateActivity={updateActivity} />
                   </div>
@@ -2435,9 +2435,9 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
           {/* Infos pratiques */}
           <h3 className="form-section-title"><Info size={16} />Informations pratiques</h3>
           <div className="form-grid">
-            <div className="form-group"><label>Budget min (â‚¬/pers/jour)</label>
+            <div className="form-group"><label>Budget min (€/pers/jour)</label>
               <input type="number" min="0" value={guideFormData.practical_info.budget_min || ''} onChange={e => setGuideFormData(p => ({ ...p, practical_info: { ...p.practical_info, budget_min: e.target.value ? parseInt(e.target.value) : null } }))} placeholder="Ex: 50" /></div>
-            <div className="form-group"><label>Budget max (â‚¬/pers/jour)</label>
+            <div className="form-group"><label>Budget max (€/pers/jour)</label>
               <input type="number" min="0" value={guideFormData.practical_info.budget_max || ''} onChange={e => setGuideFormData(p => ({ ...p, practical_info: { ...p.practical_info, budget_max: e.target.value ? parseInt(e.target.value) : null } }))} placeholder="Ex: 100" /></div>
             <div className="form-group full-width"><label>Meilleures saisons</label>
               <div className="tags-checkboxes">
@@ -2450,15 +2450,15 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
             </div>
             <div className="form-group full-width"><label>Transports</label>
               <textarea value={guideFormData.practical_info.transport_tips || ''} onChange={e => setGuideFormData(p => ({ ...p, practical_info: { ...p.practical_info, transport_tips: e.target.value } }))} rows={2} placeholder="Conseils transports..." /></div>
-            <div className="form-group full-width"><label>Visa & formalitÃ©s</label>
+            <div className="form-group full-width"><label>Visa & formalités</label>
               <textarea value={guideFormData.practical_info.visa_info || ''} onChange={e => setGuideFormData(p => ({ ...p, practical_info: { ...p.practical_info, visa_info: e.target.value } }))} rows={2} placeholder="Infos visa..." /></div>
             <div className="form-group"><label>Monnaie</label>
               <input type="text" value={guideFormData.practical_info.currency || ''} onChange={e => setGuideFormData(p => ({ ...p, practical_info: { ...p.practical_info, currency: e.target.value } }))} placeholder="Ex: Yen (JPY)" /></div>
             <div className="form-group"><label>Langue</label>
-              <input type="text" value={guideFormData.practical_info.language_tips || ''} onChange={e => setGuideFormData(p => ({ ...p, practical_info: { ...p.practical_info, language_tips: e.target.value } }))} placeholder="Ex: Japonais â€” quelques mots utiles..." /></div>
+              <input type="text" value={guideFormData.practical_info.language_tips || ''} onChange={e => setGuideFormData(p => ({ ...p, practical_info: { ...p.practical_info, language_tips: e.target.value } }))} placeholder="Ex: Japonais — quelques mots utiles..." /></div>
           </div>
 
-          {/* Photos supplÃ©mentaires */}
+          {/* Photos supplémentaires */}
           <h3 className="form-section-title"><ZoomIn size={16} />Photos du guide</h3>
           <div className="form-group full-width">
             <div className="photo-upload-area">
@@ -2549,12 +2549,12 @@ const AdminPage = () => {
     finally { setLoading(false); }
   };
 
-  const handleLogout = () => { localStorage.removeItem('admin_token'); setIsAuthenticated(false); setPlaces([]); setGuides([]); toast.success('DÃ©connexion rÃ©ussie'); };
+  const handleLogout = () => { localStorage.removeItem('admin_token'); setIsAuthenticated(false); setPlaces([]); setGuides([]); toast.success('Déconnexion réussie'); };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) { toast.error('Les mots de passe ne correspondent pas'); return; }
-    if (passwordForm.newPassword.length < 6) { toast.error('Au moins 6 caractÃ¨res requis'); return; }
+    if (passwordForm.newPassword.length < 6) { toast.error('Au moins 6 caractères requis'); return; }
     const token = localStorage.getItem('admin_token'); setLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/auth/change-password`, {
@@ -2562,7 +2562,7 @@ const AdminPage = () => {
         body: JSON.stringify({ current_password: passwordForm.currentPassword, new_password: passwordForm.newPassword }),
       });
       const data = await res.json();
-      if (res.ok) { toast.success('Mot de passe modifiÃ© !'); setShowPasswordModal(false); setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); }
+      if (res.ok) { toast.success('Mot de passe modifié !'); setShowPasswordModal(false); setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); }
       else toast.error(data.detail || 'Erreur');
     } catch { toast.error('Erreur'); }
     finally { setLoading(false); }
@@ -2605,7 +2605,7 @@ const AdminPage = () => {
         for (const photoUrl of removedPhotos) {
           if (photoUrl.startsWith('/uploads/')) await fetch(`${API_URL}/api/upload?url=${encodeURIComponent(photoUrl)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
         }
-        toast.success(editingGuide ? 'Guide modifiÃ© !' : 'Guide crÃ©Ã© !'); resetGuideForm(); fetchGuides(token);
+        toast.success(editingGuide ? 'Guide modifié !' : 'Guide créé !'); resetGuideForm(); fetchGuides(token);
       } else { const err = await res.json(); toast.error(err.detail || 'Erreur'); }
     } catch { toast.error('Erreur lors de la sauvegarde'); }
     finally { setLoading(false); }
@@ -2616,7 +2616,7 @@ const AdminPage = () => {
     const token = localStorage.getItem('admin_token');
     try {
       const res = await fetch(`${API_URL}/api/guides/${guideId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) { toast.success('Guide supprimÃ©'); fetchGuides(token); }
+      if (res.ok) { toast.success('Guide supprimé'); fetchGuides(token); }
     } catch { toast.error('Erreur lors de la suppression'); }
   };
 
@@ -2639,11 +2639,11 @@ const AdminPage = () => {
         const country = addr.country || '';
         setFormData(f => ({ ...f, latitude: lat, longitude: lng, city, country }));
         setGeocodeResult({ lat, lng, display_name: data[0].display_name });
-        toast.success('CoordonnÃ©es, ville et pays trouvÃ©s !');
+        toast.success('Coordonnées, ville et pays trouvés !');
       } else {
-        toast.error('Adresse introuvable â€” vÃ©rifiez ou saisissez les coordonnÃ©es manuellement.');
+        toast.error('Adresse introuvable — vérifiez ou saisissez les coordonnées manuellement.');
       }
-    } catch { toast.error('Erreur de gÃ©olocalisation'); }
+    } catch { toast.error('Erreur de géolocalisation'); }
     finally { setGeocoding(false); }
   };
 
@@ -2707,7 +2707,7 @@ const AdminPage = () => {
         for (const mediaUrl of removedMedia) {
           if (mediaUrl.startsWith('/uploads/')) await fetch(`${API_URL}/api/upload?url=${encodeURIComponent(mediaUrl)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
         }
-        toast.success(editingPlace ? 'Lieu modifiÃ© !' : 'Lieu crÃ©Ã© !'); resetForm(); fetchPlaces(token);
+        toast.success(editingPlace ? 'Lieu modifié !' : 'Lieu créé !'); resetForm(); fetchPlaces(token);
       } else { const error = await res.json(); toast.error(error.detail || 'Erreur'); }
     } catch { toast.error('Erreur lors de la sauvegarde'); }
     finally { setLoading(false); }
@@ -2735,7 +2735,7 @@ const AdminPage = () => {
     const token = localStorage.getItem('admin_token');
     try {
       const res = await fetch(`${API_URL}/api/places/${placeId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) { toast.success('Lieu supprimÃ©'); fetchPlaces(token); }
+      if (res.ok) { toast.success('Lieu supprimé'); fetchPlaces(token); }
     } catch { toast.error('Erreur lors de la suppression'); }
   };
 
@@ -2763,15 +2763,15 @@ const AdminPage = () => {
               type="password"
               value={password}
               onChange={(e) => { setPassword(e.target.value); setLoginError(false); }}
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="••••••••"
               className={`login-input${loginError ? ' error' : ''}`}
               data-testid="password-input"
             />
             {loginError && <p className="login-error">Mot de passe incorrect.</p>}
             <button type="submit" className="login-submit-btn" disabled={loading} data-testid="login-btn">
-              {loading ? 'Connexionâ€¦' : 'SE CONNECTER'}
+              {loading ? 'Connexion…' : 'SE CONNECTER'}
             </button>
-            <Link to="/" className="back-to-home-btn" data-testid="back-home-btn">â† Retour au site</Link>
+            <Link to="/" className="back-to-home-btn" data-testid="back-home-btn">← Retour au site</Link>
           </form>
         </motion.div>
       </div>
@@ -2785,7 +2785,7 @@ const AdminPage = () => {
         <span className="admin-header-title">Administration</span>
         <div className="admin-header-actions">
           <button onClick={() => setShowPasswordModal(true)} className="admin-header-btn" data-testid="change-password-btn"><Key size={16} />Mot de passe</button>
-          <button onClick={handleLogout} className="admin-header-btn danger" data-testid="logout-btn"><LogOut size={16} />DÃ©connexion</button>
+          <button onClick={handleLogout} className="admin-header-btn danger" data-testid="logout-btn"><LogOut size={16} />Déconnexion</button>
         </div>
       </header>
 
@@ -2822,7 +2822,7 @@ const AdminPage = () => {
       </div>
 
       <div className="admin-content">
-        {/* ONGLET LIEUX â€” FORMULAIRE */}
+        {/* ONGLET LIEUX — FORMULAIRE */}
         {adminTab === 'places' && showForm && (
           <div className="admin-inline-form">
             <div className="form-header">
@@ -2832,7 +2832,7 @@ const AdminPage = () => {
             <form onSubmit={handleSubmit} className="place-form" data-testid="place-form">
                     <div className="form-grid">
                       <div className="form-group"><label>Titre</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required data-testid="title-input" /></div>
-                      <div className="form-group"><label>CatÃ©gorie</label>
+                      <div className="form-group"><label>Catégorie</label>
                         <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} data-testid="category-select">
                           {CATEGORIES.filter(c => c.id !== 'all').map((cat) => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
                         </select>
@@ -2845,7 +2845,7 @@ const AdminPage = () => {
                             required data-testid="address-input" placeholder="Ex: 12 rue de la Paix, Paris" />
                           <button type="button" className="geocode-btn" onClick={geocodeAddress} disabled={geocoding}>
                             {geocoding ? <Loader2 size={16} className="spin" /> : <Search size={16} />}
-                            {geocoding ? 'Rechercheâ€¦' : 'GÃ©olocaliser'}
+                            {geocoding ? 'Recherche…' : 'Géolocaliser'}
                           </button>
                         </div>
                         {geocodeResult && (
@@ -2857,7 +2857,7 @@ const AdminPage = () => {
                         )}
                         <button type="button" className="coords-manual-toggle"
                           onClick={() => setShowManualCoords(v => !v)}>
-                          {showManualCoords ? 'Masquer' : 'Saisir les coordonnÃ©es manuellement'}
+                          {showManualCoords ? 'Masquer' : 'Saisir les coordonnées manuellement'}
                         </button>
                         {showManualCoords && (
                           <div className="coords-manual-fields">
@@ -2871,13 +2871,13 @@ const AdminPage = () => {
                       <div className="form-group full-width"><label>Date de visite</label><input type="month" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} /></div>
                       <div className="form-group full-width"><label>Description</label>
                         <div className="quill-wrapper" data-testid="description-input">
-                          <ReactQuill theme="snow" value={formData.description} onChange={(value) => setFormData({ ...formData, description: value })} modules={quillModules} formats={quillFormats} placeholder="DÃ©crivez ce lieu..." />
+                          <ReactQuill theme="snow" value={formData.description} onChange={(value) => setFormData({ ...formData, description: value })} modules={quillModules} formats={quillFormats} placeholder="Décrivez ce lieu..." />
                         </div>
                       </div>
                       <div className="form-group full-width"><label>Note</label><StarRating rating={formData.rating} onChange={(rating) => setFormData({ ...formData, rating })} readonly={false} /></div>
-                      <div className="form-group full-width"><label>Photos et vidÃ©os</label>
+                      <div className="form-group full-width"><label>Photos et vidéos</label>
                         <div className="photo-upload-area">
-                          <DropZone inputId="photo-upload" label="Glisser des photos ou vidÃ©os ici" accept="image/*,video/*" onFiles={addFiles} />
+                          <DropZone inputId="photo-upload" label="Glisser des photos ou vidéos ici" accept="image/*,video/*" onFiles={addFiles} />
                           {mediaItems.length > 0 && (
                             <div className="uploaded-photos">
                               {mediaItems.map((item, idx) => (
@@ -2915,7 +2915,7 @@ const AdminPage = () => {
           </div>
         )}
 
-        {/* ONGLET LIEUX â€” LISTE */}
+        {/* ONGLET LIEUX — LISTE */}
         {adminTab === 'places' && !showForm && (
           <>
             <div className="admin-toolbar">
@@ -2956,7 +2956,7 @@ const AdminPage = () => {
           </>
         )}
 
-        {/* ONGLET GUIDES â€” FORMULAIRE */}
+        {/* ONGLET GUIDES — FORMULAIRE */}
         {adminTab === 'guides' && showGuideForm && (
           <AdminGuideForm
             show={showGuideForm}
@@ -2971,7 +2971,7 @@ const AdminPage = () => {
           />
         )}
 
-        {/* ONGLET GUIDES â€” LISTE */}
+        {/* ONGLET GUIDES — LISTE */}
         {adminTab === 'guides' && !showGuideForm && (
           <>
             <div className="admin-toolbar">
@@ -2980,7 +2980,7 @@ const AdminPage = () => {
 
             <div className="admin-places-list">
               {guides.length === 0 ? (
-                <div className="empty-admin"><BookOpen size={48} /><h3>Aucun guide</h3><p>CrÃ©ez votre premier guide de voyage</p></div>
+                <div className="empty-admin"><BookOpen size={48} /><h3>Aucun guide</h3><p>Créez votre premier guide de voyage</p></div>
               ) : guides.map((guide) => (
                 <motion.div key={guide.id} className="admin-place-item" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <div className="admin-place-image">
@@ -2988,10 +2988,10 @@ const AdminPage = () => {
                   </div>
                   <div className="admin-place-info">
                     <h3>{guide.title}</h3>
-                    <p>{guide.destination}, {guide.country} â€” {guide.duration_days} jour{guide.duration_days > 1 ? 's' : ''}</p>
+                    <p>{guide.destination}, {guide.country} — {guide.duration_days} jour{guide.duration_days > 1 ? 's' : ''}</p>
                     <div className="admin-place-meta">
                       <span className="cat-badge" style={{ background: guide.published ? '#5cb85c' : '#6c6c6c', color: '#fff' }}>
-                        {guide.published ? 'PubliÃ©' : 'Brouillon'}
+                        {guide.published ? 'Publié' : 'Brouillon'}
                       </span>
                     </div>
                   </div>
@@ -3025,4 +3025,3 @@ function App() {
 }
 
 export default App;
-
