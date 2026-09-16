@@ -31,7 +31,7 @@ const ACTIVITY_TYPES = {
 
 // Shared style for hero info pills
 const heroPill = {
-  fontFamily: 'Jost, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.88)',
+  fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.88)',
   background: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: '4px 14px',
   backdropFilter: 'blur(4px)',
 };
@@ -387,7 +387,7 @@ const PhotoPlaceholder = ({ category, index = 0, height = 200, title = '' }) => 
       ))}
       {title && (
         <text x="200" y={height/2 + 6} textAnchor="middle" fill="rgba(255,255,255,0.35)"
-          fontSize="12" fontFamily="Jost, sans-serif">{title}</text>
+          fontSize="12" fontFamily="Montserrat, sans-serif">{title}</text>
       )}
     </svg>
   );
@@ -1295,7 +1295,7 @@ const GlobeView = ({ guides, navigate }) => {
           background: 'linear-gradient(135deg, #0a0e1a 0%, #0d1b2a 50%, #0a0e1a 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em' }}>
+          <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em' }}>
             Localisation des destinationsâ€¦
           </span>
         </div>
@@ -1314,14 +1314,14 @@ const GlobeView = ({ guides, navigate }) => {
             >
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: g.markerColor, flexShrink: 0 }} />
               <div>
-                <div style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontSize: 15, fontWeight: 600, color: 'var(--text)', lineHeight: 1.1 }}>{g.title}</div>
-                <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: 'var(--text-muted)' }}>{g.destination}</div>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, fontWeight: 600, color: 'var(--text)', lineHeight: 1.1 }}>{g.title}</div>
+                <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 10, color: 'var(--text-muted)' }}>{g.destination}</div>
               </div>
             </div>
           ))}
         </div>
       )}
-      <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 14 }}>
+      <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 14 }}>
         Cliquez et glissez pour faire tourner Â· Cliquez un marqueur pour ouvrir le guide
       </p>
     </div>
@@ -1557,7 +1557,7 @@ const GuideDetailPage = () => {
           <button onClick={() => navigate(-1)} style={{
             position: 'absolute', top: 20, left: 20, background: 'rgba(0,0,0,0.38)',
             border: 'none', color: '#fff', borderRadius: 6, padding: '8px 16px',
-            fontFamily: 'Jost, sans-serif', fontSize: 13, cursor: 'pointer',
+            fontFamily: 'Montserrat, sans-serif', fontSize: 13, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 6, backdropFilter: 'blur(4px)',
           }}>â† Retour</button>
 
@@ -1566,17 +1566,17 @@ const GuideDetailPage = () => {
             <button onClick={() => { setLightboxIndex(0); setLightboxOpen(true); }} style={{
               position: 'absolute', top: 20, right: 20, background: 'rgba(0,0,0,0.38)',
               border: 'none', color: '#fff', borderRadius: 6, padding: '8px 16px',
-              fontFamily: 'Jost, sans-serif', fontSize: 13, cursor: 'pointer',
+              fontFamily: 'Montserrat, sans-serif', fontSize: 13, cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 6, backdropFilter: 'blur(4px)',
             }}><ZoomIn size={14} /> Photos ({allPhotos.length})</button>
           )}
 
           {/* Title block */}
           <div style={{ position: 'absolute', bottom: 28, left: '50%', transform: 'translateX(-50%)', textAlign: 'center', width: '90%', maxWidth: 700 }}>
-            <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
+            <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
               Guide voyage â€” {guide.destination}, {guide.country}
             </p>
-            <h1 style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontWeight: 600, fontSize: 42, color: '#fff', margin: 0, lineHeight: 1.1, textShadow: '0 2px 16px rgba(0,0,0,0.35)' }}>
+            <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, fontSize: 42, color: '#fff', margin: 0, lineHeight: 1.1, textShadow: '0 2px 16px rgba(0,0,0,0.35)' }}>
               {guide.title}
             </h1>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
@@ -1596,7 +1596,7 @@ const GuideDetailPage = () => {
 
           {/* Intro */}
           {guide.intro && (
-            <p style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontStyle: 'italic', fontSize: 20, color: '#666',
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 20, color: '#666',
               lineHeight: 1.75, marginBottom: 44, textAlign: 'center' }}
               dangerouslySetInnerHTML={{ __html: guide.intro }} />
           )}
@@ -1605,7 +1605,7 @@ const GuideDetailPage = () => {
           <div style={{ display: 'flex', gap: 4, marginBottom: 36, background: '#ede8db', borderRadius: 8, padding: 4, width: 'fit-content', flexWrap: 'wrap' }}>
             {TABS.map(([key, label]) => (
               <button key={key} onClick={() => setActiveSection(key)} style={{
-                fontFamily: 'Jost, sans-serif', fontSize: 13, padding: '7px 20px', borderRadius: 6,
+                fontFamily: 'Montserrat, sans-serif', fontSize: 13, padding: '7px 20px', borderRadius: 6,
                 border: 'none', cursor: 'pointer', transition: 'all 0.15s',
                 background: activeSection === key ? '#3f4240' : 'transparent',
                 color: activeSection === key ? '#ede8db' : '#888',
@@ -1623,7 +1623,7 @@ const GuideDetailPage = () => {
                   <div style={{ display: 'flex', gap: 8, marginBottom: 36, flexWrap: 'wrap' }}>
                     {guide.itinerary.map((day, i) => (
                       <button key={i} onClick={() => setActiveDay(i)} style={{
-                        fontFamily: 'Jost, sans-serif', fontSize: 13, padding: '8px 20px', borderRadius: 6,
+                        fontFamily: 'Montserrat, sans-serif', fontSize: 13, padding: '8px 20px', borderRadius: 6,
                         border: 'none', cursor: 'pointer', transition: 'all 0.15s',
                         background: activeDay === i ? '#3f4240' : '#faf8f3',
                         color: activeDay === i ? '#ede8db' : '#888',
@@ -1641,12 +1641,12 @@ const GuideDetailPage = () => {
                     const day = guide.itinerary[activeDay];
                     return (
                       <div>
-                        <h2 style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontWeight: 600, fontSize: 30, color: '#252826', marginBottom: 8 }}>
+                        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, fontSize: 30, color: '#252826', marginBottom: 8 }}>
                           Jour {day.day_number}
                           {day.title && <span style={{ fontWeight: 400, color: '#aaa', fontSize: 24 }}> â€” {day.title}</span>}
                         </h2>
                         {day.description && (
-                          <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 14, color: '#777', lineHeight: 1.7, marginBottom: 32 }}
+                          <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: '#777', lineHeight: 1.7, marginBottom: 32 }}
                             dangerouslySetInnerHTML={{ __html: day.description }} />
                         )}
 
@@ -1677,23 +1677,23 @@ const GuideDetailPage = () => {
                                 <div style={{ paddingTop: 5, flex: 1 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                                     {act.time && (
-                                      <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#bbb', letterSpacing: '0.06em', minWidth: 36 }}>
+                                      <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: '#bbb', letterSpacing: '0.06em', minWidth: 36 }}>
                                         {act.time}
                                       </span>
                                     )}
                                     {t && (
                                       <span style={{
-                                        fontFamily: 'Jost, sans-serif', fontSize: 10, color: t.color,
+                                        fontFamily: 'Montserrat, sans-serif', fontSize: 10, color: t.color,
                                         background: t.bg, borderRadius: 3, padding: '2px 7px',
                                         letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500,
                                       }}>{t.label}</span>
                                     )}
                                   </div>
-                                  <div style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontWeight: 600, fontSize: 20, color: '#252826', lineHeight: 1.2, marginBottom: 6 }}>
+                                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, fontSize: 20, color: '#252826', lineHeight: 1.2, marginBottom: 6 }}>
                                     {act.title}
                                   </div>
                                   {act.description && (
-                                    <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 13.5, color: '#666', margin: '0 0 10px', lineHeight: 1.65 }}
+                                    <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13.5, color: '#666', margin: '0 0 10px', lineHeight: 1.65 }}
                                       dangerouslySetInnerHTML={{ __html: act.description }} />
                                   )}
                                   {linked && (
@@ -1701,10 +1701,10 @@ const GuideDetailPage = () => {
                                       display: 'inline-flex', alignItems: 'center', gap: 8,
                                       background: '#f5f1ea', borderRadius: 6, padding: '6px 12px',
                                       border: '1px solid #e5e0d5', cursor: 'pointer',
-                                      fontFamily: "'Libre Caslon Display', Georgia, serif", fontSize: 14, fontWeight: 600, color: '#252826',
+                                      fontFamily: "'Cormorant Garamond', serif", fontSize: 14, fontWeight: 600, color: '#252826',
                                     }}>
                                       <MapPin size={12} color="#c17c5a" />{linked.title}
-                                      {linked.city && <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: '#aaa', fontWeight: 400 }}>{linked.city}</span>}
+                                      {linked.city && <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 10, color: '#aaa', fontWeight: 400 }}>{linked.city}</span>}
                                     </button>
                                   )}
                                 </div>
@@ -1716,12 +1716,12 @@ const GuideDetailPage = () => {
                         {/* Tips du jour */}
                         {day.tips?.length > 0 && (
                           <div style={{ marginTop: 24, background: '#faf8f3', borderRadius: 8, padding: '20px 24px', border: '1px solid #e5e0d5' }}>
-                            <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#bbb', marginBottom: 12 }}>
+                            <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#bbb', marginBottom: 12 }}>
                               Conseils du jour
                             </p>
                             <ul style={{ paddingLeft: 18, margin: 0 }}>
                               {day.tips.map((tip, i) => (
-                                <li key={i} style={{ fontFamily: 'Jost, sans-serif', fontSize: 13.5, color: '#555', lineHeight: 1.65, marginBottom: 6 }}>{tip}</li>
+                                <li key={i} style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13.5, color: '#555', lineHeight: 1.65, marginBottom: 6 }}>{tip}</li>
                               ))}
                             </ul>
                           </div>
@@ -1744,11 +1744,11 @@ const GuideDetailPage = () => {
                           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#3f4240' }}>
                           {b.icon}
                         </div>
-                        <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#999', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                        <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: '#999', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                           {b.label}
                         </span>
                       </div>
-                      <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 13.5, color: '#555', margin: 0, lineHeight: 1.65 }}>{b.content}</p>
+                      <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13.5, color: '#555', margin: 0, lineHeight: 1.65 }}>{b.content}</p>
                     </div>
                   ))}
                 </div>
@@ -1801,7 +1801,7 @@ const GuideDetailPage = () => {
                         {dayGroups.map(g => g.acts.some(a => a.latitude && a.longitude) && (
                           <div key={g.dayNumber} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <div style={{ width: 24, height: 3, borderRadius: 2, background: g.color }} />
-                            <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#777' }}>
+                            <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: '#777' }}>
                               Jour {g.dayNumber}{g.dayTitle ? ` â€” ${g.dayTitle}` : ''}
                             </span>
                           </div>
@@ -1825,12 +1825,12 @@ const GuideDetailPage = () => {
                           <Marker key={act.num} position={[act.latitude, act.longitude]}
                             icon={createActivityMarkerIcon(act.num, act.type)}>
                             <Popup>
-                              <div style={{ fontFamily: 'Jost, sans-serif', minWidth: 140 }}>
+                              <div style={{ fontFamily: 'Montserrat, sans-serif', minWidth: 140 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: act.color, flexShrink: 0 }} />
                                   <span style={{ fontSize: 10, color: '#999' }}>Jour {act.dayNumber}</span>
                                 </div>
-                                <div style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontSize: 15, fontWeight: 600, color: '#252826' }}>{act.title}</div>
+                                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, fontWeight: 600, color: '#252826' }}>{act.title}</div>
                               </div>
                             </Popup>
                           </Marker>
@@ -1855,14 +1855,14 @@ const GuideDetailPage = () => {
                             width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
                             background: hasCoords ? act.color : '#ccc',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontFamily: 'Jost, sans-serif', fontSize: 12, fontWeight: 700, color: '#fff',
+                            fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, color: '#fff',
                           }}>{act.num}</div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: '#bbb', marginBottom: 2 }}>
+                            <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 10, color: '#bbb', marginBottom: 2 }}>
                               Jour {act.dayNumber}
                             </div>
                             <div style={{
-                              fontFamily: "'Libre Caslon Display', Georgia, serif", fontWeight: 600,
+                              fontFamily: "'Cormorant Garamond', serif", fontWeight: 600,
                               fontSize: 14, color: '#252826', lineHeight: 1.2,
                               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                             }}>{act.title}</div>
@@ -1880,7 +1880,7 @@ const GuideDetailPage = () => {
           {guide.tags?.length > 0 && (
             <div style={{ marginTop: 48, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {guide.tags.map(t => (
-                <span key={t} style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#aaa',
+                <span key={t} style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: '#aaa',
                   background: '#f0ece4', borderRadius: 20, padding: '4px 12px' }}>#{t}</span>
               ))}
             </div>
@@ -2062,17 +2062,17 @@ const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
 
   return (
     <div style={{ marginTop: 10, position: 'relative' }}>
-      <label style={{ fontFamily: 'Jost, sans-serif', fontSize: 9, color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+      <label style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 9, color: '#999', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
         Adresse liÃ©e
       </label>
       {!showSearch ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f0ece4', borderRadius: 6, padding: '6px 10px', border: '1px solid #e5e0d5', marginTop: 4 }}>
           <CategoryBadge categoryId={linked.category} small />
-          <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: '#252826', flex: 1 }}>{linked.title} â€” {linked.city}</span>
+          <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#252826', flex: 1 }}>{linked.title} â€” {linked.city}</span>
           <button type="button" onClick={() => { updateActivity(dayIdx, actIdx, 'place_id', null); setChanging(false); setSearch(''); }}
             style={{ background: 'none', border: 'none', color: '#bbb', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '0 4px' }}>Ã—</button>
           <button type="button" onClick={() => { setChanging(true); setOpen(true); setSearch(''); }}
-            style={{ background: 'none', border: '1px solid #d0cbc0', color: '#888', cursor: 'pointer', fontFamily: 'Jost, sans-serif', fontSize: 11, borderRadius: 4, padding: '2px 8px' }}>
+            style={{ background: 'none', border: '1px solid #d0cbc0', color: '#888', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: 11, borderRadius: 4, padding: '2px 8px' }}>
             Changer
           </button>
         </div>
@@ -2080,7 +2080,7 @@ const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
         <div>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
             <input
-              style={{ display: 'block', width: '100%', boxSizing: 'border-box', padding: '7px 10px', borderRadius: 6, border: '1.5px solid #ddd9d0', fontFamily: 'Jost, sans-serif', fontSize: 12, background: '#fff', outline: 'none', color: '#252826', flex: 1 }}
+              style={{ display: 'block', width: '100%', boxSizing: 'border-box', padding: '7px 10px', borderRadius: 6, border: '1.5px solid #ddd9d0', fontFamily: 'Montserrat, sans-serif', fontSize: 12, background: '#fff', outline: 'none', color: '#252826', flex: 1 }}
               value={search}
               onChange={e => { setSearch(e.target.value); setOpen(true); }}
               onFocus={() => setOpen(true)}
@@ -2089,7 +2089,7 @@ const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
             />
             {changing && (
               <button type="button" onClick={() => { setChanging(false); setSearch(''); setOpen(false); }}
-                style={{ background: 'none', border: '1px solid #d0cbc0', color: '#888', cursor: 'pointer', fontFamily: 'Jost, sans-serif', fontSize: 11, borderRadius: 4, padding: '6px 10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                style={{ background: 'none', border: '1px solid #d0cbc0', color: '#888', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: 11, borderRadius: 4, padding: '6px 10px', whiteSpace: 'nowrap', flexShrink: 0 }}>
                 Annuler
               </button>
             )}
@@ -2097,7 +2097,7 @@ const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
           {open && (
             <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200, background: '#fff', border: '1px solid #ddd9d0', borderTop: 'none', borderRadius: '0 0 6px 6px', boxShadow: '0 8px 20px rgba(0,0,0,0.1)', maxHeight: 220, overflowY: 'auto' }}>
               {filtered.length === 0 ? (
-                <div style={{ padding: '10px 12px', fontFamily: 'Jost, sans-serif', fontSize: 12, color: '#bbb' }}>Aucune adresse trouvÃ©e</div>
+                <div style={{ padding: '10px 12px', fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#bbb' }}>Aucune adresse trouvÃ©e</div>
               ) : filtered.map(p => (
                 <div key={p.id}
                   onMouseDown={e => { e.preventDefault(); updateActivity(dayIdx, actIdx, 'place_id', p.id); setSearch(''); setOpen(false); setChanging(false); }}
@@ -2106,13 +2106,13 @@ const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <CategoryBadge categoryId={p.category} small />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontSize: 14, fontWeight: 600, color: '#252826', lineHeight: 1.1 }}>{p.title}</div>
-                    <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: '#aaa' }}>{p.city}, {p.country}</div>
+                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, fontWeight: 600, color: '#252826', lineHeight: 1.1 }}>{p.title}</div>
+                    <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 10, color: '#aaa' }}>{p.city}, {p.country}</div>
                   </div>
                 </div>
               ))}
               {!search && places.length > 0 && (
-                <div style={{ padding: '6px 12px', fontFamily: 'Jost, sans-serif', fontSize: 10, color: '#ccc', borderTop: '1px solid #f0ece4' }}>
+                <div style={{ padding: '6px 12px', fontFamily: 'Montserrat, sans-serif', fontSize: 10, color: '#ccc', borderTop: '1px solid #f0ece4' }}>
                   Tapez pour filtrer ({places.length} adresses)
                 </div>
               )}
@@ -2339,7 +2339,7 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
                 <input type="color" value={guideFormData.marker_color || '#c1845a'} onChange={e => setGuideFormData(p => ({ ...p, marker_color: e.target.value }))}
                   style={{ width: 44, height: 34, padding: 2, borderRadius: 6, border: '1.5px solid var(--border)', cursor: 'pointer' }} />
-                <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: '#aaa' }}>Point affichÃ© sur le globe 3D</span>
+                <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#aaa' }}>Point affichÃ© sur le globe 3D</span>
               </div>
             </div>
             <div className="form-group">

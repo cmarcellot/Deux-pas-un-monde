@@ -8,7 +8,7 @@
 }
 
 .site-hero-tagline {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   color: #b0ab9f;
   font-size: 14px;
   margin-top: 20px;
@@ -21,7 +21,7 @@
   align-items: center;
   gap: 8px;
   margin-top: 14px;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   color: rgba(255,255,255,0.55);
   letter-spacing: 0.06em;
@@ -41,7 +41,7 @@
 }
 
 .section-nav-btn {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 13px;
   letter-spacing: 0.06em;
   padding: 8px 24px;
@@ -75,7 +75,7 @@
   color: #ede8db;
 }
 .dpm-logo-wordmark .wm-top {
-  font-family: 'Libre Caslon Display', Georgia, serif;
+  font-family: 'Cormorant Garamond', serif;
   font-weight: 600;
   font-size: 18px;
   letter-spacing: 0.2em;
@@ -83,7 +83,7 @@
   display: block;
 }
 .dpm-logo-wordmark .wm-sub {
-  font-family: 'Libre Caslon Display', Georgia, serif;
+  font-family: 'Cormorant Garamond', serif;
   font-weight: 400;
   font-size: 12px;
   letter-spacing: 0.3em;
@@ -122,7 +122,7 @@
 }
 
 .filter-pill {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   letter-spacing: 0.06em;
   padding: 5px 14px;
@@ -182,7 +182,7 @@
 }
 
 .results-count {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   color: #aaa;
   margin: 0 0 16px;
@@ -235,28 +235,29 @@
 .place-card-body { padding: 16px 18px 18px; }
 
 .place-card-body h3 {
-  font-family: 'Libre Caslon Display', Georgia, serif;
-  font-weight: 600;
-  font-size: 20px;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: 22px;
   color: var(--text);
   margin: 0 0 4px;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 .place-card-location {
-  font-family: 'Jost', sans-serif;
-  font-size: 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
   color: #888;
   margin: 0 0 10px;
   letter-spacing: 0.03em;
+  line-height: 1.4;
 }
 
 .place-card-desc {
-  font-family: 'Jost', sans-serif;
-  font-size: 13.5px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
   color: #555;
   margin: 0;
-  line-height: 1.6;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -301,14 +302,14 @@
   gap: 4px;
 }
 .place-list-body h3 {
-  font-family: 'Libre Caslon Display', Georgia, serif;
+  font-family: 'Cormorant Garamond', serif;
   font-weight: 600;
   font-size: 19px;
   color: var(--text);
   margin: 0;
 }
 .place-list-body p {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 13px;
   color: #666;
   margin: 0;
@@ -323,7 +324,7 @@
   gap: 10px;
 }
 .place-list-date {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 11px;
   color: #aaa;
 }
@@ -337,7 +338,7 @@
   gap: 6px;
 }
 .place-list-right span {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   color: #888;
 }
@@ -351,7 +352,7 @@
   gap: 5px;
   border-radius: 4px;
   padding: 4px 10px;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 500;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -452,7 +453,7 @@
 .modal-body { padding: 20px 24px 24px; }
 
 .modal-title {
-  font-family: 'Libre Caslon Display', Georgia, serif;
+  font-family: 'Cormorant Garamond', serif;
   font-size: 32px; font-weight: 600;
   color: var(--text); margin: 0 0 10px; line-height: 1.15;
 }
@@ -466,7 +467,7 @@
 
 .modal-address {
   display: flex; align-items: flex-start; gap: 8px;
-  color: #888; font-family: 'Jost', sans-serif;
+  color: #888; font-family: 'Montserrat', sans-serif;
   font-size: 14px; line-height: 1.5;
   padding: 14px 0;
   border-bottom: 1px solid var(--border);
@@ -475,7 +476,7 @@
 .modal-address svg { flex-shrink: 0; margin-top: 2px; color: var(--text-muted); }
 
 .modal-description {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 15px; line-height: 1.75;
   color: #444; margin-bottom: 20px;
 }
@@ -495,8 +496,8 @@
    ============================================================ */
 .map-wrapper { height: calc(100vh - 180px); min-height: 400px; }
 .map-popup { cursor: pointer; padding: 4px; }
-.map-popup h4 { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 15px; margin-bottom: 4px; color: var(--text); }
-.map-popup p { color: #666; font-size: 12px; margin-bottom: 6px; font-family: 'Jost', sans-serif; }
+.map-popup h4 { font-family: 'Cormorant Garamond', serif; font-size: 15px; margin-bottom: 4px; color: var(--text); }
+.map-popup p { color: #666; font-size: 12px; margin-bottom: 6px; font-family: 'Montserrat', sans-serif; }
 
 /* ============================================================
    EMPTY / LOADING
@@ -505,14 +506,14 @@
   grid-column: 1 / -1;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 60px 24px; text-align: center;
-  color: var(--text-muted); font-family: 'Jost', sans-serif;
+  color: var(--text-muted); font-family: 'Montserrat', sans-serif;
 }
 .empty-state h3 { margin: 16px 0 8px; color: var(--text); }
 
 .loading {
   display: flex; align-items: center; justify-content: center;
   padding: 60px; color: var(--text-muted);
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   grid-column: 1 / -1;
 }
 .loading-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
@@ -522,7 +523,7 @@
    ============================================================ */
 .footer {
   padding: 24px; text-align: center;
-  color: var(--text-muted); font-family: 'Jost', sans-serif; font-size: 13px;
+  color: var(--text-muted); font-family: 'Montserrat', sans-serif; font-size: 13px;
   border-top: 1px solid var(--border);
   background: var(--surface);
 }
@@ -548,7 +549,7 @@
 }
 
 .lightbox-counter {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 14px; color: rgba(255,255,255,0.7); letter-spacing: 0.05em;
 }
 
@@ -619,7 +620,7 @@
 .form-group { margin-bottom: 1.25rem; }
 .form-group label {
   display: block; margin-bottom: 6px;
-  color: #666; font-size: 13px; font-family: 'Jost', sans-serif;
+  color: #666; font-size: 13px; font-family: 'Montserrat', sans-serif;
 }
 
 .form-group input,
@@ -627,7 +628,7 @@
 .form-group textarea {
   width: 100%; padding: 10px 12px;
   background: white; border: 1px solid var(--border); border-radius: 10px;
-  color: var(--text); font-family: 'Jost', sans-serif;
+  color: var(--text); font-family: 'Montserrat', sans-serif;
   font-size: max(16px, 14px);
   transition: border-color 0.2s;
 }
@@ -651,7 +652,7 @@
 .quill-wrapper .ql-toolbar button.ql-active .ql-fill   { fill: var(--dark); }
 .quill-wrapper .ql-container {
   border: 1px solid var(--border); border-radius: 0 0 10px 10px;
-  font-family: 'Jost', sans-serif; font-size: 14px; min-height: 130px;
+  font-family: 'Montserrat', sans-serif; font-size: 14px; min-height: 130px;
 }
 .quill-wrapper .ql-editor { color: var(--text); min-height: 130px; }
 .quill-wrapper .ql-editor.ql-blank::before { color: var(--text-light); font-style: normal; }
@@ -665,7 +666,7 @@
   background: var(--dark); color: #ede8db;
   border: none; border-radius: 10px;
   font-size: 14px; font-weight: 500; cursor: pointer;
-  transition: all 0.2s; font-family: 'Jost', sans-serif;
+  transition: all 0.2s; font-family: 'Montserrat', sans-serif;
   display: flex; align-items: center; justify-content: center; gap: 8px;
 }
 .btn-primary:hover:not(:disabled) { background: var(--dark-hover); }
@@ -675,7 +676,7 @@
   padding: 10px 24px; background: var(--surface); color: var(--text);
   border: 1px solid var(--border); border-radius: 10px;
   font-size: 14px; cursor: pointer; transition: all 0.2s;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 .btn-secondary:hover { background: var(--border); }
 
@@ -692,7 +693,7 @@
 
 .admin-header-title {
   flex: 1;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 14px; font-weight: 500; letter-spacing: 0.08em;
   text-transform: uppercase; color: rgba(255,255,255,0.6); min-width: 0;
 }
@@ -702,7 +703,7 @@
   display: flex; align-items: center; gap: 6px; padding: 8px 14px;
   background: transparent; border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;
   color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.2s;
-  font-family: 'Jost', sans-serif; font-size: 13px; white-space: nowrap;
+  font-family: 'Montserrat', sans-serif; font-size: 13px; white-space: nowrap;
 }
 .admin-header-btn:hover { background: rgba(255,255,255,0.1); color: white; }
 .admin-header-btn.danger:hover { background: var(--error); border-color: var(--error); color: white; }
@@ -720,7 +721,7 @@
   display: flex; align-items: center; gap: 6px;
   padding: 14px 20px; background: none; border: none;
   border-bottom: 2px solid transparent;
-  color: var(--text-muted); cursor: pointer; font-family: 'Jost', sans-serif;
+  color: var(--text-muted); cursor: pointer; font-family: 'Montserrat', sans-serif;
   font-size: 14px; transition: all 0.2s; white-space: nowrap;
 }
 .admin-tab-btn:hover { color: var(--text); }
@@ -728,7 +729,7 @@
 
 /* Admin places list */
 .admin-places-list { display: flex; flex-direction: column; gap: 10px; }
-.empty-admin { text-align: center; padding: 60px 24px; color: var(--text-muted); font-family: 'Jost', sans-serif; }
+.empty-admin { text-align: center; padding: 60px 24px; color: var(--text-muted); font-family: 'Montserrat', sans-serif; }
 .empty-admin h3 { margin: 16px 0 8px; color: var(--text); }
 
 .admin-place-item {
@@ -749,7 +750,7 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text);
 }
 .admin-place-info p {
-  color: var(--text-muted); font-size: 13px; font-family: 'Jost', sans-serif;
+  color: var(--text-muted); font-size: 13px; font-family: 'Montserrat', sans-serif;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .admin-place-meta { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
@@ -797,7 +798,7 @@
   border-radius: 16px 16px 0 0;
 }
 .form-header h2 {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 17px; font-weight: 500; color: var(--text);
   letter-spacing: 0.01em;
 }
@@ -820,7 +821,7 @@
   display: flex; align-items: center; gap: 6px; flex-shrink: 0;
   padding: 0 14px; border-radius: 10px;
   background: var(--dark); color: #ede8db; border: none;
-  font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 500;
+  font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 500;
   cursor: pointer; transition: opacity 0.2s; white-space: nowrap;
 }
 .geocode-btn:hover { opacity: 0.85; }
@@ -830,7 +831,7 @@
   display: flex; align-items: flex-start; gap: 6px; flex-wrap: wrap;
   margin-top: 8px; padding: 8px 12px; border-radius: 8px;
   background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25);
-  color: #2d7a3a; font-size: 12px; line-height: 1.4; font-family: 'Jost', sans-serif;
+  color: #2d7a3a; font-size: 12px; line-height: 1.4; font-family: 'Montserrat', sans-serif;
 }
 .geocode-coords {
   margin-left: auto; font-family: monospace; font-size: 11px;
@@ -839,7 +840,7 @@
 .coords-manual-toggle {
   background: none; border: none; color: var(--text-muted);
   font-size: 12px; cursor: pointer; padding: 4px 0;
-  text-decoration: underline dotted; font-family: 'Jost', sans-serif;
+  text-decoration: underline dotted; font-family: 'Montserrat', sans-serif;
   display: block; margin-top: 6px;
 }
 .coords-manual-toggle:hover { color: var(--text); }
@@ -859,7 +860,7 @@
 .drop-zone-label {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   color: var(--text-muted); cursor: pointer; transition: color 0.2s;
-  font-family: 'Jost', sans-serif; font-size: 14px;
+  font-family: 'Montserrat', sans-serif; font-size: 14px;
 }
 .drop-zone.dragging .drop-zone-label { color: var(--dark); }
 .drop-zone-hint { font-size: 12px; color: var(--text-light); }
@@ -909,7 +910,7 @@
   font-size: 11px; font-weight: 600; color: var(--text-muted);
   text-transform: uppercase; letter-spacing: 0.08em;
   padding: 20px 0 8px; margin: 0;
-  border-top: 1px solid var(--border); font-family: 'Jost', sans-serif;
+  border-top: 1px solid var(--border); font-family: 'Montserrat', sans-serif;
 }
 .form-section-title:first-of-type { border-top: none; padding-top: 0; }
 
@@ -918,7 +919,7 @@
 .toggle-row input[type="checkbox"] { display: none; }
 .toggle-row input[type="checkbox"] + .toggle-label {
   display: flex; align-items: center; gap: 10px;
-  cursor: pointer; font-family: 'Jost', sans-serif; font-size: 14px;
+  cursor: pointer; font-family: 'Montserrat', sans-serif; font-size: 14px;
   color: var(--text); user-select: none; position: relative;
 }
 .toggle-row input[type="checkbox"] + .toggle-label::before {
@@ -946,13 +947,13 @@
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 14px; background: var(--bg); border-bottom: 1px solid var(--border);
 }
-.activities-header label { font-size: 13px; color: var(--text-muted); font-weight: 600; font-family: 'Jost', sans-serif; }
+.activities-header label { font-size: 13px; color: var(--text-muted); font-weight: 600; font-family: 'Montserrat', sans-serif; }
 .add-activity-btn {
   display: flex; align-items: center; gap: 4px;
   padding: 4px 12px; border-radius: 6px;
   background: var(--surface); border: 1px solid var(--border);
   color: var(--text-muted); font-size: 12px; cursor: pointer; transition: all 0.15s;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 .add-activity-btn:hover { background: var(--dark); color: white; border-color: var(--dark); }
 
@@ -971,7 +972,7 @@
   align-items: flex-start;
 }
 .form-label-xs {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 9px;
   color: #999;
   letter-spacing: 0.1em;
@@ -986,7 +987,7 @@
   padding: 7px 8px;
   border-radius: 6px;
   border: 1.5px solid #ddd9d0;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   background: #fff;
   outline: none;
@@ -1005,7 +1006,7 @@
 .activity-form-row input, .activity-form-row select {
   flex: 1; min-width: 80px; padding: 8px 10px;
   background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-  color: var(--text); font-family: 'Jost', sans-serif; font-size: 13px;
+  color: var(--text); font-family: 'Montserrat', sans-serif; font-size: 13px;
 }
 .activity-form-row input:focus, .activity-form-row select:focus { border-color: var(--dark); outline: none; }
 .activity-form-row input::placeholder { color: var(--text-light); }
@@ -1042,13 +1043,13 @@
   width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
   background: var(--dark); color: #ede8db;
   display: flex; align-items: center; justify-content: center;
-  font-size: 20px; font-weight: 700; font-family: 'Libre Caslon Display', Georgia, serif;
+  font-size: 20px; font-weight: 700; font-family: 'Cormorant Garamond', serif;
 }
 .surprise-label {
-  font-family: 'Libre Caslon Display', Georgia, serif;
+  font-family: 'Cormorant Garamond', serif;
   font-size: 18px; font-weight: 600; color: var(--text); margin: 0 0 4px;
 }
-.surprise-sub { font-size: 13px; color: var(--text-muted); margin: 0; font-family: 'Jost', sans-serif; }
+.surprise-sub { font-size: 13px; color: var(--text-muted); margin: 0; font-family: 'Montserrat', sans-serif; }
 .countdown-blocks { display: flex; gap: 10px; justify-content: center; }
 .countdown-block {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -1056,10 +1057,10 @@
   border-radius: 10px; padding: 10px 14px; min-width: 60px;
 }
 .countdown-num {
-  font-size: 26px; font-weight: 700; font-family: 'Libre Caslon Display', Georgia, serif;
+  font-size: 26px; font-weight: 700; font-family: 'Cormorant Garamond', serif;
   color: var(--dark); line-height: 1;
 }
-.countdown-unit { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Jost', sans-serif; }
+.countdown-unit { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Montserrat', sans-serif; }
 
 /* ============================================================
    GUIDE LIST ROW
@@ -1101,7 +1102,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   color: var(--text-muted);
 }
@@ -1114,14 +1115,14 @@
   border-left: 1px solid var(--border);
 }
 .guide-list-body h3 {
-  font-family: 'Libre Caslon Display', Georgia, serif;
+  font-family: 'Cormorant Garamond', serif;
   font-weight: 600;
   font-size: 19px;
   color: var(--text);
   margin: 0;
 }
 .guide-list-body p {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 13px;
   color: #666;
   margin: 0;
@@ -1137,7 +1138,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   color: var(--text-muted);
   margin-bottom: 12px;
@@ -1163,7 +1164,7 @@
   border-radius: 8px;
   padding: 6px 10px;
   cursor: pointer;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   text-align: left;
   transition: background 0.15s;
 }
@@ -1190,7 +1191,7 @@
 }
 .globe-hint {
   text-align: center;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 11px;
   color: var(--text-muted);
   margin-top: 12px;
@@ -1221,15 +1222,15 @@
   background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
   color: white; padding: 4px 10px; border-radius: 6px;
   font-size: 12px; display: flex; align-items: center; gap: 4px;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 .guide-card-body { padding: 16px 18px 18px; }
 .guide-card-destination {
   display: flex; align-items: center; gap: 5px;
-  color: var(--text-muted); font-size: 12px; font-family: 'Jost', sans-serif; margin-bottom: 4px;
+  color: var(--text-muted); font-size: 12px; font-family: 'Montserrat', sans-serif; margin-bottom: 4px;
 }
 .guide-card-body h3 {
-  font-family: 'Libre Caslon Display', Georgia, serif;
+  font-family: 'Cormorant Garamond', serif;
   font-size: 20px; font-weight: 600; color: var(--text); margin: 0;
 }
 
@@ -1258,7 +1259,7 @@
   padding: 3rem 1.5rem 1.5rem;
 }
 .guide-hero-title {
-  font-family: 'Libre Caslon Display', Georgia, serif;
+  font-family: 'Cormorant Garamond', serif;
   font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 600;
   color: white; margin: 0 0 12px;
   text-shadow: 0 2px 12px rgba(0,0,0,0.5); line-height: 1.1;
@@ -1269,7 +1270,7 @@
   background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);
   border: 1px solid rgba(255,255,255,0.2); color: white;
   padding: 5px 12px; border-radius: 50px;
-  font-size: 13px; font-family: 'Jost', sans-serif;
+  font-size: 13px; font-family: 'Montserrat', sans-serif;
 }
 
 .guide-section-tabs {
@@ -1282,7 +1283,7 @@
 .guide-tab-btn {
   display: flex; align-items: center; gap: 6px; padding: 14px 18px;
   background: none; border: none; border-bottom: 2px solid transparent;
-  color: var(--text-muted); cursor: pointer; font-family: 'Jost', sans-serif;
+  color: var(--text-muted); cursor: pointer; font-family: 'Montserrat', sans-serif;
   font-size: 13px; white-space: nowrap; transition: all 0.2s; flex-shrink: 0;
 }
 .guide-tab-btn:hover { color: var(--text); }
@@ -1295,9 +1296,9 @@
   padding: 16px 20px 16px 24px;
   border-left: 3px solid var(--dark); border-bottom: 1px solid var(--border);
   background: rgba(63,66,64,0.03); border-radius: 0 8px 8px 0;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
-.guide-empty-section { color: var(--text-muted); font-style: italic; padding: 24px 0; font-family: 'Jost', sans-serif; }
+.guide-empty-section { color: var(--text-muted); font-style: italic; padding: 24px 0; font-family: 'Montserrat', sans-serif; }
 
 /* Itinerary */
 .guide-itinerary { display: flex; flex-direction: column; gap: 10px; }
@@ -1312,39 +1313,39 @@
 }
 .day-accordion-header:hover { background: var(--bg); }
 .day-accordion-title { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.day-accordion-title h3 { font-size: 16px; font-family: 'Libre Caslon Display', Georgia, serif; }
+.day-accordion-title h3 { font-size: 16px; font-family: 'Cormorant Garamond', serif; }
 .day-number-badge {
   flex-shrink: 0; background: var(--dark); color: #ede8db;
   padding: 3px 10px; border-radius: 50px; font-size: 11px;
-  font-family: 'Jost', sans-serif; font-weight: 500;
+  font-family: 'Montserrat', sans-serif; font-weight: 500;
 }
 .day-accordion-body {
   overflow: hidden; padding: 0 20px 20px; border-top: 1px solid var(--border);
 }
 .day-description {
   color: var(--text-muted); font-size: 14px; line-height: 1.6;
-  margin: 14px 0; font-family: 'Jost', sans-serif;
+  margin: 14px 0; font-family: 'Montserrat', sans-serif;
 }
 .day-activities { display: flex; flex-direction: column; gap: 12px; margin: 14px 0; }
 .activity-item { display: flex; gap: 14px; }
 .activity-time {
   flex-shrink: 0; font-size: 12px; color: var(--dark);
   font-weight: 500; padding-top: 2px; min-width: 40px;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 .activity-content { flex: 1; }
 .activity-content strong {
   font-size: 15px; display: block; margin-bottom: 3px;
-  font-family: 'Libre Caslon Display', Georgia, serif; color: var(--text);
+  font-family: 'Cormorant Garamond', serif; color: var(--text);
 }
 .activity-content p {
   color: var(--text-muted); font-size: 13px; line-height: 1.5; margin: 0;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 .activity-place-ref {
   display: inline-flex; align-items: center; gap: 4px; margin-top: 5px;
   color: var(--dark); font-size: 12px; font-weight: 500;
-  background: none; border: none; padding: 0; cursor: pointer; font-family: 'Jost', sans-serif;
+  background: none; border: none; padding: 0; cursor: pointer; font-family: 'Montserrat', sans-serif;
   text-decoration: underline dotted; text-underline-offset: 2px; transition: opacity 0.15s;
 }
 .activity-place-ref:hover { opacity: 0.65; }
@@ -1354,11 +1355,11 @@
 }
 .day-tips h4 {
   display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 8px;
-  color: var(--text-muted); font-family: 'Jost', sans-serif; font-weight: 500;
+  color: var(--text-muted); font-family: 'Montserrat', sans-serif; font-weight: 500;
 }
 .day-tips ul { list-style: none; padding: 0; margin: 0; }
 .day-tips li {
-  font-size: 13px; color: var(--text-muted); font-family: 'Jost', sans-serif;
+  font-size: 13px; color: var(--text-muted); font-family: 'Montserrat', sans-serif;
   padding: 3px 0 3px 16px; position: relative;
 }
 .day-tips li::before { content: '→'; position: absolute; left: 0; color: var(--dark); font-size: 11px; top: 5px; }
@@ -1372,15 +1373,15 @@
 .practical-block h4 {
   display: flex; align-items: center; gap: 6px;
   font-size: 11px; margin: 0 0 8px;
-  color: var(--text-muted); font-family: 'Jost', sans-serif;
+  color: var(--text-muted); font-family: 'Montserrat', sans-serif;
   text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
 }
-.practical-block p { font-size: 14px; line-height: 1.6; color: var(--text); margin: 0; font-family: 'Jost', sans-serif; }
+.practical-block p { font-size: 14px; line-height: 1.6; color: var(--text); margin: 0; font-family: 'Montserrat', sans-serif; }
 .season-pills { display: flex; gap: 8px; flex-wrap: wrap; }
 .season-pill {
   padding: 4px 12px; border-radius: 50px;
   background: var(--bg); border: 1px solid var(--border);
-  color: var(--dark); font-size: 13px; font-family: 'Jost', sans-serif;
+  color: var(--dark); font-size: 13px; font-family: 'Montserrat', sans-serif;
 }
 
 /* Photos grid */
@@ -1484,14 +1485,14 @@
   background: none;
   border: none;
   outline: none;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 14px;
   color: rgba(255,255,255,0.6);
   cursor: text;
 }
 .hero-search-input::placeholder { color: rgba(255,255,255,0.4); }
 .hero-search-kbd {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 11px;
   color: rgba(255,255,255,0.3);
   border: 1px solid rgba(255,255,255,0.2);
@@ -1538,7 +1539,7 @@
   background: none;
   border: none;
   outline: none;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 15px;
   color: var(--text);
 }
@@ -1556,7 +1557,7 @@
 .search-section { padding: 8px 0; }
 .search-section + .search-section { border-top: 1px solid var(--border); }
 .search-section-label {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.1em;
@@ -1595,7 +1596,7 @@
   min-width: 0;
 }
 .search-result-title {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 14px;
   color: var(--text);
   font-weight: 500;
@@ -1604,7 +1605,7 @@
   text-overflow: ellipsis;
 }
 .search-result-sub {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   color: var(--text-muted);
   white-space: nowrap;
@@ -1618,7 +1619,7 @@
   padding: 0 1px;
 }
 .search-no-result {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 13px;
   color: var(--text-muted);
   text-align: center;
@@ -1627,7 +1628,7 @@
 .search-overlay-footer {
   border-top: 1px solid var(--border);
   padding: 10px 18px;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 11px;
   color: var(--text-light);
   flex-shrink: 0;
@@ -1647,7 +1648,7 @@
   background: var(--dark);
   color: #ede8db;
   border-radius: 30px;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
@@ -1684,7 +1685,7 @@
 
 .login-subtitle {
   text-align: center;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   letter-spacing: 0.1em;
   color: #aaa;
@@ -1694,7 +1695,7 @@
 
 .login-label {
   display: block;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 11px;
   color: #888;
   letter-spacing: 0.1em;
@@ -1706,7 +1707,7 @@
   display: block; width: 100%; box-sizing: border-box;
   padding: 11px 14px; margin-bottom: 16px;
   border-radius: 6px; border: 1.5px solid #d5d0c8;
-  font-family: 'Jost', sans-serif; font-size: 14px;
+  font-family: 'Montserrat', sans-serif; font-size: 14px;
   background: #fff; color: #252826;
   outline: none; transition: border-color 0.15s;
 }
@@ -1714,7 +1715,7 @@
 .login-input.error { border-color: #c05a3a; margin-bottom: 6px; }
 
 .login-error {
-  font-family: 'Jost', sans-serif; font-size: 12px;
+  font-family: 'Montserrat', sans-serif; font-size: 12px;
   color: #c05a3a; margin: 0 0 12px;
 }
 
@@ -1722,7 +1723,7 @@
   width: 100%; padding: 12px;
   background: #3f4240; color: #ede8db;
   border: none; border-radius: 6px;
-  font-family: 'Jost', sans-serif; font-size: 13px;
+  font-family: 'Montserrat', sans-serif; font-size: 13px;
   letter-spacing: 0.08em; font-weight: 500;
   cursor: pointer; transition: background 0.2s;
 }
@@ -1732,7 +1733,7 @@
 .back-to-home-btn {
   display: block; width: 100%; margin-top: 12px; padding: 10px;
   background: transparent; border: 1px solid #d5d0c8; border-radius: 6px;
-  font-family: 'Jost', sans-serif; font-size: 13px; color: #888;
+  font-family: 'Montserrat', sans-serif; font-size: 13px; color: #888;
   text-align: center; text-decoration: none; cursor: pointer;
   transition: background 0.2s, color 0.2s; box-sizing: border-box;
 }
@@ -1791,13 +1792,13 @@
 }
 .detail-address {
   display: flex; align-items: flex-start; gap: 10px;
-  color: var(--text-muted); font-family: 'Jost', sans-serif; font-size: 14px;
+  color: var(--text-muted); font-family: 'Montserrat', sans-serif; font-size: 14px;
   margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);
 }
 .detail-address svg { flex-shrink: 0; margin-top: 2px; }
 .detail-description {
   font-size: 15px; line-height: 1.8; color: #444; margin-bottom: 2rem;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 .detail-description p { margin-bottom: 10px; }
 .detail-description p:last-child { margin-bottom: 0; }
@@ -1855,9 +1856,9 @@
 }
 
 .v2-nav-link {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: 0.025em;
   color: rgba(255,255,255,0.9);
   text-decoration: none;
@@ -1919,10 +1920,10 @@
 }
 
 .v2-hero-eyebrow {
-  font-family: 'Jost', sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: 2.6px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 2px;
   text-transform: uppercase;
   color: rgba(255,255,255,0.9);
   margin: 10px 0 3px;
@@ -1939,19 +1940,19 @@
 }
 
 .v2-hero-title {
-  font-family: 'Libre Caslon Display', Georgia, serif;
-  font-size: 55px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 62px;
   font-weight: 400;
-  line-height: 1.02;
+  line-height: 0.95;
   color: white;
   margin: 0 0 14px;
-  letter-spacing: -1.2px;
+  letter-spacing: -1px;
 }
 
 .v2-hero-sub {
-  font-family: 'Jost', sans-serif;
-  font-size: 14px;
-  font-weight: 300;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
   color: rgba(255,255,255,0.9);
   line-height: 1.5;
   margin: 0;
@@ -1996,7 +1997,7 @@
 .v2-searchbar-field svg:first-child { color: #465456; flex-shrink: 0; }
 .v2-searchbar-field > span {
   flex: 1;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 13px;
   font-weight: 400;
   color: #465456;
@@ -2023,9 +2024,9 @@
   border: none;
   border-radius: 28px;
   padding: 13px 20px;
-  font-family: 'Jost', sans-serif;
-  font-size: 14px;
-  font-weight: 400;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
   letter-spacing: 0.03em;
   cursor: pointer;
   transition: opacity 0.2s;
@@ -2094,21 +2095,21 @@
 }
 
 .v2-cat-label {
-  font-family: 'Jost', sans-serif;
-  font-size: 14px;
-  font-weight: 400;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
   color: #243b32;
   text-align: center;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 /* PLACE BADGE — light soft pill on card images */
 .v2-place-badge {
   display: inline-block;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 0.35px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
   color: #243b32;
   border-radius: 18px;
@@ -2131,20 +2132,20 @@
 }
 
 .v2-adresses-title {
-  font-family: 'Libre Caslon Display', Georgia, serif;
-  font-size: 33px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 40px;
   font-weight: 400;
   color: #243b32;
   margin: 0 0 10px;
-  line-height: 1.15;
-  letter-spacing: -0.6px;
+  line-height: 1;
+  letter-spacing: -0.5px;
 }
 
 .v2-adresses-sub {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 1.6px;
+  font-weight: 500;
+  letter-spacing: 2px;
   color: #4c5a5b;
   line-height: 1.85;
   text-transform: uppercase;
@@ -2155,7 +2156,7 @@
   display: inline-flex;
   gap: 16px;
   align-items: center;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   font-weight: 400;
   color: #243b32;
@@ -2220,30 +2221,30 @@
 }
 
 .v2-section-eyebrow {
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 1.6px;
+  font-weight: 500;
+  letter-spacing: 2px;
   text-transform: uppercase;
   color: #687073;
   margin: 0 0 4px;
 }
 
 .v2-guides-title {
-  font-family: 'Libre Caslon Display', Georgia, serif;
-  font-size: 24px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px;
   font-weight: 400;
   color: #243b32;
   margin: 2px 0 0;
-  line-height: 1.1;
+  line-height: 1;
 }
 
 .v2-guides-desc {
-  font-family: 'Jost', sans-serif;
-  font-size: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
   font-weight: 400;
   color: #687073;
-  line-height: 1.6;
+  line-height: 1.5;
   margin: 10px 0;
 }
 
@@ -2295,7 +2296,7 @@
   left: 10px;
   background: rgba(248,246,239,0.9);
   color: #243b32;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.35px;
@@ -2305,19 +2306,19 @@
 }
 
 .v2-guide-mini-title {
-  font-family: 'Jost', sans-serif;
-  font-size: 15px;
-  font-weight: 400;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 500;
   color: #243b32;
   margin: 0 0 2px;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .v2-guide-mini-dest {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-family: 'Jost', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 9px;
   color: #687073;
   margin: 0;
