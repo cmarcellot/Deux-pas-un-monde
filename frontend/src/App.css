@@ -1840,7 +1840,7 @@
   align-items: center;
   gap: 10px;
 }
-.v2-nav .dpm-logo svg { width: 48px; height: 48px; }
+.v2-nav .dpm-logo svg { height: 44px; width: auto; }
 .v2-nav .dpm-logo-wordmark { text-align: left; color: white; }
 
 .v2-nav-links {
@@ -1895,8 +1895,8 @@
 /* HERO — full-bleed background photo, text left-aligned */
 .v2-hero {
   position: relative;
-  height: 68vh;
-  min-height: 480px;
+  height: 82vh;
+  min-height: 560px;
   background: var(--hero-bg-image, linear-gradient(110deg, #2c3a2e 0%, #4a3220 38%, #7a4520 60%, #c07840 100%));
   background-size: cover;
   background-position: center;
@@ -2173,8 +2173,8 @@
 
 /* Override places-grid to 4 columns in homepage */
 .v2-places-grid {
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 20px !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 16px !important;
 }
 
 .v2-map-wrapper {

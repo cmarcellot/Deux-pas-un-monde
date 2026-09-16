@@ -63,11 +63,11 @@ const EMPTY_GUIDE = {
 
 // Map backend slugs to new design labels and category keys
 const CATEGORIES = [
-  { id: 'all',           key: 'all',        label: 'Tout',       icon: Filter },
-  { id: 'accommodation', key: 'dormir',     label: 'Dormir',     icon: Bed },
-  { id: 'restaurant',    key: 'manger',     label: 'Manger',     icon: Utensils },
-  { id: 'activity',      key: 'decouvrir',  label: 'Découvrir',  icon: Compass },
-  { id: 'gem',           key: 'partir',     label: 'Partir',     icon: Gem },
+  { id: 'all',           key: 'all',        label: 'Tout',       badgeLabel: 'TOUS',                 icon: Filter },
+  { id: 'accommodation', key: 'dormir',     label: 'Dormir',     badgeLabel: 'HÉBERGEMENT INSOLITE', icon: Bed },
+  { id: 'restaurant',    key: 'manger',     label: 'Manger',     badgeLabel: 'GASTRONOMIE',          icon: Utensils },
+  { id: 'activity',      key: 'decouvrir',  label: 'Découvrir',  badgeLabel: 'NATURE',               icon: Compass },
+  { id: 'gem',           key: 'partir',     label: 'Partir',     badgeLabel: 'COUP DE CŒUR',         icon: Gem },
 ];
 
 const getCatInfo = (categoryId) => CATEGORIES.find(c => c.id === categoryId) || CATEGORIES[0];
