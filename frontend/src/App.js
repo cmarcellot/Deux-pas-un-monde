@@ -12,7 +12,7 @@ import {
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Eye, Save, Key, ZoomIn,
   BookOpen, Calendar, Globe, Wallet, Info, Plane,
-  Search, CheckCircle, Loader2, GripVertical, Heart, Camera, Sparkles
+  Search, CheckCircle, Loader2, GripVertical, Heart
 } from 'lucide-react';
 import './App.css';
 
@@ -194,15 +194,15 @@ const DpmLogo = ({ light = false }) => {
 
 // Category badge (mockup style — colored pill with label)
 const BADGE_COLORS = {
-  accommodation: '#2d5236',
-  restaurant:    '#a84832',
-  activity:      '#3d5a2d',
-  gem:           '#7a5c3a',
+  accommodation: '#f8f6ef',
+  restaurant:    '#f3d7ca',
+  activity:      '#e5e9d7',
+  gem:           '#f8f6ef',
 };
 const CategoryBadge = ({ categoryId }) => {
   const cat = getCatInfo(categoryId);
   if (!cat || cat.id === 'all') return null;
-  const bg = BADGE_COLORS[categoryId] || '#555';
+  const bg = BADGE_COLORS[categoryId] || '#f8f6ef';
   return (
     <span className="v2-place-badge" style={{ background: bg }}>
       {cat.badgeLabel || cat.label}
@@ -729,13 +729,21 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
 // ============================================================
 // HOME PAGE
 // ============================================================
+const CAT_SVG = {
+  bed: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 17V9a3 3 0 0 1 3-3h18a3 3 0 0 1 3 3v8M3 26v-8a2 2 0 0 1 2-2h22a2 2 0 0 1 2 2v8M3 23h26"/><path d="M7 16v-3a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v3m2 0v-3a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v3"/></svg>,
+  tent: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m16 4 12 24H4L16 4Zm0 0v24m0-18-7 18m7-18 7 18M2 28h28M7 20l-4 8m22-8 4 8"/><path d="m16 10-2 18h4l-2-18"/></svg>,
+  camera: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8h5l2-4h6l2 4h5a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z"/><circle cx="16" cy="17.5" r="6.1"/><path d="M7 5h3"/></svg>,
+  food: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v8a3 3 0 0 0 6 0V3M11 3v9m0 2v15M23 3c-4 4-5 10-5 15h5m0-15v26"/></svg>,
+  leaf: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M16 27C10 23 10 10 16 4c6 6 6 19 0 23Z"/><path d="M13 25C5 23 4 17 5 10c4 1 7 4 8 8m6 7c8-2 9-8 8-15-4 1-7 4-8 8"/><path d="M16 27C9 29 3 25 1 20c5-1 10 1 15 7Zm0 0c7 2 13-2 15-7-5-1-10 1-15 7Z"/></svg>,
+  pin: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M25 12c0 7-9 18-9 18S7 19 7 12a9 9 0 1 1 18 0Z"/><circle cx="16" cy="12" r="3.5"/></svg>,
+};
 const HOME_VISUAL_CATS = [
-  { id: 'accommodation', line1: 'Hébergements', line2: 'insolites', Icon: Bed },
-  { id: 'activity',      line1: 'Nature &',     line2: 'Aventure',  Icon: Compass },
-  { id: 'activity',      line1: 'Expériences',  line2: 'uniques',   Icon: Camera },
-  { id: 'restaurant',   line1: 'Gastronomie',  line2: '& Terroir', Icon: Utensils },
-  { id: 'gem',           line1: 'Bien-être',    line2: '& Spa',     Icon: Sparkles },
-  { id: 'gem',           line1: 'Week-ends',    line2: 'à deux',    Icon: MapPin },
+  { id: 'accommodation', line1: 'Hébergements', line2: 'insolites', svg: 'bed' },
+  { id: 'activity',      line1: 'Nature &',     line2: 'Aventure',  svg: 'tent' },
+  { id: 'activity',      line1: 'Expériences',  line2: 'uniques',   svg: 'camera' },
+  { id: 'restaurant',   line1: 'Gastronomie',  line2: '& Terroir', svg: 'food' },
+  { id: 'gem',           line1: 'Bien-être',    line2: '& Spa',     svg: 'leaf' },
+  { id: 'gem',           line1: 'Week-ends',    line2: 'à deux',    svg: 'pin' },
 ];
 
 const HomePage = () => {
@@ -794,11 +802,10 @@ const HomePage = () => {
         <nav className="v2-nav">
         <Link to="/" className="v2-nav-brand"><img src="/logo.png" alt="Deux Pas Un Monde" className="v2-nav-logo" /></Link>
         <div className="v2-nav-links">
-          <Link to="/"        className="v2-nav-link active">ACCUEIL</Link>
-          <a href="#adresses" className="v2-nav-link">NOS ADRESSES</a>
-          <a href="#coups"    className="v2-nav-link">NOS COUPS DE COEUR</a>
-          <Link to="/guides"  className="v2-nav-link">GUIDES VOYAGE</Link>
-          <a href="#apropos"  className="v2-nav-link">A PROPOS</a>
+          <Link to="/"        className="v2-nav-link active">Accueil</Link>
+          <a href="#adresses" className="v2-nav-link">Nos adresses</a>
+          <Link to="/guides"  className="v2-nav-link">Guides voyage</Link>
+          <a href="#apropos"  className="v2-nav-link">À propos</a>
         </div>
         <div className="v2-nav-actions">
           <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
@@ -816,7 +823,7 @@ const HomePage = () => {
         </nav>
         <div className="v2-hero-overlay" />
         <div className="v2-hero-text">
-          <p className="v2-hero-eyebrow">— DES LIEUX EXTRAORDINAIRES —</p>
+          <p className="v2-hero-eyebrow">Des lieux extraordinaires</p>
           <h1 className="v2-hero-title">Des expériences<br />qui font voyager</h1>
           <p className="v2-hero-sub">Nos bonnes adresses, nos coups de coeur et nos guides<br />pour s'évader, proche ou loin.</p>
         </div>
@@ -856,7 +863,6 @@ const HomePage = () => {
       <div className="v2-cat-strip" data-testid="header">
         <div className="v2-cat-strip-inner">
           {HOME_VISUAL_CATS.map((cat, i) => {
-            const CatIcon = cat.Icon;
             const isActive = activeCategory === cat.id;
             return (
               <React.Fragment key={i}>
@@ -865,7 +871,7 @@ const HomePage = () => {
                   className={`v2-cat-item${isActive ? ' active' : ''}`}
                   onClick={() => setActiveCategory(isActive ? 'all' : cat.id)}
                   data-testid={`category-${cat.id}`}>
-                  <div className="v2-cat-icon"><CatIcon size={20} strokeWidth={1.5} /></div>
+                  <div className="v2-cat-icon">{CAT_SVG[cat.svg]}</div>
                   <span className="v2-cat-label">{cat.line1}<br />{cat.line2}</span>
                 </button>
               </React.Fragment>
@@ -947,8 +953,9 @@ const HomePage = () => {
           <p className="v2-section-eyebrow">NOS GUIDES</p>
           <h2 className="v2-guides-title">Itin&eacute;raires &amp;<br />conseils de voyage</h2>
           <p className="v2-guides-desc">Des id&eacute;es de parcours pour d&eacute;couvrir une r&eacute;gion, le temps d'un week-end ou d'un plus long voyage.</p>
-          <Link to="/guides" className="v2-see-all" style={{ marginTop: 16, marginBottom: 32, display: 'inline-block' }}>Voir tous les guides &#8594;</Link>
-          <div className="v2-guides-grid">
+          <Link to="/guides" className="v2-see-all">Voir tous les guides <span>&#8594;</span></Link>
+        </div>
+        <div className="v2-guides-grid">
             {Array.from({ length: 3 }).map((_, i) => {
               const guide = guides[i];
               return guide ? (
@@ -958,8 +965,9 @@ const HomePage = () => {
                       ? <img src={getPhotoSrc(guide.cover_image)} alt={guide.title} />
                       : <div className="v2-guide-mini-placeholder"><BookOpen size={24} /></div>}
                     <span className="v2-guide-mini-dur">{guide.duration_days} JOUR{guide.duration_days > 1 ? 'S' : ''}</span>
+                    <span className="v2-guide-arrow">&#8594;</span>
                   </div>
-                  <p className="v2-guide-mini-title">{guide.title} &#8594;</p>
+                  <p className="v2-guide-mini-title">{guide.title}</p>
                   <p className="v2-guide-mini-dest"><MapPin size={11} />{guide.destination}</p>
                 </div>
               ) : (
@@ -969,19 +977,14 @@ const HomePage = () => {
               );
             })}
           </div>
-        </div>
       </section>
       {/* FOOTER */}
       <footer className="v2-footer">
         <div className="v2-footer-inner">
-          <p className="v2-footer-tagline">— Le monde est plus beau à deux pas —</p>
-          <Heart size={14} strokeWidth={1.5} style={{ opacity: 0.5 }} />
-          <p className="v2-footer-copy">Deux pas un monde &copy; 2026 &mdash; <a href={igUrl} target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
+          <span className="v2-footer-side" />
+          <p className="v2-footer-tagline">Le monde est plus beau à deux pas <b style={{display:'block',textAlign:'center',fontFamily:'serif',fontWeight:400,fontSize:19}}>&#9825;</b></p>
+          <span className="v2-footer-side" />
         </div>
-        <svg className="v2-footer-mountains" viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0,90 L120,40 L240,70 L400,10 L560,55 L720,25 L880,60 L1040,15 L1200,50 L1320,30 L1440,45 L1440,100 L0,100 Z" fill="rgba(255,255,255,0.05)"/>
-          <path d="M0,100 L0,75 L180,55 L360,85 L540,60 L720,80 L900,50 L1080,75 L1260,45 L1440,65 L1440,100 Z" fill="rgba(255,255,255,0.04)"/>
-        </svg>
       </footer>
 
       <Link to="/admin" className="floating-admin-btn" data-testid="admin-link">
