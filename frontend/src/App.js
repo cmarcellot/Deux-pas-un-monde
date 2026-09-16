@@ -792,7 +792,7 @@ const HomePage = () => {
       {/* HERO */}
       <div className="v2-hero">
         <nav className="v2-nav">
-        <Link to="/" className="v2-nav-brand"><DpmLogo light /></Link>
+        <Link to="/" className="v2-nav-brand"><img src="/logo.png" alt="Deux Pas Un Monde" className="v2-nav-logo" /></Link>
         <div className="v2-nav-links">
           <Link to="/"        className="v2-nav-link active">ACCUEIL</Link>
           <a href="#adresses" className="v2-nav-link">NOS ADRESSES</a>
