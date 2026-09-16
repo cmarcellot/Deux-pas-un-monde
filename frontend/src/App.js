@@ -497,7 +497,7 @@ const FitBoundsToMarkers = ({ positions }) => {
   const posKey = positions.map(p => p.join(',')).join('|');
   useEffect(() => {
     if (positions.length === 1) { map.setView(positions[0], 14); return; }
-    if (positions.length > 1) { map.fitBounds(L.latLngBounds(positions), { padding: [40, 40] }); }
+    if (positions.length > 1) { map.fitBounds(L.latLngBounds(positions), { padding: [20, 20] }); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, posKey]);
   return null;
