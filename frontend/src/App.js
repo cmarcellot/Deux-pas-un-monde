@@ -894,10 +894,13 @@ const HomePage = () => {
       </section>
       {/* FOOTER */}
       <footer className="v2-footer">
-        <div className="v2-footer-inner">
-          <span className="v2-footer-side" />
-          <p className="v2-footer-tagline">Le monde est plus beau à deux pas <b style={{display:'block',textAlign:'center',fontFamily:'serif',fontWeight:400,fontSize:19}}>&#9825;</b></p>
-          <span className="v2-footer-side" />
+        <div className="v2-footer-inner v2-footer-inner--full">
+          <div className="v2-footer-brand">
+            <img src="/logo-icone-creme.png" alt="Deux Pas Un Monde" className="v2-footer-logo" />
+            <span className="v2-footer-copy">&copy; {new Date().getFullYear()} Deux Pas Un Monde</span>
+          </div>
+          <p className="v2-footer-tagline">Le monde est plus beau à deux pas</p>
+          <Link to="/admin" className="v2-footer-admin-link">Espace admin</Link>
         </div>
       </footer>
 
@@ -3102,10 +3105,13 @@ const AdressesPage = () => {
 
       {/* FOOTER */}
       <footer className="v2-footer">
-        <div className="v2-footer-inner">
-          <span className="v2-footer-side" />
-          <p className="v2-footer-tagline">Le monde est plus beau à deux pas <b style={{display:'block',textAlign:'center',fontFamily:'serif',fontWeight:400,fontSize:19}}>&#9825;</b></p>
-          <span className="v2-footer-side" />
+        <div className="v2-footer-inner v2-footer-inner--full">
+          <div className="v2-footer-brand">
+            <img src="/logo-icone-creme.png" alt="Deux Pas Un Monde" className="v2-footer-logo" />
+            <span className="v2-footer-copy">&copy; {new Date().getFullYear()} Deux Pas Un Monde</span>
+          </div>
+          <p className="v2-footer-tagline">Le monde est plus beau à deux pas</p>
+          <Link to="/admin" className="v2-footer-admin-link">Espace admin</Link>
         </div>
       </footer>
 
