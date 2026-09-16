@@ -791,28 +791,15 @@ const HomePage = () => {
           <p className="v2-hero-sub">Nos bonnes adresses, nos coups de coeur et nos guides<br />pour s'évader, proche ou loin.</p>
         </div>
         <div className="v2-searchbar-wrap">
-          <div className="v2-searchbar" onClick={() => setSearchOpen(true)} role="button" tabIndex={0}
-            onKeyDown={e => e.key === 'Enter' && setSearchOpen(true)}>
-            <div className="v2-searchbar-field">
-              <MapPin size={15} strokeWidth={1.5} />
-              <span>Où souhaitez-vous partir ?</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13" style={{marginLeft:'auto',flexShrink:0}}><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-            <div className="v2-searchbar-sep" />
-            <div className="v2-searchbar-field v2-searchbar-field--sm">
-              <Calendar size={15} strokeWidth={1.5} />
-              <span>Quand ?</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13" style={{marginLeft:'auto',flexShrink:0}}><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-            <div className="v2-searchbar-sep" />
-            <div className="v2-searchbar-field v2-searchbar-field--sm">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="15" height="15" style={{flexShrink:0}}>
-                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-              </svg>
-              <span>2 voyageurs</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13" style={{marginLeft:'auto',flexShrink:0}}><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-            <button className="v2-searchbar-btn" onClick={e => { e.stopPropagation(); setSearchOpen(true); }}>
+          <div className="v2-searchbar v2-searchbar--simple">
+            <Search size={16} strokeWidth={1.5} style={{ color: 'rgba(255,255,255,0.6)', flexShrink: 0 }} />
+            <input
+              className="v2-searchbar-text"
+              placeholder="Rechercher une destination, un lieu..."
+              onFocus={() => setSearchOpen(true)}
+              readOnly
+            />
+            <button className="v2-searchbar-btn" onClick={() => setSearchOpen(true)}>
               <Search size={15} />
               Rechercher
             </button>

@@ -1966,57 +1966,41 @@
 .v2-searchbar-wrap {
   position: absolute;
   bottom: 24px;
-  left: 15%;
-  width: 66%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56%;
   z-index: 20;
 }
 
 .v2-searchbar {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr 1.05fr 0.88fr;
+  display: flex;
   align-items: center;
+  gap: 10px;
   background: rgba(248,246,237,0.97);
   color: #243b32;
   border-radius: 40px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
   min-height: 59px;
-  padding: 8px;
-  cursor: pointer;
+  padding: 8px 8px 8px 22px;
   overflow: hidden;
   transition: box-shadow 0.25s;
   width: 100%;
 }
+.v2-searchbar--simple { cursor: default; }
 .v2-searchbar:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.18); }
 
-.v2-searchbar-field {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 20px;
-  border-right: 1px solid #ddd7c9;
-  min-width: 0;
-}
-.v2-searchbar-field--sm { }
-.v2-searchbar-field:nth-child(3) { border: 0; }
-.v2-searchbar-field svg:first-child { color: #465456; flex-shrink: 0; }
-.v2-searchbar-field > span {
+.v2-searchbar-text {
   flex: 1;
+  border: none;
+  background: none;
   font-family: 'Jost', sans-serif;
   font-size: 15px;
   font-weight: 400;
   color: #465456;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  outline: none;
+  cursor: pointer;
 }
-.v2-searchbar-chevron {
-  width: 16px; height: 16px; flex: 0 0 16px; align-self: center;
-  stroke-width: 1.75; color: #465456; margin-left: auto;
-}
-
-.v2-searchbar-sep {
-  display: none;
-}
+.v2-searchbar-text::placeholder { color: #8a9a95; }
 
 .v2-searchbar-btn {
   display: flex;
