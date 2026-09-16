@@ -2071,6 +2071,7 @@
   line-height: 1.4;
   color: #243b32;
   transition: color 0.2s;
+  text-decoration: none;
 }
 .v2-cat-item + .v2-cat-item::before {
   content: '';
@@ -2432,4 +2433,97 @@
   .v2-guides-section { grid-template-columns: 35% 65%; }
   .v2-guides-grid { grid-template-columns: 1fr; }
   .v2-guide-mini-img { height: 115px; }
+}
+
+/* ============================================================
+   PAGE NOS ADRESSES
+   ============================================================ */
+.adresses-hero {
+  position: relative;
+  height: 250px;
+  background: url('./hero.png') center 30% / cover no-repeat,
+    linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
+  color: #f7f5ef;
+  overflow: hidden;
+}
+.adresses-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(5,18,13,0.42);
+  pointer-events: none;
+}
+.adresses-hero .v2-nav { background: rgba(0,0,0,0.28); }
+.adresses-hero-content {
+  position: relative;
+  z-index: 1;
+  margin-left: 8.3%;
+  padding-top: 108px;
+}
+.adresses-eyebrow { color: rgba(255,255,255,0.65) !important; }
+.adresses-hero-title {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 46px;
+  font-weight: 500;
+  color: white;
+  margin: 5px 0 0;
+  line-height: 1.05;
+}
+.adresses-hero-count {
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.55);
+  margin: 8px 0 0;
+  letter-spacing: 0.04em;
+}
+
+.adresses-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 6.3%;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 8;
+}
+.adresses-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 360px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: white;
+  transition: border-color 0.15s;
+}
+.adresses-search-wrap:focus-within { border-color: var(--dark); }
+.adresses-search-input {
+  border: none;
+  background: none;
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  width: 100%;
+}
+.adresses-view-toggles {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+.adresses-places {
+  padding: 32px 6.3% 56px;
+}
+
+@media (max-width: 640px) {
+  .adresses-hero { height: 210px; }
+  .adresses-hero-content { padding-top: 90px; }
+  .adresses-hero-title { font-size: 32px; }
+  .adresses-toolbar { padding: 12px 5%; }
+  .adresses-places { padding: 20px 5% 40px; }
 }

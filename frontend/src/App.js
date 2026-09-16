@@ -722,17 +722,12 @@ const HOME_VISUAL_CATS = [
 const HomePage = () => {
   const [places, setPlaces] = useState([]);
   const [guides, setGuides] = useState([]);
-  const [activeCategory, setActiveCategory] = useState('all');
   const [selectedPlace, setSelectedPlace] = useState(null);
-  const [mapCenter, setMapCenter] = useState([46.603354, 1.888334]);
   const [loading, setLoading] = useState(true);
-  const location = window.location;
-  const [viewMode, setViewMode] = useState(new URLSearchParams(location.search).get('view') || 'grid');
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchPlaces(); }, [activeCategory]);
+  useEffect(() => { fetchPlaces(); }, []);
   useEffect(() => { fetchGuides(); }, []);
 
   useEffect(() => {
@@ -745,13 +740,9 @@ const HomePage = () => {
 
   const fetchPlaces = async () => {
     try {
-      const url = activeCategory === 'all'
-        ? `${API_URL}/api/places`
-        : `${API_URL}/api/places?category=${activeCategory}`;
-      const res = await fetch(url);
+      const res = await fetch(`${API_URL}/api/places`);
       const data = await res.json();
       setPlaces(data);
-      if (data.length > 0) setMapCenter([data[0].latitude, data[0].longitude]);
     } catch { toast.error('Erreur lors du chargement des lieux'); }
     finally { setLoading(false); }
   };
@@ -764,7 +755,6 @@ const HomePage = () => {
     } catch {}
   };
 
-  const filtered = places;
   const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
 
   return (
@@ -775,10 +765,10 @@ const HomePage = () => {
         <nav className="v2-nav">
         <Link to="/" className="v2-nav-brand"><img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" /></Link>
         <div className="v2-nav-links">
-          <Link to="/"        className="v2-nav-link active">Accueil</Link>
-          <a href="#adresses" className="v2-nav-link">Nos adresses</a>
-          <Link to="/guides"  className="v2-nav-link">Guides voyage</Link>
-          <a href="#apropos"  className="v2-nav-link">À propos</a>
+          <Link to="/"          className="v2-nav-link active">Accueil</Link>
+          <Link to="/adresses" className="v2-nav-link">Nos adresses</Link>
+          <Link to="/guides"   className="v2-nav-link">Guides voyage</Link>
+          <a href="#apropos"   className="v2-nav-link">À propos</a>
         </div>
         <div className="v2-nav-actions">
           <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
@@ -835,83 +825,36 @@ const HomePage = () => {
       {/* CATEGORY STRIP */}
       <div className="v2-cat-strip" data-testid="header">
         <div className="v2-cat-strip-inner">
-          {HOME_VISUAL_CATS.map((cat, i) => {
-            const isActive = activeCategory === cat.id;
-            return (
-              <React.Fragment key={i}>
-                {i > 0 && <div className="v2-cat-sep" />}
-                <button
-                  className={`v2-cat-item${isActive ? ' active' : ''}`}
-                  onClick={() => setActiveCategory(isActive ? 'all' : cat.id)}
-                  data-testid={`category-${cat.id}`}>
-                  <div className="v2-cat-icon">{CAT_SVG[cat.svg]}</div>
-                  <span className="v2-cat-label">{cat.line1}<br />{cat.line2}</span>
-                </button>
-              </React.Fragment>
-            );
-          })}
+          {HOME_VISUAL_CATS.map((cat, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <div className="v2-cat-sep" />}
+              <Link to={`/adresses?category=${cat.id}`} className="v2-cat-item" data-testid={`category-${cat.id}`}>
+                <div className="v2-cat-icon">{CAT_SVG[cat.svg]}</div>
+                <span className="v2-cat-label">{cat.line1}<br />{cat.line2}</span>
+              </Link>
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
-      {/* NOS BONNES ADRESSES */}
+      {/* NOS BONNES ADRESSES — preview 4 cartes */}
       <section className="v2-adresses-section" id="adresses">
         <div className="v2-adresses-left">
           <h2 className="v2-adresses-title">Nos bonnes adresses</h2>
-          <p className="v2-adresses-sub">DES LIEUX AUTHENTIQUES, DES HÉBERGEMENTS INSOLITES, DES RESTOS SAVOUREUX, DES EXPÉRIENCES INOUBLIABLES...</p>
-          <a href="#adresses" className="v2-see-all" onClick={e => e.preventDefault()}>Voir toutes les adresses &#8594;</a>
-          <div className="view-toggles" style={{ marginTop: 20 }}>
-            {[
-              ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
-              ['list', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>],
-              ['map',  <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>],
-            ].map(([mode, icon]) => (
-              <button key={mode} className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
-                onClick={() => setViewMode(mode)} data-testid={`view-${mode}-btn`}>{icon}</button>
-            ))}
-          </div>
+          <p className="v2-adresses-sub">Des lieux authentiques, des hébergements insolites, des restos savoureux, des expériences inoubliables...</p>
+          <Link to="/adresses" className="v2-see-all">Voir toutes les adresses &#8594;</Link>
         </div>
         <div className="v2-adresses-right">
-          {viewMode === 'grid' ? (
-            <div className="places-grid v2-places-grid" data-testid="places-grid">
-              {loading ? <div className="loading">Chargement...</div>
-                : filtered.length === 0 ? (
-                  <div className="empty-state" data-testid="empty-state">
-                    <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
-                  </div>
-                ) : filtered.map(place => (
-                  <PlaceCard key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
-                ))}
-            </div>
-          ) : viewMode === 'list' ? (
-            <div data-testid="places-list">
-              {loading ? <div className="loading">Chargement...</div>
-                : filtered.length === 0 ? (
-                  <div className="empty-state" data-testid="empty-state">
-                    <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
-                  </div>
-                ) : filtered.map(place => (
-                  <PlaceListRow key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
-                ))}
-            </div>
-          ) : (
-            <div className="map-wrapper v2-map-wrapper" data-testid="map-wrapper">
-              <MapContainer center={mapCenter} zoom={6} style={{ height: '100%', width: '100%' }}>
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
-                <MapRecenter center={mapCenter} />
-                <FitBoundsToMarkers positions={filtered.map(p => [p.latitude, p.longitude])} />
-                {filtered.map(place => (
-                  <Marker key={place.id} position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)}
-                    eventHandlers={{ click: () => setSelectedPlace(place) }}>
-                    <Popup>
-                      <div className="map-popup" onClick={() => setSelectedPlace(place)}>
-                        <h4>{place.title}</h4><p>{place.address}</p><StarRating rating={place.rating} readonly />
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
-              </MapContainer>
-            </div>
-          )}
+          <div className="places-grid v2-places-grid" data-testid="places-grid">
+            {loading ? <div className="loading">Chargement...</div>
+              : places.length === 0 ? (
+                <div className="empty-state" data-testid="empty-state">
+                  <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
+                </div>
+              ) : places.slice(0, 4).map(place => (
+                <PlaceCard key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
+              ))}
+          </div>
         </div>
       </section>
 
@@ -2980,12 +2923,208 @@ const AdminPage = () => {
   );
 };
 
+// ============================================================
+// ADRESSES PAGE
+// ============================================================
+const AdressesPage = () => {
+  const [places, setPlaces] = useState([]);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [viewMode, setViewMode] = useState('grid');
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [mapCenter, setMapCenter] = useState([46.603354, 1.888334]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const navigate = useNavigate();
+  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
+
+  // Lire la catégorie depuis l'URL (?category=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get('category');
+    if (cat) setActiveCategory(cat);
+  }, []);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchPlaces(); }, [activeCategory]);
+
+  const fetchPlaces = async () => {
+    setLoading(true);
+    try {
+      const url = activeCategory === 'all'
+        ? `${API_URL}/api/places`
+        : `${API_URL}/api/places?category=${activeCategory}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      setPlaces(data);
+      if (data.length > 0) setMapCenter([data[0].latitude, data[0].longitude]);
+    } catch { toast.error('Erreur lors du chargement des lieux'); }
+    finally { setLoading(false); }
+  };
+
+  const filtered = searchQuery
+    ? places.filter(p =>
+        p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.country?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : places;
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+
+      {/* HERO COMPACT */}
+      <div className="adresses-hero">
+        <nav className="v2-nav">
+          <Link to="/" className="v2-nav-brand">
+            <img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" />
+          </Link>
+          <div className="v2-nav-links">
+            <Link to="/"          className="v2-nav-link">Accueil</Link>
+            <Link to="/adresses"  className="v2-nav-link active">Nos adresses</Link>
+            <Link to="/guides"    className="v2-nav-link">Guides voyage</Link>
+            <a href="#apropos"    className="v2-nav-link">À propos</a>
+          </div>
+          <div className="v2-nav-actions">
+            <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
+            <button className="v2-nav-icon-btn" aria-label="Compte">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </button>
+            <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-icon-btn" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+            </a>
+          </div>
+        </nav>
+        <div className="adresses-hero-content">
+          <p className="v2-section-eyebrow adresses-eyebrow">NOS BONNES ADRESSES</p>
+          <h1 className="adresses-hero-title">Toutes nos adresses</h1>
+          {!loading && <p className="adresses-hero-count">{filtered.length} adresse{filtered.length > 1 ? 's' : ''}</p>}
+        </div>
+      </div>
+
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} places={places} onSelectPlace={setSelectedPlace} />
+
+      {/* BANDE CATÉGORIES */}
+      <div className="v2-cat-strip">
+        <div className="v2-cat-strip-inner">
+          {[{ id: 'all', line1: 'Tout', line2: 'voir', svg: 'pin' }, ...HOME_VISUAL_CATS].map((cat, i) => {
+            const isActive = activeCategory === cat.id;
+            return (
+              <React.Fragment key={i}>
+                {i > 0 && <div className="v2-cat-sep" />}
+                <button
+                  className={`v2-cat-item${isActive ? ' active' : ''}`}
+                  onClick={() => setActiveCategory(isActive && cat.id !== 'all' ? 'all' : cat.id)}>
+                  <div className="v2-cat-icon">{CAT_SVG[cat.svg]}</div>
+                  <span className="v2-cat-label">{cat.line1}<br />{cat.line2}</span>
+                </button>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* BARRE OUTILS */}
+      <div className="adresses-toolbar">
+        <div className="adresses-search-wrap">
+          <Search size={14} strokeWidth={1.5} style={{ color: 'var(--text-light)', flexShrink: 0 }} />
+          <input
+            className="adresses-search-input"
+            placeholder="Rechercher une adresse, une ville..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-light)', display: 'flex' }}>
+              <X size={14} />
+            </button>
+          )}
+        </div>
+        <div className="adresses-view-toggles">
+          {[
+            ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
+            ['list', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>],
+            ['map',  <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>],
+          ].map(([mode, icon]) => (
+            <button key={mode} className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
+              onClick={() => setViewMode(mode)}>{icon}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* LISTE DES ADRESSES */}
+      <div className="adresses-places">
+        {viewMode === 'grid' ? (
+          <div className="places-grid v2-places-grid">
+            {loading ? <div className="loading">Chargement...</div>
+              : filtered.length === 0 ? (
+                <div className="empty-state">
+                  <MapPin size={40} /><h3>Aucune adresse trouvée</h3><p>Essayez une autre recherche ou catégorie.</p>
+                </div>
+              ) : filtered.map(place => (
+                <PlaceCard key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
+              ))}
+          </div>
+        ) : viewMode === 'list' ? (
+          <div>
+            {loading ? <div className="loading">Chargement...</div>
+              : filtered.length === 0 ? (
+                <div className="empty-state">
+                  <MapPin size={40} /><h3>Aucune adresse trouvée</h3>
+                </div>
+              ) : filtered.map(place => (
+                <PlaceListRow key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
+              ))}
+          </div>
+        ) : (
+          <div className="map-wrapper" style={{ height: 520, borderRadius: 16, overflow: 'hidden' }}>
+            <MapContainer center={mapCenter} zoom={6} style={{ height: '100%', width: '100%' }}>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
+              <MapRecenter center={mapCenter} />
+              <FitBoundsToMarkers positions={filtered.filter(p => p.latitude && p.longitude).map(p => [p.latitude, p.longitude])} />
+              {filtered.filter(p => p.latitude && p.longitude).map(place => (
+                <Marker key={place.id} position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)}
+                  eventHandlers={{ click: () => setSelectedPlace(place) }}>
+                  <Popup>
+                    <div className="map-popup" onClick={() => setSelectedPlace(place)}>
+                      <h4>{place.title}</h4><p>{place.address}</p><StarRating rating={place.rating} readonly />
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          </div>
+        )}
+      </div>
+
+      {/* FOOTER */}
+      <footer className="v2-footer">
+        <div className="v2-footer-inner">
+          <span className="v2-footer-side" />
+          <p className="v2-footer-tagline">Le monde est plus beau à deux pas <b style={{display:'block',textAlign:'center',fontFamily:'serif',fontWeight:400,fontSize:19}}>&#9825;</b></p>
+          <span className="v2-footer-side" />
+        </div>
+      </footer>
+
+      {selectedPlace && (
+        <PlaceModal place={selectedPlace} onClose={() => setSelectedPlace(null)}
+          onNavigate={() => { navigate(`/place/${selectedPlace.id}`); setSelectedPlace(null); }} />
+      )}
+    </div>
+  );
+};
+
 function App() {
   return (
     <Router>
       <Toaster position="top-right" richColors theme="dark" />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/adresses" element={<AdressesPage />} />
         <Route path="/place/:id" element={<PlaceDetailPage />} />
         <Route path="/guides" element={<GuidesPage />} />
         <Route path="/guides/:id" element={<GuideDetailPage />} />
