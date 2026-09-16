@@ -899,7 +899,6 @@ const HomePage = () => {
             <img src="/logo-icone-creme.png" alt="Deux Pas Un Monde" className="v2-footer-logo" />
             <span className="v2-footer-copy">&copy; {new Date().getFullYear()} Deux Pas Un Monde</span>
           </div>
-          <p className="v2-footer-tagline">Le monde est plus beau à deux pas</p>
           <Link to="/admin" className="v2-footer-admin-link">Espace admin</Link>
         </div>
       </footer>
@@ -3110,7 +3109,6 @@ const AdressesPage = () => {
             <img src="/logo-icone-creme.png" alt="Deux Pas Un Monde" className="v2-footer-logo" />
             <span className="v2-footer-copy">&copy; {new Date().getFullYear()} Deux Pas Un Monde</span>
           </div>
-          <p className="v2-footer-tagline">Le monde est plus beau à deux pas</p>
           <Link to="/admin" className="v2-footer-admin-link">Espace admin</Link>
         </div>
       </footer>
