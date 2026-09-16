@@ -12,7 +12,7 @@ import {
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Eye, Save, Key, ZoomIn,
   BookOpen, Calendar, Globe, Wallet, Info, Plane,
-  Search, CheckCircle, Loader2, GripVertical, Heart
+  Search, CheckCircle, Loader2, GripVertical, Heart, Camera, Sparkles
 } from 'lucide-react';
 import './App.css';
 
@@ -199,15 +199,20 @@ const DpmLogo = ({ light = false }) => {
   );
 };
 
-// Category badge (light theme)
-const CategoryBadge = ({ categoryId, small = false }) => {
+// Category badge (mockup style — colored pill with label)
+const BADGE_COLORS = {
+  accommodation: '#2d5236',
+  restaurant:    '#a84832',
+  activity:      '#3d5a2d',
+  gem:           '#7a5c3a',
+};
+const CategoryBadge = ({ categoryId }) => {
   const cat = getCatInfo(categoryId);
-  const icon = CAT_ICONS[categoryId];
-  if (!icon) return null;
+  if (!cat || cat.id === 'all') return null;
+  const bg = BADGE_COLORS[categoryId] || '#555';
   return (
-    <span className={`cat-badge ${cat.key}${small ? ' small' : ''}`}>
-      <span className="cat-badge-icon" dangerouslySetInnerHTML={{ __html: icon }}/>
-      {cat.label}
+    <span className="v2-place-badge" style={{ background: bg }}>
+      {cat.badgeLabel || cat.label}
     </span>
   );
 };
@@ -734,9 +739,9 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
 const HOME_VISUAL_CATS = [
   { id: 'accommodation', line1: 'Hébergements', line2: 'insolites', Icon: Bed },
   { id: 'activity',      line1: 'Nature &',     line2: 'Aventure',  Icon: Compass },
-  { id: 'activity',      line1: 'Expériences',  line2: 'uniques',   Icon: Eye },
+  { id: 'activity',      line1: 'Expériences',  line2: 'uniques',   Icon: Camera },
   { id: 'restaurant',   line1: 'Gastronomie',  line2: '& Terroir', Icon: Utensils },
-  { id: 'gem',           line1: 'Bien-être',    line2: '& Spa',     Icon: Heart },
+  { id: 'gem',           line1: 'Bien-être',    line2: '& Spa',     Icon: Sparkles },
   { id: 'gem',           line1: 'Week-ends',    line2: 'à deux',    Icon: MapPin },
 ];
 
@@ -794,7 +799,7 @@ const HomePage = () => {
       {/* HERO */}
       <div className="v2-hero">
         <nav className="v2-nav">
-        <Link to="/" className="v2-nav-brand"><DpmLogo /></Link>
+        <Link to="/" className="v2-nav-brand"><DpmLogo light /></Link>
         <div className="v2-nav-links">
           <Link to="/"        className="v2-nav-link active">ACCUEIL</Link>
           <a href="#adresses" className="v2-nav-link">NOS ADRESSES</a>
