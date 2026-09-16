@@ -3111,8 +3111,7 @@ const AdressesPage = () => {
       </footer>
 
       {selectedPlace && (
-        <PlaceModal place={selectedPlace} onClose={() => setSelectedPlace(null)}
-          onNavigate={() => { navigate(`/place/${selectedPlace.id}`); setSelectedPlace(null); }} />
+        <PlaceDetailModal place={selectedPlace} onClose={() => setSelectedPlace(null)} />
       )}
     </div>
   );
