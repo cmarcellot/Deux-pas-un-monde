@@ -731,6 +731,15 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
 // ============================================================
 // HOME PAGE
 // ============================================================
+const HOME_VISUAL_CATS = [
+  { id: 'accommodation', line1: 'Hébergements', line2: 'insolites', Icon: Bed },
+  { id: 'activity',      line1: 'Nature &',     line2: 'Aventure',  Icon: Compass },
+  { id: 'activity',      line1: 'Expériences',  line2: 'uniques',   Icon: Eye },
+  { id: 'restaurant',   line1: 'Gastronomie',  line2: '& Terroir', Icon: Utensils },
+  { id: 'gem',           line1: 'Bien-être',    line2: '& Spa',     Icon: Heart },
+  { id: 'gem',           line1: 'Week-ends',    line2: 'à deux',    Icon: MapPin },
+];
+
 const HomePage = () => {
   const [places, setPlaces] = useState([]);
   const [guides, setGuides] = useState([]);
@@ -757,7 +766,9 @@ const HomePage = () => {
 
   const fetchPlaces = async () => {
     try {
-      const url = activeCategory === 'all' ? `${API_URL}/api/places` : `${API_URL}/api/places?category=${activeCategory}`;
+      const url = activeCategory === 'all'
+        ? `${API_URL}/api/places`
+        : `${API_URL}/api/places?category=${activeCategory}`;
       const res = await fetch(url);
       const data = await res.json();
       setPlaces(data);
@@ -775,89 +786,122 @@ const HomePage = () => {
   };
 
   const filtered = places;
-
   const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      {/* ── HERO ── */}
-      <div className="v2-hero">
-        <nav className="v2-nav">
-          <Link to="/"><DpmLogo /></Link>
-          <div className="v2-nav-links">
-            <Link to="/" className="v2-nav-link">Accueil</Link>
-            <a href="#adresses" className="v2-nav-link">Nos Adresses</a>
-            <Link to="/guides" className="v2-nav-link">Guides Voyage</Link>
-          </div>
-          <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-ig">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-            @deuxpas_unmonde
-          </a>
-        </nav>
 
-        <div className="v2-hero-content">
-          <p className="v2-hero-eyebrow">DES LIEUX EXTRAORDINAIRES</p>
-          <h1 className="v2-hero-title">Des expériences<br/>qui font voyager</h1>
-          <p className="v2-hero-sub">Nos bonnes adresses, nos coups de coeur et nos guides<br/>pour s'évader, proche ou loin.</p>
-          <div className="v2-hero-search" onClick={() => setSearchOpen(true)} role="button" tabIndex={0}
+      {/* NAVBAR */}
+      <nav className="v2-nav">
+        <Link to="/" className="v2-nav-brand"><DpmLogo /></Link>
+        <div className="v2-nav-links">
+          <Link to="/"        className="v2-nav-link active">ACCUEIL</Link>
+          <a href="#adresses" className="v2-nav-link">NOS ADRESSES</a>
+          <a href="#coups"    className="v2-nav-link">NOS COUPS DE COEUR</a>
+          <Link to="/guides"  className="v2-nav-link">GUIDES VOYAGE</Link>
+          <a href="#apropos"  className="v2-nav-link">A PROPOS</a>
+        </div>
+        <div className="v2-nav-actions">
+          <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
+          <button className="v2-nav-icon-btn" aria-label="Compte">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
+              <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+          </button>
+          <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-icon-btn" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+          </a>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <div className="v2-hero">
+        <div className="v2-hero-overlay" />
+        <div className="v2-hero-text">
+          <p className="v2-hero-eyebrow">— DES LIEUX EXTRAORDINAIRES —</p>
+          <h1 className="v2-hero-title">Des expériences<br />qui font voyager</h1>
+          <p className="v2-hero-sub">Nos bonnes adresses, nos coups de coeur et nos guides<br />pour s'évader, proche ou loin.</p>
+        </div>
+        <div className="v2-searchbar-wrap">
+          <div className="v2-searchbar" onClick={() => setSearchOpen(true)} role="button" tabIndex={0}
             onKeyDown={e => e.key === 'Enter' && setSearchOpen(true)}>
-            <Search size={18} style={{ color: '#888', flexShrink: 0 }} />
-            <span>Rechercher adresses, guides, villes...</span>
-            <span className="v2-search-kbd">&#8984;K</span>
+            <div className="v2-searchbar-field">
+              <MapPin size={15} strokeWidth={1.5} />
+              <span>Où souhaitez-vous partir ?</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13" style={{marginLeft:'auto',flexShrink:0}}><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div className="v2-searchbar-sep" />
+            <div className="v2-searchbar-field v2-searchbar-field--sm">
+              <Calendar size={15} strokeWidth={1.5} />
+              <span>Quand ?</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13" style={{marginLeft:'auto',flexShrink:0}}><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div className="v2-searchbar-sep" />
+            <div className="v2-searchbar-field v2-searchbar-field--sm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="15" height="15" style={{flexShrink:0}}>
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+              <span>2 voyageurs</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13" style={{marginLeft:'auto',flexShrink:0}}><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <button className="v2-searchbar-btn" onClick={e => { e.stopPropagation(); setSearchOpen(true); }}>
+              <Search size={15} />
+              Rechercher
+            </button>
           </div>
         </div>
       </div>
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} places={places} onSelectPlace={setSelectedPlace} />
 
-      {/* ── CATEGORY STRIP ── */}
+      {/* CATEGORY STRIP */}
       <div className="v2-cat-strip" data-testid="header">
         <div className="v2-cat-strip-inner">
-          {CATEGORIES.filter(c => c.id !== 'all').map(cat => {
-            const CatIcon = cat.icon;
+          {HOME_VISUAL_CATS.map((cat, i) => {
+            const CatIcon = cat.Icon;
+            const isActive = activeCategory === cat.id;
             return (
-              <button key={cat.id}
-                className={`v2-cat-item${activeCategory === cat.id ? ' active' : ''}`}
-                onClick={() => setActiveCategory(activeCategory === cat.id ? 'all' : cat.id)}
-                data-testid={`category-${cat.id}`}>
-                <div className="v2-cat-icon"><CatIcon size={22} /></div>
-                <span>{cat.label}</span>
-              </button>
+              <React.Fragment key={i}>
+                {i > 0 && <div className="v2-cat-sep" />}
+                <button
+                  className={`v2-cat-item${isActive ? ' active' : ''}`}
+                  onClick={() => setActiveCategory(isActive ? 'all' : cat.id)}
+                  data-testid={`category-${cat.id}`}>
+                  <div className="v2-cat-icon"><CatIcon size={20} strokeWidth={1.5} /></div>
+                  <span className="v2-cat-label">{cat.line1}<br />{cat.line2}</span>
+                </button>
+              </React.Fragment>
             );
           })}
         </div>
       </div>
 
-      {/* ── NOS BONNES ADRESSES ── */}
-      <section className="v2-section" id="adresses">
-        <div className="v2-section-inner">
-          <div className="v2-section-intro">
-            <div>
-              <p className="v2-section-eyebrow">NOS BONNES ADRESSES</p>
-              <h2 className="v2-section-title">Nos bonnes adresses</h2>
-              <p className="v2-section-desc">Des lieux authentiques, des hebergements insolites,<br/>des restos savoureux, des experiences inoubliables...</p>
-            </div>
-            <div className="v2-section-controls">
-              <p className="results-count">{filtered.length} adresse{filtered.length > 1 ? 's' : ''}</p>
-              <div className="view-toggles">
-                {[
-                  ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
-                  ['list', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>],
-                  ['map',  <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>],
-                ].map(([mode, icon]) => (
-                  <button key={mode} className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
-                    onClick={() => setViewMode(mode)} data-testid={`view-${mode}-btn`}>{icon}</button>
-                ))}
-              </div>
-            </div>
+      {/* NOS BONNES ADRESSES */}
+      <section className="v2-adresses-section" id="adresses">
+        <div className="v2-adresses-left">
+          <h2 className="v2-adresses-title">Nos bonnes adresses</h2>
+          <p className="v2-adresses-sub">DES LIEUX AUTHENTIQUES, DES HÉBERGEMENTS INSOLITES, DES RESTOS SAVOUREUX, DES EXPÉRIENCES INOUBLIABLES...</p>
+          <a href="#adresses" className="v2-see-all" onClick={e => e.preventDefault()}>Voir toutes les adresses &#8594;</a>
+          <div className="view-toggles" style={{ marginTop: 20 }}>
+            {[
+              ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
+              ['list', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>],
+              ['map',  <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>],
+            ].map(([mode, icon]) => (
+              <button key={mode} className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
+                onClick={() => setViewMode(mode)} data-testid={`view-${mode}-btn`}>{icon}</button>
+            ))}
           </div>
-
+        </div>
+        <div className="v2-adresses-right">
           {viewMode === 'grid' ? (
-            <div className="places-grid" data-testid="places-grid">
+            <div className="places-grid v2-places-grid" data-testid="places-grid">
               {loading ? <div className="loading">Chargement...</div>
                 : filtered.length === 0 ? (
                   <div className="empty-state" data-testid="empty-state">
-                    <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientot !</p>
+                    <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
                   </div>
                 ) : filtered.map(place => (
                   <PlaceCard key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
@@ -868,7 +912,7 @@ const HomePage = () => {
               {loading ? <div className="loading">Chargement...</div>
                 : filtered.length === 0 ? (
                   <div className="empty-state" data-testid="empty-state">
-                    <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientot !</p>
+                    <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
                   </div>
                 ) : filtered.map(place => (
                   <PlaceListRow key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
@@ -896,7 +940,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ── NOS GUIDES ── */}
+      {/* NOS GUIDES */}
       {guides.length > 0 && (
         <section className="v2-guides-section">
           <div className="v2-guides-img">
@@ -906,9 +950,9 @@ const HomePage = () => {
           </div>
           <div className="v2-guides-body">
             <p className="v2-section-eyebrow">NOS GUIDES</p>
-            <h2 className="v2-section-title">Itineraires &amp; conseils de voyage</h2>
-            <p className="v2-section-desc">Des idees de parcours pour decouvrir une region, le temps d'un week-end ou d'un plus long voyage.</p>
-            <Link to="/guides" className="v2-see-all">Voir tous les guides</Link>
+            <h2 className="v2-guides-title">Itinéraires &amp;<br />conseils de voyage</h2>
+            <p className="v2-guides-desc">Des idées de parcours pour découvrir une région, le temps d'un week-end ou d'un plus long voyage.</p>
+            <Link to="/guides" className="v2-see-all" style={{ marginTop: 16, marginBottom: 32, display: 'inline-block' }}>Voir tous les guides &#8594;</Link>
             <div className="v2-guides-grid">
               {guides.map(guide => (
                 <div key={guide.id} className="v2-guide-mini" onClick={() => navigate(`/guides/${guide.id}`)}>
@@ -916,9 +960,9 @@ const HomePage = () => {
                     {guide.cover_image
                       ? <img src={getPhotoSrc(guide.cover_image)} alt={guide.title} />
                       : <div className="v2-guide-mini-placeholder"><BookOpen size={24} /></div>}
-                    <span className="v2-guide-mini-dur">{guide.duration_days}J</span>
+                    <span className="v2-guide-mini-dur">{guide.duration_days} JOUR{guide.duration_days > 1 ? 'S' : ''}</span>
                   </div>
-                  <p className="v2-guide-mini-title">{guide.title}</p>
+                  <p className="v2-guide-mini-title">{guide.title} &#8594;</p>
                   <p className="v2-guide-mini-dest"><MapPin size={11} />{guide.destination}</p>
                 </div>
               ))}
@@ -927,11 +971,17 @@ const HomePage = () => {
         </section>
       )}
 
-      {/* ── FOOTER ── */}
+      {/* FOOTER */}
       <footer className="v2-footer">
-        <Heart size={14} />
-        <p>Le monde est plus beau a deux pas</p>
-        <p className="v2-footer-sub">Deux pas un monde &copy; 2026 &mdash; <a href={igUrl} target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
+        <div className="v2-footer-inner">
+          <p className="v2-footer-tagline">— Le monde est plus beau à deux pas —</p>
+          <Heart size={14} strokeWidth={1.5} style={{ opacity: 0.5 }} />
+          <p className="v2-footer-copy">Deux pas un monde &copy; 2026 &mdash; <a href={igUrl} target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
+        </div>
+        <svg className="v2-footer-mountains" viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,90 L120,40 L240,70 L400,10 L560,55 L720,25 L880,60 L1040,15 L1200,50 L1320,30 L1440,45 L1440,100 L0,100 Z" fill="rgba(255,255,255,0.05)"/>
+          <path d="M0,100 L0,75 L180,55 L360,85 L540,60 L720,80 L900,50 L1080,75 L1260,45 L1440,65 L1440,100 Z" fill="rgba(255,255,255,0.04)"/>
+        </svg>
       </footer>
 
       <Link to="/admin" className="floating-admin-btn" data-testid="admin-link">
