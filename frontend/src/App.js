@@ -1314,7 +1314,7 @@ const GlobeView = ({ guides, navigate }) => {
             >
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: g.markerColor, flexShrink: 0 }} />
               <div>
-                <div style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontSize: 15, fontWeight: 600, color: 'var(--text)', lineHeight: 1.1 }}>{g.title}</div>
+                <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 15, fontWeight: 600, color: 'var(--text)', lineHeight: 1.1 }}>{g.title}</div>
                 <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: 'var(--text-muted)' }}>{g.destination}</div>
               </div>
             </div>
@@ -1576,7 +1576,7 @@ const GuideDetailPage = () => {
             <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
               Guide voyage — {guide.destination}, {guide.country}
             </p>
-            <h1 style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontWeight: 600, fontSize: 42, color: '#fff', margin: 0, lineHeight: 1.1, textShadow: '0 2px 16px rgba(0,0,0,0.35)' }}>
+            <h1 style={{ fontFamily: "'EB Garamond', Georgia, serif", fontWeight: 600, fontSize: 42, color: '#fff', margin: 0, lineHeight: 1.1, textShadow: '0 2px 16px rgba(0,0,0,0.35)' }}>
               {guide.title}
             </h1>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
@@ -1596,7 +1596,7 @@ const GuideDetailPage = () => {
 
           {/* Intro */}
           {guide.intro && (
-            <p style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontStyle: 'italic', fontSize: 20, color: '#666',
+            <p style={{ fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'italic', fontSize: 20, color: '#666',
               lineHeight: 1.75, marginBottom: 44, textAlign: 'center' }}
               dangerouslySetInnerHTML={{ __html: guide.intro }} />
           )}
@@ -1641,7 +1641,7 @@ const GuideDetailPage = () => {
                     const day = guide.itinerary[activeDay];
                     return (
                       <div>
-                        <h2 style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontWeight: 600, fontSize: 30, color: '#252826', marginBottom: 8 }}>
+                        <h2 style={{ fontFamily: "'EB Garamond', Georgia, serif", fontWeight: 600, fontSize: 30, color: '#252826', marginBottom: 8 }}>
                           Jour {day.day_number}
                           {day.title && <span style={{ fontWeight: 400, color: '#aaa', fontSize: 24 }}> — {day.title}</span>}
                         </h2>
@@ -1689,7 +1689,7 @@ const GuideDetailPage = () => {
                                       }}>{t.label}</span>
                                     )}
                                   </div>
-                                  <div style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontWeight: 600, fontSize: 20, color: '#252826', lineHeight: 1.2, marginBottom: 6 }}>
+                                  <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontWeight: 600, fontSize: 20, color: '#252826', lineHeight: 1.2, marginBottom: 6 }}>
                                     {act.title}
                                   </div>
                                   {act.description && (
@@ -1701,7 +1701,7 @@ const GuideDetailPage = () => {
                                       display: 'inline-flex', alignItems: 'center', gap: 8,
                                       background: '#f5f1ea', borderRadius: 6, padding: '6px 12px',
                                       border: '1px solid #e5e0d5', cursor: 'pointer',
-                                      fontFamily: "'Libre Caslon Display', Georgia, serif", fontSize: 14, fontWeight: 600, color: '#252826',
+                                      fontFamily: "'EB Garamond', Georgia, serif", fontSize: 14, fontWeight: 600, color: '#252826',
                                     }}>
                                       <MapPin size={12} color="#c17c5a" />{linked.title}
                                       {linked.city && <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: '#aaa', fontWeight: 400 }}>{linked.city}</span>}
@@ -1830,7 +1830,7 @@ const GuideDetailPage = () => {
                                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: act.color, flexShrink: 0 }} />
                                   <span style={{ fontSize: 10, color: '#999' }}>Jour {act.dayNumber}</span>
                                 </div>
-                                <div style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontSize: 15, fontWeight: 600, color: '#252826' }}>{act.title}</div>
+                                <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 15, fontWeight: 600, color: '#252826' }}>{act.title}</div>
                               </div>
                             </Popup>
                           </Marker>
@@ -1862,7 +1862,7 @@ const GuideDetailPage = () => {
                               Jour {act.dayNumber}
                             </div>
                             <div style={{
-                              fontFamily: "'Libre Caslon Display', Georgia, serif", fontWeight: 600,
+                              fontFamily: "'EB Garamond', Georgia, serif", fontWeight: 600,
                               fontSize: 14, color: '#252826', lineHeight: 1.2,
                               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                             }}>{act.title}</div>
@@ -2106,7 +2106,7 @@ const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <CategoryBadge categoryId={p.category} small />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Libre Caslon Display', Georgia, serif", fontSize: 14, fontWeight: 600, color: '#252826', lineHeight: 1.1 }}>{p.title}</div>
+                    <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 14, fontWeight: 600, color: '#252826', lineHeight: 1.1 }}>{p.title}</div>
                     <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: '#aaa' }}>{p.city}, {p.country}</div>
                   </div>
                 </div>
