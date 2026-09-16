@@ -2281,6 +2281,15 @@
   color: var(--text-muted);
 }
 
+.v2-guide-empty-slot {
+  width: 100%;
+  height: 100%;
+  background: var(--border);
+  border-radius: 8px;
+  min-height: 120px;
+  opacity: 0.5;
+}
+
 .v2-guide-mini-dur {
   position: absolute;
   top: 8px;

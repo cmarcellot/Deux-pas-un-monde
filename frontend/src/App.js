@@ -944,20 +944,21 @@ const HomePage = () => {
       </section>
 
       {/* NOS GUIDES */}
-      {guides.length > 0 && (
-        <section className="v2-guides-section">
-          <div className="v2-guides-img">
-            {guides[0] && guides[0].cover_image
-              ? <img src={getPhotoSrc(guides[0].cover_image)} alt="" />
-              : <div className="v2-guides-img-placeholder"><BookOpen size={64} /></div>}
-          </div>
-          <div className="v2-guides-body">
-            <p className="v2-section-eyebrow">NOS GUIDES</p>
-            <h2 className="v2-guides-title">Itinéraires &amp;<br />conseils de voyage</h2>
-            <p className="v2-guides-desc">Des idées de parcours pour découvrir une région, le temps d'un week-end ou d'un plus long voyage.</p>
-            <Link to="/guides" className="v2-see-all" style={{ marginTop: 16, marginBottom: 32, display: 'inline-block' }}>Voir tous les guides &#8594;</Link>
-            <div className="v2-guides-grid">
-              {guides.map(guide => (
+      <section className="v2-guides-section">
+        <div className="v2-guides-img">
+          {guides[0]?.cover_image
+            ? <img src={getPhotoSrc(guides[0].cover_image)} alt="" />
+            : <div className="v2-guides-img-placeholder"><BookOpen size={64} /></div>}
+        </div>
+        <div className="v2-guides-body">
+          <p className="v2-section-eyebrow">NOS GUIDES</p>
+          <h2 className="v2-guides-title">Itin&eacute;raires &amp;<br />conseils de voyage</h2>
+          <p className="v2-guides-desc">Des id&eacute;es de parcours pour d&eacute;couvrir une r&eacute;gion, le temps d'un week-end ou d'un plus long voyage.</p>
+          <Link to="/guides" className="v2-see-all" style={{ marginTop: 16, marginBottom: 32, display: 'inline-block' }}>Voir tous les guides &#8594;</Link>
+          <div className="v2-guides-grid">
+            {Array.from({ length: 3 }).map((_, i) => {
+              const guide = guides[i];
+              return guide ? (
                 <div key={guide.id} className="v2-guide-mini" onClick={() => navigate(`/guides/${guide.id}`)}>
                   <div className="v2-guide-mini-img">
                     {guide.cover_image
@@ -968,12 +969,15 @@ const HomePage = () => {
                   <p className="v2-guide-mini-title">{guide.title} &#8594;</p>
                   <p className="v2-guide-mini-dest"><MapPin size={11} />{guide.destination}</p>
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div key={i} className="v2-guide-mini">
+                  <div className="v2-guide-mini-img v2-guide-empty-slot" />
+                </div>
+              );
+            })}
           </div>
-        </section>
-      )}
-
+        </div>
+      </section>
       {/* FOOTER */}
       <footer className="v2-footer">
         <div className="v2-footer-inner">
