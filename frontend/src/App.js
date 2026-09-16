@@ -156,41 +156,13 @@ const getPhotoSrc = (photo) => (photo.startsWith('/api') || photo.startsWith('/u
 // ============================================================
 // LOGO (4 SVG tiles)
 // ============================================================
-const DpmLogo = ({ light = false }) => {
-  const fg = light ? '#3f4240' : '#ede8db';
-  const bg = light ? '#ede8db' : '#3f4240';
-  const size = 48;
-  const gap = 3;
-  const total = size * 4 + gap * 3;
-  const tiles = [
-    // plane
-    { key: 'plane', d: 'M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z' },
-    // camera
-    { key: 'cam',   d: 'M12 15.2c-1.77 0-3.2-1.43-3.2-3.2s1.43-3.2 3.2-3.2 3.2 1.43 3.2 3.2-1.43 3.2-3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z' },
-    // pin
-    { key: 'pin',   d: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z' },
-    // fork
-    { key: 'fork',  d: 'M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z' },
-  ];
-  return (
-    <div className={`dpm-logo${light ? ' light' : ''}`}>
-      <svg width={total} height={size} viewBox={`0 0 ${total} ${size}`} fill="none">
-        {tiles.map((t, i) => (
-          <g key={t.key} transform={`translate(${i * (size + gap)}, 0)`}>
-            <rect x={0} y={0} width={size} height={size} fill={fg}/>
-            <g transform={`translate(${size*0.15},${size*0.15}) scale(${size*0.7/24})`} fill={bg}>
-              <path d={t.d}/>
-            </g>
-          </g>
-        ))}
-      </svg>
-      <div className="dpm-logo-wordmark">
-        <span className="wm-top">DEUX PAS</span>
-        <span className="wm-sub">UN MONDE</span>
-      </div>
-    </div>
-  );
-};
+const DpmLogo = ({ light = false, height = 52 }) => (
+  <img
+    src={light ? '/logo-deux-pas-un-monde-encre.png' : '/logo-deux-pas-un-monde-creme.png'}
+    alt="Deux Pas Un Monde"
+    style={{ height, width: 'auto', display: 'block' }}
+  />
+);
 
 // Category badge (mockup style — colored pill with label)
 const BADGE_COLORS = {
@@ -800,7 +772,7 @@ const HomePage = () => {
       {/* HERO */}
       <div className="v2-hero">
         <nav className="v2-nav">
-        <Link to="/" className="v2-nav-brand"><img src="/logo.png" alt="Deux Pas Un Monde" className="v2-nav-logo" /></Link>
+        <Link to="/" className="v2-nav-brand"><img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" /></Link>
         <div className="v2-nav-links">
           <Link to="/"        className="v2-nav-link active">Accueil</Link>
           <a href="#adresses" className="v2-nav-link">Nos adresses</a>
