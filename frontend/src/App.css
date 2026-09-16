@@ -1900,8 +1900,7 @@
   position: relative;
   height: 390px;
   color: #f7f5ef;
-  background: var(--hero-bg-image, url('')),
-    linear-gradient(90deg, rgba(5,18,13,0.26), transparent 68%),
+  background: linear-gradient(90deg, rgba(5,18,13,0.26), transparent 68%),
     linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
   background-size: cover;
   background-position: center center;
