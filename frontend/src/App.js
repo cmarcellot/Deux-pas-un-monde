@@ -1263,7 +1263,7 @@ const GuidesPage = () => {
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
 
       {/* HERO */}
-      <div className="guides-page-hero" style={{ backgroundImage: 'url(/guides-hero.png)' }}>
+      <div className="guides-page-hero">
         <nav className="v2-nav">
           <Link to="/" className="v2-nav-brand">
             <img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" />
@@ -1290,7 +1290,7 @@ const GuidesPage = () => {
         </nav>
         <div className="adresses-hero-content">
           <p className="v2-section-eyebrow adresses-eyebrow">GUIDES VOYAGE</p>
-          <h1 className="adresses-hero-title">Itinéraires &amp;<br />conseils de voyage</h1>
+          <h1 className="adresses-hero-title">Tous nos guides</h1>
           {!loading && <p className="adresses-hero-count">{filtered.length} guide{filtered.length > 1 ? 's' : ''}</p>}
         </div>
       </div>
