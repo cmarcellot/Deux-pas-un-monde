@@ -1965,7 +1965,7 @@
 /* SEARCH BAR — white pill at bottom of hero */
 .v2-searchbar-wrap {
   position: absolute;
-  bottom: 24px;
+  bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
   width: 56%;
