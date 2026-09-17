@@ -1161,6 +1161,7 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
   );
 };
 
+// eslint-disable-next-line no-unused-vars
 const GlobeView = ({ guides, navigate }) => {
   const [resolvedGuides, setResolvedGuides] = useState([]);
   const [geocoding, setGeocoding] = useState(true);
