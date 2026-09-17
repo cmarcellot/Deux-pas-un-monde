@@ -1903,13 +1903,13 @@
 /* HERO — full-bleed background photo */
 .v2-hero {
   position: relative;
-  height: 320px;
+  height: 340px;
   color: #f7f5ef;
   background: url('./hero.png') center center / cover no-repeat,
     linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
   overflow: hidden;
 }
-@media (min-width: 1600px) { .v2-hero { height: 370px; } }
+@media (min-width: 1600px) { .v2-hero { height: 395px; } }
 
 .v2-hero-overlay {
   position: absolute;
@@ -1920,7 +1920,7 @@
 
 .v2-hero-text {
   margin-left: 8.3%;
-  padding-top: 103px;
+  padding-top: 82px;
 }
 
 .v2-hero-eyebrow {
