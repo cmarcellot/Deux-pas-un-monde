@@ -2486,8 +2486,13 @@
 }
 
 .adresses-searchbar-wrap {
-  padding: 18px 6.3% 0;
+  padding: 18px 0 0;
   background: var(--bg);
+  display: flex;
+  justify-content: center;
+}
+.adresses-searchbar-wrap .v2-searchbar--simple {
+  width: 56%;
 }
 .adresses-searchbar-wrap .v2-searchbar--light {
   background: white;
