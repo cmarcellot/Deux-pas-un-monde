@@ -1903,13 +1903,13 @@
 /* HERO — full-bleed background photo */
 .v2-hero {
   position: relative;
-  height: 340px;
+  height: 370px;
   color: #f7f5ef;
   background: url('./hero.png') center center / cover no-repeat,
     linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
   overflow: hidden;
 }
-@media (min-width: 1600px) { .v2-hero { height: 395px; } }
+@media (min-width: 1600px) { .v2-hero { height: 430px; } }
 
 .v2-hero-overlay {
   position: absolute;
