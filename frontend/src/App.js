@@ -1262,7 +1262,7 @@ const GuidesPage = () => {
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
 
       {/* HERO */}
-      <div className="guides-page-hero">
+      <div className="guides-page-hero" style={{ backgroundImage: 'url(/guides-hero.png)' }}>
         <nav className="v2-nav">
           <Link to="/" className="v2-nav-brand">
             <img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" />

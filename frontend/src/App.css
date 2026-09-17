@@ -2448,8 +2448,10 @@
 .guides-page-hero {
   position: relative;
   height: 250px;
-  background: url('/guides-hero.png') center top / cover no-repeat,
-    linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-color: #2c3a2e;
   color: #f7f5ef;
   overflow: hidden;
 }
