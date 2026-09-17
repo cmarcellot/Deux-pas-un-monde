@@ -1903,7 +1903,7 @@
 /* HERO — full-bleed background photo */
 .v2-hero {
   position: relative;
-  height: 390px;
+  height: 355px;
   color: #f7f5ef;
   background: url('./hero.png') center center / cover no-repeat,
     linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
@@ -1965,7 +1965,7 @@
 /* SEARCH BAR — white pill at bottom of hero */
 .v2-searchbar-wrap {
   position: absolute;
-  bottom: 40px;
+  bottom: 48px;
   left: 50%;
   transform: translateX(-50%);
   width: 56%;
