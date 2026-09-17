@@ -1905,7 +1905,7 @@
   position: relative;
   height: 370px;
   color: #f7f5ef;
-  background: url('./hero.png') center top / cover no-repeat,
+  background: url('./hero.png') center 25% / cover no-repeat,
     linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
   overflow: hidden;
 }
@@ -2448,7 +2448,7 @@
 .adresses-hero {
   position: relative;
   height: 250px;
-  background: url('./hero.png') center top / cover no-repeat,
+  background: url('./hero.png') center 25% / cover no-repeat,
     linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
   color: #f7f5ef;
   overflow: hidden;
