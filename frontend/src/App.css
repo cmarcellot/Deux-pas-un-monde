@@ -2525,6 +2525,7 @@
 }
 .adresses-places {
   padding: 32px 6.3% 56px;
+  flex: 1;
 }
 
 @media (max-width: 640px) {

@@ -2955,7 +2955,7 @@ const AdressesPage = () => {
     : places;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
 
       {/* HERO COMPACT */}
       <div className="adresses-hero">
