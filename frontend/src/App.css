@@ -2448,7 +2448,7 @@
 .adresses-hero {
   position: relative;
   height: 250px;
-  background: url('./hero.png') center 30% / cover no-repeat,
+  background: url('./hero.png') center center / cover no-repeat,
     linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
   color: #f7f5ef;
   overflow: hidden;
