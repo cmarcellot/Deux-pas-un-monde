@@ -2443,6 +2443,26 @@
 }
 
 /* ============================================================
+   PAGE GUIDES VOYAGE
+   ============================================================ */
+.guides-page-hero {
+  position: relative;
+  height: 250px;
+  background: url('/guides-hero.png') center top / cover no-repeat,
+    linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
+  color: #f7f5ef;
+  overflow: hidden;
+}
+.guides-page-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(5,18,13,0.42);
+  pointer-events: none;
+}
+.guides-page-hero .v2-nav { background: rgba(0,0,0,0.28); }
+
+/* ============================================================
    PAGE NOS ADRESSES
    ============================================================ */
 .adresses-hero {

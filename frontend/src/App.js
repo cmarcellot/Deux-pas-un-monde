@@ -8,7 +8,7 @@ import { Toaster, toast } from 'sonner';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import {
-  Home, Settings, Star, MapPin, X, Plus, Trash2, Edit3,
+  Home, Star, MapPin, X, Plus, Trash2, Edit3,
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Eye, Save, Key, ZoomIn,
   BookOpen, Calendar, Globe, Wallet, Info, Plane,
@@ -1231,10 +1231,14 @@ const GlobeView = ({ guides, navigate }) => {
 // GUIDES LIST PAGE — /guides
 // ============================================================
 const GuidesPage = () => {
-  const [guides, setGuides]     = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [viewMode, setViewMode] = useState('grid');
+  const [guides, setGuides]       = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [viewMode, setViewMode]   = useState('grid');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen]   = useState(false);
   const navigate = useNavigate();
+
+  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
 
   useEffect(() => { fetchGuides(); }, []);
 
@@ -1248,78 +1252,117 @@ const GuidesPage = () => {
     finally { setLoading(false); }
   };
 
-  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
-  const igSvg = <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>;
-
-  const VIEW_TOGGLES = [
-    { mode: 'grid', icon: <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg> },
-    { mode: 'list', icon: <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg> },
-    { mode: 'globe', icon: <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg> },
-  ];
-
+  const filtered = guides.filter(g => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return [g.title, g.destination, g.country].some(f => (f||'').toLowerCase().includes(q));
+  });
 
   return (
-    <div className="guides-page">
-      {/* Hero */}
-      <div className="site-hero">
-        <Link to="/"><DpmLogo /></Link>
-        <p className="site-hero-tagline">NOS GUIDES DE VOYAGE</p>
-        <a href={igUrl} target="_blank" rel="noopener noreferrer" className="site-hero-instagram">
-          {igSvg}@deuxpas_unmonde
-        </a>
-        <div className="section-nav">
-          <Link to="/"><button className="section-nav-btn">Adresses</button></Link>
-          <Link to="/guides"><button className="section-nav-btn active">Guides voyage</button></Link>
-        </div>
-      </div>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
 
-      {/* Filter bar */}
-      <div className="filter-bar">
-        <div className="filter-bar-inner">
-          <p className="results-count" style={{ margin: 0 }}>{guides.length} guide{guides.length > 1 ? 's' : ''}</p>
-          <div className="view-toggles">
-            {VIEW_TOGGLES.map(({ mode, icon }) => (
-              <button key={mode} className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`} onClick={() => setViewMode(mode)}>
-                {icon}
-              </button>
-            ))}
+      {/* HERO */}
+      <div className="guides-page-hero">
+        <nav className="v2-nav">
+          <Link to="/" className="v2-nav-brand">
+            <img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" />
+          </Link>
+          <div className="v2-nav-links">
+            <Link to="/"         className="v2-nav-link">Accueil</Link>
+            <Link to="/adresses" className="v2-nav-link">Nos adresses</Link>
+            <Link to="/guides"   className="v2-nav-link active">Guides voyage</Link>
+            <a href="#apropos"   className="v2-nav-link">À propos</a>
           </div>
+          <div className="v2-nav-actions">
+            <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
+            <button className="v2-nav-icon-btn" aria-label="Compte">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </button>
+            <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-icon-btn" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+            </a>
+          </div>
+        </nav>
+        <div className="adresses-hero-content">
+          <p className="v2-section-eyebrow adresses-eyebrow">GUIDES VOYAGE</p>
+          <h1 className="adresses-hero-title">Itinéraires &amp;<br />conseils de voyage</h1>
+          {!loading && <p className="adresses-hero-count">{filtered.length} guide{filtered.length > 1 ? 's' : ''}</p>}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="guides-content">
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} places={[]} onSelectPlace={() => {}} />
+
+      {/* SEARCHBAR */}
+      <div className="adresses-searchbar-wrap">
+        <div className="v2-searchbar v2-searchbar--simple v2-searchbar--light">
+          <Search size={16} strokeWidth={1.5} style={{ color: 'rgba(0,0,0,0.35)', flexShrink: 0 }} />
+          <input
+            className="v2-searchbar-text"
+            placeholder="Rechercher un guide, une destination..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', color: 'rgba(0,0,0,0.35)', display: 'flex' }}>
+              <X size={14} />
+            </button>
+          )}
+          <button className="v2-searchbar-btn v2-searchbar-btn--dark" onClick={() => {}}>
+            <Search size={15} /> Rechercher
+          </button>
+        </div>
+      </div>
+
+      {/* TOOLBAR */}
+      <div className="adresses-toolbar">
+        <div className="adresses-view-toggles">
+          {[
+            ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
+            ['list', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>],
+          ].map(([mode, icon]) => (
+            <button key={mode} className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
+              onClick={() => setViewMode(mode)}>{icon}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* GUIDES */}
+      <div className="adresses-places">
         <SurpriseCountdown />
         {loading ? (
           <div className="loading">Chargement…</div>
-        ) : guides.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="empty-state">
-            <BookOpen size={40} /><h3>Aucun guide pour le moment</h3><p>Les guides arrivent bientôt !</p>
+            <BookOpen size={40} /><h3>Aucun guide trouvé</h3><p>Essayez une autre recherche.</p>
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="guides-grid">
-            {guides.map(guide => (
+          <div className="places-grid v2-places-grid">
+            {filtered.map(guide => (
               <GuideCard key={guide.id} guide={guide} onClick={() => navigate(`/guides/${guide.id}`)} />
             ))}
           </div>
-        ) : viewMode === 'list' ? (
+        ) : (
           <div className="guides-list">
-            {guides.map(guide => (
+            {filtered.map(guide => (
               <GuideListRow key={guide.id} guide={guide} onClick={() => navigate(`/guides/${guide.id}`)} />
             ))}
-          </div>
-        ) : (
-          <div className="guides-globe-wrap">
-            <GlobeView guides={guides} navigate={navigate} />
           </div>
         )}
       </div>
 
-      <footer className="footer">
-        <p>Deux pas un monde © 2026 — <a href={igUrl} target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
+      <footer className="v2-footer">
+        <div className="v2-footer-inner v2-footer-inner--full">
+          <div className="v2-footer-brand">
+            <img src="/logo-icone-creme.png" alt="Deux Pas Un Monde" className="v2-footer-logo" />
+            <span className="v2-footer-copy">&copy; {new Date().getFullYear()} Deux Pas Un Monde</span>
+          </div>
+          <Link to="/admin" className="v2-footer-admin-link">Espace admin</Link>
+        </div>
       </footer>
-
-      <Link to="/admin" className="floating-admin-btn"><Settings size={15} />Admin</Link>
     </div>
   );
 };
