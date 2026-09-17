@@ -2992,6 +2992,27 @@ const AdressesPage = () => {
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} places={places} onSelectPlace={setSelectedPlace} />
 
+      {/* SEARCHBAR */}
+      <div className="adresses-searchbar-wrap">
+        <div className="v2-searchbar v2-searchbar--simple v2-searchbar--light">
+          <Search size={16} strokeWidth={1.5} style={{ color: 'rgba(0,0,0,0.35)', flexShrink: 0 }} />
+          <input
+            className="v2-searchbar-text"
+            placeholder="Rechercher une adresse, une ville, une région..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', color: 'rgba(0,0,0,0.35)', display: 'flex' }}>
+              <X size={14} />
+            </button>
+          )}
+          <button className="v2-searchbar-btn v2-searchbar-btn--dark" onClick={() => {}}>
+            <Search size={15} /> Rechercher
+          </button>
+        </div>
+      </div>
+
       {/* BANDE CATÉGORIES */}
       <div className="v2-cat-strip">
         <div className="v2-cat-strip-inner">
@@ -3014,20 +3035,6 @@ const AdressesPage = () => {
 
       {/* BARRE OUTILS */}
       <div className="adresses-toolbar">
-        <div className="adresses-search-wrap">
-          <Search size={14} strokeWidth={1.5} style={{ color: 'var(--text-light)', flexShrink: 0 }} />
-          <input
-            className="adresses-search-input"
-            placeholder="Rechercher une adresse, une ville..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-light)', display: 'flex' }}>
-              <X size={14} />
-            </button>
-          )}
-        </div>
         <div className="adresses-view-toggles">
           {[
             ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
