@@ -1832,12 +1832,12 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 15px 6.3%;
+  padding: 8px 6.3%;
   z-index: 10;
 }
 
 .v2-nav-brand { text-decoration: none; display: flex; }
-.v2-nav-logo { width: 100px; height: 66px; object-fit: contain; display: block; }
+.v2-nav-logo { width: 85px; height: 56px; object-fit: contain; display: block; }
 
 /* Make logo horizontal in navbar */
 .v2-nav .dpm-logo {
@@ -1903,7 +1903,7 @@
 /* HERO — full-bleed background photo */
 .v2-hero {
   position: relative;
-  height: 355px;
+  height: 320px;
   color: #f7f5ef;
   background: url('./hero.png') center center / cover no-repeat,
     linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
@@ -1965,7 +1965,7 @@
 /* SEARCH BAR — white pill at bottom of hero */
 .v2-searchbar-wrap {
   position: absolute;
-  bottom: 48px;
+  bottom: 60px;
   left: 50%;
   transform: translateX(-50%);
   width: 56%;
