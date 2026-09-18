@@ -1912,10 +1912,7 @@
 @media (min-width: 1600px) { .v2-hero { height: 430px; } }
 
 .v2-hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(5,18,13,0.26), transparent 68%);
-  pointer-events: none;
+  display: none;
 }
 
 .v2-hero-text {
@@ -2458,11 +2455,7 @@
   overflow: hidden;
 }
 .guides-page-hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(5,18,13,0.26), transparent 68%);
-  pointer-events: none;
+  display: none;
 }
 .guides-page-hero .v2-nav { background: rgba(0,0,0,0.28); }
 
@@ -2478,11 +2471,7 @@
   overflow: hidden;
 }
 .adresses-hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(5,18,13,0.26), transparent 68%);
-  pointer-events: none;
+  display: none;
 }
 .adresses-hero .v2-nav { background: rgba(0,0,0,0.28); }
 .adresses-hero-content {
