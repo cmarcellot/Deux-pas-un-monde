@@ -63,11 +63,11 @@ const EMPTY_GUIDE = {
 
 // Map backend slugs to new design labels and category keys
 const CATEGORIES = [
-  { id: 'all',           key: 'all',        label: 'Tout',       badgeLabel: 'TOUS',                 icon: Filter },
-  { id: 'accommodation', key: 'dormir',     label: 'Dormir',     badgeLabel: 'HÉBERGEMENT INSOLITE', icon: Bed },
-  { id: 'restaurant',    key: 'manger',     label: 'Manger',     badgeLabel: 'GASTRONOMIE',          icon: Utensils },
-  { id: 'activity',      key: 'decouvrir',  label: 'Découvrir',  badgeLabel: 'NATURE',               icon: Compass },
-  { id: 'gem',           key: 'partir',     label: 'Partir',     badgeLabel: 'COUP DE CŒUR',         icon: Gem },
+  { id: 'all',           key: 'all',        label: 'Toutes les adresses',    badgeLabel: 'TOUS',                 icon: Filter },
+  { id: 'accommodation', key: 'dormir',     label: 'Hébergements insolites', badgeLabel: 'HÉBERGEMENT INSOLITE', icon: Bed },
+  { id: 'activity',      key: 'decouvrir',  label: 'Nature & Aventure',      badgeLabel: 'NATURE & AVENTURE',    icon: Compass },
+  { id: 'restaurant',    key: 'manger',     label: 'Gastronomie & Terroir',  badgeLabel: 'GASTRONOMIE',          icon: Utensils },
+  { id: 'gem',           key: 'partir',     label: 'Bien-être & Spa',        badgeLabel: 'BIEN-ÊTRE & SPA',      icon: Gem },
 ];
 
 const getCatInfo = (categoryId) => CATEGORIES.find(c => c.id === categoryId) || CATEGORIES[0];
@@ -703,6 +703,7 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
 // HOME PAGE
 // ============================================================
 const CAT_SVG = {
+  all: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="10" height="10" rx="1.5"/><rect x="18" y="4" width="10" height="10" rx="1.5"/><rect x="4" y="18" width="10" height="10" rx="1.5"/><rect x="18" y="18" width="10" height="10" rx="1.5"/></svg>,
   bed: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 17V9a3 3 0 0 1 3-3h18a3 3 0 0 1 3 3v8M3 26v-8a2 2 0 0 1 2-2h22a2 2 0 0 1 2 2v8M3 23h26"/><path d="M7 16v-3a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v3m2 0v-3a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v3"/></svg>,
   tent: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m16 4 12 24H4L16 4Zm0 0v24m0-18-7 18m7-18 7 18M2 28h28M7 20l-4 8m22-8 4 8"/><path d="m16 10-2 18h4l-2-18"/></svg>,
   camera: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8h5l2-4h6l2 4h5a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z"/><circle cx="16" cy="17.5" r="6.1"/><path d="M7 5h3"/></svg>,
@@ -711,12 +712,11 @@ const CAT_SVG = {
   pin: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M25 12c0 7-9 18-9 18S7 19 7 12a9 9 0 1 1 18 0Z"/><circle cx="16" cy="12" r="3.5"/></svg>,
 };
 const HOME_VISUAL_CATS = [
+  { id: 'all',           line1: 'Toutes les',  line2: 'adresses',  svg: 'all' },
   { id: 'accommodation', line1: 'Hébergements', line2: 'insolites', svg: 'bed' },
   { id: 'activity',      line1: 'Nature &',     line2: 'Aventure',  svg: 'tent' },
-  { id: 'activity',      line1: 'Expériences',  line2: 'uniques',   svg: 'camera' },
-  { id: 'restaurant',   line1: 'Gastronomie',  line2: '& Terroir', svg: 'food' },
+  { id: 'restaurant',    line1: 'Gastronomie',  line2: '& Terroir', svg: 'food' },
   { id: 'gem',           line1: 'Bien-être',    line2: '& Spa',     svg: 'leaf' },
-  { id: 'gem',           line1: 'Week-ends',    line2: 'à deux',    svg: 'pin' },
 ];
 
 const HomePage = () => {
@@ -815,7 +815,7 @@ const HomePage = () => {
           {HOME_VISUAL_CATS.map((cat, i) => (
             <React.Fragment key={i}>
               {i > 0 && <div className="v2-cat-sep" />}
-              <Link to={`/adresses?category=${cat.id}`} className="v2-cat-item" data-testid={`category-${cat.id}`}>
+              <Link to={cat.id === 'all' ? '/adresses' : `/adresses?category=${cat.id}`} className="v2-cat-item" data-testid={`category-${cat.id}`}>
                 <div className="v2-cat-icon">{CAT_SVG[cat.svg]}</div>
                 <span className="v2-cat-label">{cat.line1}<br />{cat.line2}</span>
               </Link>
