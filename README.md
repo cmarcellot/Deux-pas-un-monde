@@ -1,5 +1,7 @@
 # Deux pas un monde
 
+[![Latest release](https://img.shields.io/github/v/release/cmarcellot/Deux-pas-un-monde)](https://github.com/cmarcellot/Deux-pas-un-monde/releases)
+
 Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.com/deuxpas_unmonde) — Un carnet de voyage interactif pour partager bonnes adresses et guides de voyage.
 
 ## Aperçu
@@ -9,14 +11,15 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 ## Fonctionnalités
 
 ### Pour les visiteurs
-- **3 vues disponibles** : Liste, Carte, et vue hybride Liste + Carte côte à côte
+- **Page d'accueil** : héro plein écran, barre de recherche, bandeau de catégories, aperçu des meilleures adresses et des guides de voyage
+- **Page Nos adresses** (`/adresses`) : toutes les adresses, avec recherche et 3 vues disponibles — Liste, Carte, et vue hybride Liste + Carte côte à côte
 - **Vue Liste** : Cartes visuelles avec photo, note, badge catégorie coloré, ville et date de visite
 - **Vue Carte** : Marqueurs colorés par catégorie sur OpenStreetMap, popups au clic
 - **Filtrage par catégorie** :
-  - 🛏 Dormir (bleu-gris)
-  - 🍽 Manger (terracotta)
-  - 🧭 Découvrir (vert)
-  - ✈️ Partir (ocre)
+  - 🛏 Hébergements insolites (bleu-gris)
+  - 🍽 Gastronomie & Terroir (terracotta)
+  - 🧭 Nature & Aventure (vert)
+  - 🌿 Bien-être & Spa (ocre)
 - **Recherche textuelle** : Filtrer les lieux par nom en temps réel
 - **Détails en modal** : Informations complètes d'un lieu avec galerie photos, note, adresse et date de visite
 - **Page détail** dédiée par lieu (`/place/:id`)
@@ -24,7 +27,7 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 - **Notation par étoiles** : Appréciation de chaque lieu (1 à 5 étoiles)
 
 ### Guides de Voyage
-- **Page `/guides`** : Bibliothèque de guides publiés
+- **Page `/guides`** : Bibliothèque de guides publiés, avec recherche et vues Liste / Carte
 - **Page détail guide** avec 4 onglets :
   - **Itinéraire** : Accordéons jour par jour avec activités, horaires et conseils
   - **Infos pratiques** : Budget estimé, meilleures saisons, transports, visa, monnaie, langue
@@ -76,11 +79,11 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 - Uploads : volume persistant monté sur `/app/uploads`
 
 ### Design
-- Thème clair élégant
+- Thème clair élégant (refonte v4)
 - Fond : `#f5f1ea` / Surface : `#faf8f3`
 - Accent : `#c17c5a` (terracotta doux)
 - Texte : `#252826`
-- Polices : **Cormorant Garant** (titres, logo) + **Jost** (corps)
+- Polices : **EB Garamond** (titres, logo) + **Jost** (corps)
 - Carte : OpenStreetMap standard
 - Catégories en couleurs OKLCH
 
@@ -132,10 +135,17 @@ REACT_APP_API_URL=http://localhost:8001
 ├── frontend/
 │   ├── public/
 │   │   ├── index.html     # HTML avec meta SEO + fonts
-│   │   └── logo.png       # Favicon
+│   │   ├── favicon.png
+│   │   ├── logo-deux-pas-un-monde-creme.png  # Logo nav (fond sombre)
+│   │   ├── logo-deux-pas-un-monde-encre.png  # Logo (fond clair)
+│   │   ├── logo-icone-creme.png              # Icône logo, pied de page
+│   │   ├── logo-icone-encre.png
+│   │   ├── hero.png                          # Image héro (accueil, adresses, guides)
+│   │   └── guides-hero.png
 │   ├── src/
 │   │   ├── App.js         # Composant principal (toutes les pages)
 │   │   ├── App.css        # Styles et animations
+│   │   ├── hero.png        # Copie source de l'image héro (référencée en CSS)
 │   │   ├── index.js       # Point d'entrée React
 │   │   └── index.css      # Variables CSS globales + thème
 │   ├── package.json
@@ -186,10 +196,12 @@ Les fichiers sont stockés dans `/app/uploads/{entity_type}/{entity_id}/{uuid}.e
 
 | ID backend | Nom affiché | Couleur |
 |------------|-------------|---------|
-| `accommodation` | Dormir | Bleu-gris OKLCH |
-| `restaurant` | Manger | Terracotta OKLCH |
-| `activity` | Découvrir | Vert OKLCH |
-| `gem` | Partir | Ocre OKLCH |
+| `accommodation` | Hébergements insolites | Bleu-gris OKLCH |
+| `restaurant` | Gastronomie & Terroir | Terracotta OKLCH |
+| `activity` | Nature & Aventure | Vert OKLCH |
+| `gem` | Bien-être & Spa | Ocre OKLCH |
+
+Le filtre "Toutes les adresses" (`all`) n'applique aucune restriction côté API.
 
 ## Auteurs
 
