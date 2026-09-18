@@ -8,11 +8,11 @@ import { Toaster, toast } from 'sonner';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import {
-  Home, Settings, Star, MapPin, X, Plus, Trash2, Edit3,
+  Home, Star, MapPin, X, Plus, Trash2, Edit3,
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Eye, Save, Key, ZoomIn,
   BookOpen, Calendar, Globe, Wallet, Info, Plane,
-  Search, CheckCircle, Loader2, GripVertical
+  Search, CheckCircle, Loader2, GripVertical, Heart
 } from 'lucide-react';
 import './App.css';
 
@@ -63,11 +63,11 @@ const EMPTY_GUIDE = {
 
 // Map backend slugs to new design labels and category keys
 const CATEGORIES = [
-  { id: 'all',           key: 'all',        label: 'Tout',       icon: Filter },
-  { id: 'accommodation', key: 'dormir',     label: 'Dormir',     icon: Bed },
-  { id: 'restaurant',    key: 'manger',     label: 'Manger',     icon: Utensils },
-  { id: 'activity',      key: 'decouvrir',  label: 'Découvrir',  icon: Compass },
-  { id: 'gem',           key: 'partir',     label: 'Partir',     icon: Gem },
+  { id: 'all',           key: 'all',        label: 'Toutes les adresses',    badgeLabel: 'TOUS',                 icon: Filter },
+  { id: 'accommodation', key: 'dormir',     label: 'Hébergements insolites', badgeLabel: 'HÉBERGEMENT INSOLITE', icon: Bed },
+  { id: 'activity',      key: 'decouvrir',  label: 'Nature & Aventure',      badgeLabel: 'NATURE & AVENTURE',    icon: Compass },
+  { id: 'restaurant',    key: 'manger',     label: 'Gastronomie & Terroir',  badgeLabel: 'GASTRONOMIE',          icon: Utensils },
+  { id: 'gem',           key: 'partir',     label: 'Bien-être & Spa',        badgeLabel: 'BIEN-ÊTRE & SPA',      icon: Gem },
 ];
 
 const getCatInfo = (categoryId) => CATEGORIES.find(c => c.id === categoryId) || CATEGORIES[0];
@@ -82,13 +82,6 @@ const formatMonthYear = (value) => {
   return isNaN(m) ? value : `${MONTHS_FR[m - 1]} ${year}`;
 };
 
-// SVG icons for category badges (matching handoff)
-const CAT_ICONS = {
-  accommodation: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>`,
-  restaurant:    `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>`,
-  activity:      `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`,
-  gem:           `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>`,
-};
 
 // Marker icons — inline SVG strings (14×14, white fill)
 const MARKER_SVG_ICONS = {
@@ -163,51 +156,28 @@ const getPhotoSrc = (photo) => (photo.startsWith('/api') || photo.startsWith('/u
 // ============================================================
 // LOGO (4 SVG tiles)
 // ============================================================
-const DpmLogo = ({ light = false }) => {
-  const fg = light ? '#3f4240' : '#ede8db';
-  const bg = light ? '#ede8db' : '#3f4240';
-  const size = 48;
-  const gap = 3;
-  const total = size * 4 + gap * 3;
-  const tiles = [
-    // plane
-    { key: 'plane', d: 'M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z' },
-    // camera
-    { key: 'cam',   d: 'M12 15.2c-1.77 0-3.2-1.43-3.2-3.2s1.43-3.2 3.2-3.2 3.2 1.43 3.2 3.2-1.43 3.2-3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z' },
-    // pin
-    { key: 'pin',   d: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z' },
-    // fork
-    { key: 'fork',  d: 'M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z' },
-  ];
-  return (
-    <div className={`dpm-logo${light ? ' light' : ''}`}>
-      <svg width={total} height={size} viewBox={`0 0 ${total} ${size}`} fill="none">
-        {tiles.map((t, i) => (
-          <g key={t.key} transform={`translate(${i * (size + gap)}, 0)`}>
-            <rect x={0} y={0} width={size} height={size} fill={fg}/>
-            <g transform={`translate(${size*0.15},${size*0.15}) scale(${size*0.7/24})`} fill={bg}>
-              <path d={t.d}/>
-            </g>
-          </g>
-        ))}
-      </svg>
-      <div className="dpm-logo-wordmark">
-        <span className="wm-top">DEUX PAS</span>
-        <span className="wm-sub">UN MONDE</span>
-      </div>
-    </div>
-  );
-};
+const DpmLogo = ({ light = false, height = 52 }) => (
+  <img
+    src={light ? '/logo-deux-pas-un-monde-encre.png' : '/logo-deux-pas-un-monde-creme.png'}
+    alt="Deux Pas Un Monde"
+    style={{ height, width: 'auto', display: 'block' }}
+  />
+);
 
-// Category badge (light theme)
-const CategoryBadge = ({ categoryId, small = false }) => {
+// Category badge (mockup style — colored pill with label)
+const BADGE_COLORS = {
+  accommodation: '#f8f6ef',
+  restaurant:    '#f3d7ca',
+  activity:      '#e5e9d7',
+  gem:           '#f8f6ef',
+};
+const CategoryBadge = ({ categoryId }) => {
   const cat = getCatInfo(categoryId);
-  const icon = CAT_ICONS[categoryId];
-  if (!icon) return null;
+  if (!cat || cat.id === 'all') return null;
+  const bg = BADGE_COLORS[categoryId] || '#f8f6ef';
   return (
-    <span className={`cat-badge ${cat.key}${small ? ' small' : ''}`}>
-      <span className="cat-badge-icon" dangerouslySetInnerHTML={{ __html: icon }}/>
-      {cat.label}
+    <span className="v2-place-badge" style={{ background: bg }}>
+      {cat.badgeLabel || cat.label}
     </span>
   );
 };
@@ -415,6 +385,7 @@ const PlaceCard = ({ place, onClick }) => (
         <StarRating rating={place.rating} readonly size={13} />
       </div>
       <p className="place-card-location">
+        <MapPin size={11} strokeWidth={1.8} style={{ marginRight: 4, flexShrink: 0, position: 'relative', top: 1 }} />
         {place.city || place.address}{place.city && place.country ? `, ${place.country}` : ''}
       </p>
       <p className="place-card-desc">{stripHtml(place.description)}</p>
@@ -731,18 +702,33 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
 // ============================================================
 // HOME PAGE
 // ============================================================
+const CAT_SVG = {
+  all: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="10" height="10" rx="1.5"/><rect x="18" y="4" width="10" height="10" rx="1.5"/><rect x="4" y="18" width="10" height="10" rx="1.5"/><rect x="18" y="18" width="10" height="10" rx="1.5"/></svg>,
+  bed: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 17V9a3 3 0 0 1 3-3h18a3 3 0 0 1 3 3v8M3 26v-8a2 2 0 0 1 2-2h22a2 2 0 0 1 2 2v8M3 23h26"/><path d="M7 16v-3a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v3m2 0v-3a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v3"/></svg>,
+  tent: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m16 4 12 24H4L16 4Zm0 0v24m0-18-7 18m7-18 7 18M2 28h28M7 20l-4 8m22-8 4 8"/><path d="m16 10-2 18h4l-2-18"/></svg>,
+  camera: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8h5l2-4h6l2 4h5a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z"/><circle cx="16" cy="17.5" r="6.1"/><path d="M7 5h3"/></svg>,
+  food: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v8a3 3 0 0 0 6 0V3M11 3v9m0 2v15M23 3c-4 4-5 10-5 15h5m0-15v26"/></svg>,
+  leaf: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M16 27C10 23 10 10 16 4c6 6 6 19 0 23Z"/><path d="M13 25C5 23 4 17 5 10c4 1 7 4 8 8m6 7c8-2 9-8 8-15-4 1-7 4-8 8"/><path d="M16 27C9 29 3 25 1 20c5-1 10 1 15 7Zm0 0c7 2 13-2 15-7-5-1-10 1-15 7Z"/></svg>,
+  pin: <svg className="cat-symbol" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M25 12c0 7-9 18-9 18S7 19 7 12a9 9 0 1 1 18 0Z"/><circle cx="16" cy="12" r="3.5"/></svg>,
+};
+const HOME_VISUAL_CATS = [
+  { id: 'all',           line1: 'Toutes les',  line2: 'adresses',  svg: 'all' },
+  { id: 'accommodation', line1: 'Hébergements', line2: 'insolites', svg: 'bed' },
+  { id: 'activity',      line1: 'Nature &',     line2: 'Aventure',  svg: 'tent' },
+  { id: 'restaurant',    line1: 'Gastronomie',  line2: '& Terroir', svg: 'food' },
+  { id: 'gem',           line1: 'Bien-être',    line2: '& Spa',     svg: 'leaf' },
+];
+
 const HomePage = () => {
   const [places, setPlaces] = useState([]);
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [guides, setGuides] = useState([]);
   const [selectedPlace, setSelectedPlace] = useState(null);
-  const [mapCenter, setMapCenter] = useState([46.603354, 1.888334]);
   const [loading, setLoading] = useState(true);
-  const location = window.location;
-  const [viewMode, setViewMode] = useState(new URLSearchParams(location.search).get('view') || 'grid');
   const [searchOpen, setSearchOpen] = useState(false);
+  const navigate = useNavigate();
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchPlaces(); }, [activeCategory]);
+  useEffect(() => { fetchPlaces(); }, []);
+  useEffect(() => { fetchGuides(); }, []);
 
   useEffect(() => {
     const handler = (e) => {
@@ -754,141 +740,155 @@ const HomePage = () => {
 
   const fetchPlaces = async () => {
     try {
-      const url = activeCategory === 'all' ? `${API_URL}/api/places` : `${API_URL}/api/places?category=${activeCategory}`;
-      const res = await fetch(url);
+      const res = await fetch(`${API_URL}/api/places`);
       const data = await res.json();
       setPlaces(data);
-      if (data.length > 0) setMapCenter([data[0].latitude, data[0].longitude]);
     } catch { toast.error('Erreur lors du chargement des lieux'); }
     finally { setLoading(false); }
   };
 
-  const filtered = places;
+  const fetchGuides = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/guides`);
+      const data = await res.json();
+      setGuides(data.slice(0, 3));
+    } catch {}
+  };
 
   const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
-  const igSvg = (
-    <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}>
-      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-    </svg>
-  );
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      {/* Dark hero */}
-      <div className="site-hero">
-        <Link to="/"><DpmLogo /></Link>
-        <p className="site-hero-tagline">NOS BONNES ADRESSES À TRAVERS LE MONDE</p>
-        <a href={igUrl} target="_blank" rel="noopener noreferrer" className="site-hero-instagram">
-          {igSvg}@deuxpas_unmonde
-        </a>
-        <div className="section-nav">
-          <Link to="/"><button className="section-nav-btn active">Adresses</button></Link>
-          <Link to="/guides"><button className="section-nav-btn">Guides voyage</button></Link>
+
+      {/* HERO */}
+      <div className="v2-hero">
+        <nav className="v2-nav">
+        <Link to="/" className="v2-nav-brand"><img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" /></Link>
+        <div className="v2-nav-links">
+          <Link to="/"          className="v2-nav-link active">Accueil</Link>
+          <Link to="/adresses" className="v2-nav-link">Nos adresses</Link>
+          <Link to="/guides"   className="v2-nav-link">Guides voyage</Link>
+          <a href="#apropos"   className="v2-nav-link">À propos</a>
         </div>
-        {/* Search bar */}
-        <div className="hero-search-wrap">
-          <div className="hero-search" onClick={() => setSearchOpen(true)} role="button" tabIndex={0}
-            onKeyDown={e => e.key === 'Enter' && setSearchOpen(true)}>
-            <Search size={15} style={{ color: '#b0ab9f', flexShrink: 0 }} />
-            <span className="hero-search-input" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              Rechercher adresses, guides, villes…
-            </span>
-            <span className="hero-search-kbd">⌘K</span>
+        <div className="v2-nav-actions">
+          <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
+          <button className="v2-nav-icon-btn" aria-label="Compte">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
+              <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+          </button>
+          <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-icon-btn" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+          </a>
+        </div>
+        </nav>
+        <div className="v2-hero-overlay" />
+        <div className="v2-hero-text">
+          <p className="v2-hero-eyebrow">Des lieux extraordinaires</p>
+          <h1 className="v2-hero-title">Des expériences<br />qui font voyager</h1>
+          <p className="v2-hero-sub">Nos bonnes adresses, nos coups de coeur et nos guides<br />pour s'évader, proche ou loin.</p>
+        </div>
+        <div className="v2-searchbar-wrap">
+          <div className="v2-searchbar v2-searchbar--simple">
+            <Search size={16} strokeWidth={1.5} style={{ color: 'rgba(255,255,255,0.6)', flexShrink: 0 }} />
+            <input
+              className="v2-searchbar-text"
+              placeholder="Rechercher une destination, un lieu..."
+              onFocus={() => setSearchOpen(true)}
+              readOnly
+            />
+            <button className="v2-searchbar-btn" onClick={() => setSearchOpen(true)}>
+              <Search size={15} />
+              Rechercher
+            </button>
           </div>
         </div>
       </div>
 
-      <SearchOverlay
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        places={places}
-        onSelectPlace={setSelectedPlace}
-      />
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} places={places} onSelectPlace={setSelectedPlace} />
 
-      {/* Filter bar (sticky) */}
-      <div className="filter-bar" data-testid="header">
-        <div className="filter-bar-inner">
-          <div className="filter-pills">
-            {CATEGORIES.map(cat => (
-              <button key={cat.id}
-                className={`filter-pill ${cat.key} ${activeCategory === cat.id ? 'active' : ''}`}
-                onClick={() => setActiveCategory(cat.id)}
-                data-testid={`category-${cat.id}`}>
-                {cat.label}
-              </button>
-            ))}
-          </div>
-          <div className="view-toggles">
-            {[
-              ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
-              ['list', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>],
-              ['map',  <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>],
-            ].map(([mode, icon]) => (
-              <button key={mode}
-                className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
-                onClick={() => setViewMode(mode)}
-                data-testid={`view-${mode}-btn`}>
-                {icon}
-              </button>
-            ))}
-          </div>
+      {/* CATEGORY STRIP */}
+      <div className="v2-cat-strip" data-testid="header">
+        <div className="v2-cat-strip-inner">
+          {HOME_VISUAL_CATS.map((cat, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <div className="v2-cat-sep" />}
+              <Link to={cat.id === 'all' ? '/adresses' : `/adresses?category=${cat.id}`} className="v2-cat-item" data-testid={`category-${cat.id}`}>
+                <div className="v2-cat-icon">{CAT_SVG[cat.svg]}</div>
+                <span className="v2-cat-label">{cat.line1}<br />{cat.line2}</span>
+              </Link>
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="content-area">
-        <p className="results-count">{filtered.length} adresse{filtered.length > 1 ? 's' : ''}</p>
-        {viewMode === 'grid' ? (
-          <div className="places-grid" data-testid="places-grid">
-            {loading ? <div className="loading">Chargement…</div>
-              : filtered.length === 0 ? (
+      {/* NOS BONNES ADRESSES — preview 4 cartes */}
+      <section className="v2-adresses-section" id="adresses">
+        <div className="v2-adresses-left">
+          <h2 className="v2-adresses-title">Nos bonnes adresses</h2>
+          <p className="v2-adresses-sub">Des lieux authentiques, des hébergements insolites, des restos savoureux, des expériences inoubliables...</p>
+          <Link to="/adresses" className="v2-see-all">Voir toutes les adresses &#8594;</Link>
+        </div>
+        <div className="v2-adresses-right">
+          <div className="places-grid v2-places-grid" data-testid="places-grid">
+            {loading ? <div className="loading">Chargement...</div>
+              : places.length === 0 ? (
                 <div className="empty-state" data-testid="empty-state">
                   <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
                 </div>
-              ) : filtered.map(place => (
+              ) : places.slice(0, 4).map(place => (
                 <PlaceCard key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
               ))}
           </div>
-        ) : viewMode === 'list' ? (
-          <div data-testid="places-list">
-            {loading ? <div className="loading">Chargement…</div>
-              : filtered.length === 0 ? (
-                <div className="empty-state" data-testid="empty-state">
-                  <MapPin size={40} /><h3>Aucun lieu pour le moment</h3><p>Les bonnes adresses arrivent bientôt !</p>
+        </div>
+      </section>
+
+      {/* NOS GUIDES */}
+      <section className="v2-guides-section">
+        <div className="v2-guides-img">
+          <img src="/guides-hero.png" alt="Voyageuse contemplant un village côtier" />
+        </div>
+        <div className="v2-guides-body">
+          <p className="v2-section-eyebrow">NOS GUIDES</p>
+          <h2 className="v2-guides-title">Itin&eacute;raires &amp;<br />conseils de voyage</h2>
+          <p className="v2-guides-desc">Des id&eacute;es de parcours pour d&eacute;couvrir une r&eacute;gion, le temps d'un week-end ou d'un plus long voyage.</p>
+          <Link to="/guides" className="v2-see-all">Voir tous les guides <span>&#8594;</span></Link>
+        </div>
+        <div className="v2-guides-grid">
+            {Array.from({ length: 3 }).map((_, i) => {
+              const guide = guides[i];
+              return guide ? (
+                <div key={guide.id} className="v2-guide-mini" onClick={() => navigate(`/guides/${guide.id}`)}>
+                  <div className="v2-guide-mini-img">
+                    {guide.cover_image
+                      ? <img src={getPhotoSrc(guide.cover_image)} alt={guide.title} />
+                      : <div className="v2-guide-mini-placeholder"><BookOpen size={24} /></div>}
+                    <span className="v2-guide-mini-dur">{guide.duration_days} JOUR{guide.duration_days > 1 ? 'S' : ''}</span>
+                    <span className="v2-guide-arrow">&#8594;</span>
+                  </div>
+                  <p className="v2-guide-mini-title">{guide.title}</p>
+                  <p className="v2-guide-mini-dest"><MapPin size={11} />{guide.destination}</p>
                 </div>
-              ) : filtered.map(place => (
-                <PlaceListRow key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
-              ))}
+              ) : (
+                <div key={i} className="v2-guide-mini">
+                  <div className="v2-guide-mini-img v2-guide-empty-slot" />
+                </div>
+              );
+            })}
           </div>
-        ) : (
-          <div className="map-wrapper" data-testid="map-wrapper">
-            <MapContainer center={mapCenter} zoom={6} style={{ height: '100%', width: '100%' }}>
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
-              <MapRecenter center={mapCenter} />
-              <FitBoundsToMarkers positions={filtered.map(p => [p.latitude, p.longitude])} />
-              {filtered.map(place => (
-                <Marker key={place.id} position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)}
-                  eventHandlers={{ click: () => setSelectedPlace(place) }}>
-                  <Popup>
-                    <div className="map-popup" onClick={() => setSelectedPlace(place)}>
-                      <h4>{place.title}</h4><p>{place.address}</p><StarRating rating={place.rating} readonly />
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
+      </section>
+      {/* FOOTER */}
+      <footer className="v2-footer">
+        <div className="v2-footer-inner v2-footer-inner--full">
+          <div className="v2-footer-brand">
+            <img src="/logo-icone-creme.png" alt="Deux Pas Un Monde" className="v2-footer-logo" />
+            <span className="v2-footer-copy">&copy; {new Date().getFullYear()} Deux Pas Un Monde</span>
           </div>
-        )}
-      </div>
-
-      <footer className="footer">
-        <p>Deux pas un monde © 2026 — <a href={igUrl} target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
+          <Link to="/admin" className="v2-footer-admin-link">Espace admin</Link>
+        </div>
       </footer>
-
-      {/* Floating admin button */}
-      <Link to="/admin" className="floating-admin-btn" data-testid="admin-link">
-        <Settings size={15} />Admin
-      </Link>
 
       <AnimatePresence>
         {selectedPlace && <PlaceDetailModal place={selectedPlace} onClose={() => setSelectedPlace(null)} />}
@@ -1053,7 +1053,7 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
         const g = hits[0].object.userData.guide;
         if (tooltipRef.current) {
           tooltipRef.current.innerHTML = `
-            <div style="font-family:'Cormorant Garant',serif;font-size:15px;font-weight:600;color:#252826;line-height:1.2">${g.title}</div>
+            <div style="font-family:'Libre Caslon Display',Georgia,serif;font-size:15px;font-weight:600;color:#252826;line-height:1.2">${g.title}</div>
             <div style="font-family:Jost,sans-serif;font-size:11px;color:#888;margin-top:3px">${g.destination}, ${g.country}</div>
             <div style="font-family:Jost,sans-serif;font-size:10px;color:#aaa;margin-top:2px">${g.duration_days} jour${g.duration_days > 1 ? 's' : ''}</div>
           `;
@@ -1161,6 +1161,7 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
   );
 };
 
+// eslint-disable-next-line no-unused-vars
 const GlobeView = ({ guides, navigate }) => {
   const [resolvedGuides, setResolvedGuides] = useState([]);
   const [geocoding, setGeocoding] = useState(true);
@@ -1213,7 +1214,7 @@ const GlobeView = ({ guides, navigate }) => {
             >
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: g.markerColor, flexShrink: 0 }} />
               <div>
-                <div style={{ fontFamily: "'Cormorant Garant', serif", fontSize: 15, fontWeight: 600, color: 'var(--text)', lineHeight: 1.1 }}>{g.title}</div>
+                <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 15, fontWeight: 600, color: 'var(--text)', lineHeight: 1.1 }}>{g.title}</div>
                 <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: 'var(--text-muted)' }}>{g.destination}</div>
               </div>
             </div>
@@ -1231,10 +1232,14 @@ const GlobeView = ({ guides, navigate }) => {
 // GUIDES LIST PAGE — /guides
 // ============================================================
 const GuidesPage = () => {
-  const [guides, setGuides]     = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [viewMode, setViewMode] = useState('grid');
+  const [guides, setGuides]       = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [viewMode, setViewMode]   = useState('grid');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen]   = useState(false);
   const navigate = useNavigate();
+
+  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
 
   useEffect(() => { fetchGuides(); }, []);
 
@@ -1248,78 +1253,117 @@ const GuidesPage = () => {
     finally { setLoading(false); }
   };
 
-  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
-  const igSvg = <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>;
-
-  const VIEW_TOGGLES = [
-    { mode: 'grid', icon: <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg> },
-    { mode: 'list', icon: <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg> },
-    { mode: 'globe', icon: <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg> },
-  ];
-
+  const filtered = guides.filter(g => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return [g.title, g.destination, g.country].some(f => (f||'').toLowerCase().includes(q));
+  });
 
   return (
-    <div className="guides-page">
-      {/* Hero */}
-      <div className="site-hero">
-        <Link to="/"><DpmLogo /></Link>
-        <p className="site-hero-tagline">NOS GUIDES DE VOYAGE</p>
-        <a href={igUrl} target="_blank" rel="noopener noreferrer" className="site-hero-instagram">
-          {igSvg}@deuxpas_unmonde
-        </a>
-        <div className="section-nav">
-          <Link to="/"><button className="section-nav-btn">Adresses</button></Link>
-          <Link to="/guides"><button className="section-nav-btn active">Guides voyage</button></Link>
-        </div>
-      </div>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
 
-      {/* Filter bar */}
-      <div className="filter-bar">
-        <div className="filter-bar-inner">
-          <p className="results-count" style={{ margin: 0 }}>{guides.length} guide{guides.length > 1 ? 's' : ''}</p>
-          <div className="view-toggles">
-            {VIEW_TOGGLES.map(({ mode, icon }) => (
-              <button key={mode} className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`} onClick={() => setViewMode(mode)}>
-                {icon}
-              </button>
-            ))}
+      {/* HERO */}
+      <div className="guides-page-hero">
+        <nav className="v2-nav">
+          <Link to="/" className="v2-nav-brand">
+            <img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" />
+          </Link>
+          <div className="v2-nav-links">
+            <Link to="/"         className="v2-nav-link">Accueil</Link>
+            <Link to="/adresses" className="v2-nav-link">Nos adresses</Link>
+            <Link to="/guides"   className="v2-nav-link active">Guides voyage</Link>
+            <a href="#apropos"   className="v2-nav-link">À propos</a>
           </div>
+          <div className="v2-nav-actions">
+            <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
+            <button className="v2-nav-icon-btn" aria-label="Compte">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </button>
+            <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-icon-btn" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+            </a>
+          </div>
+        </nav>
+        <div className="adresses-hero-content">
+          <p className="v2-section-eyebrow adresses-eyebrow">GUIDES VOYAGE</p>
+          <h1 className="adresses-hero-title">Tous nos guides</h1>
+          {!loading && <p className="adresses-hero-count">{filtered.length} guide{filtered.length > 1 ? 's' : ''}</p>}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="guides-content">
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} places={[]} onSelectPlace={() => {}} />
+
+      {/* SEARCHBAR */}
+      <div className="adresses-searchbar-wrap">
+        <div className="v2-searchbar v2-searchbar--simple v2-searchbar--light">
+          <Search size={16} strokeWidth={1.5} style={{ color: 'rgba(0,0,0,0.35)', flexShrink: 0 }} />
+          <input
+            className="v2-searchbar-text"
+            placeholder="Rechercher un guide, une destination..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', color: 'rgba(0,0,0,0.35)', display: 'flex' }}>
+              <X size={14} />
+            </button>
+          )}
+          <button className="v2-searchbar-btn v2-searchbar-btn--dark" onClick={() => {}}>
+            <Search size={15} /> Rechercher
+          </button>
+        </div>
+      </div>
+
+      {/* TOOLBAR */}
+      <div className="adresses-toolbar">
+        <div className="adresses-view-toggles">
+          {[
+            ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
+            ['list', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>],
+          ].map(([mode, icon]) => (
+            <button key={mode} className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
+              onClick={() => setViewMode(mode)}>{icon}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* GUIDES */}
+      <div className="adresses-places">
         <SurpriseCountdown />
         {loading ? (
           <div className="loading">Chargement…</div>
-        ) : guides.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="empty-state">
-            <BookOpen size={40} /><h3>Aucun guide pour le moment</h3><p>Les guides arrivent bientôt !</p>
+            <BookOpen size={40} /><h3>Aucun guide trouvé</h3><p>Essayez une autre recherche.</p>
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="guides-grid">
-            {guides.map(guide => (
+          <div className="places-grid v2-places-grid">
+            {filtered.map(guide => (
               <GuideCard key={guide.id} guide={guide} onClick={() => navigate(`/guides/${guide.id}`)} />
             ))}
           </div>
-        ) : viewMode === 'list' ? (
+        ) : (
           <div className="guides-list">
-            {guides.map(guide => (
+            {filtered.map(guide => (
               <GuideListRow key={guide.id} guide={guide} onClick={() => navigate(`/guides/${guide.id}`)} />
             ))}
-          </div>
-        ) : (
-          <div className="guides-globe-wrap">
-            <GlobeView guides={guides} navigate={navigate} />
           </div>
         )}
       </div>
 
-      <footer className="footer">
-        <p>Deux pas un monde © 2026 — <a href={igUrl} target="_blank" rel="noopener noreferrer">@deuxpas_unmonde</a></p>
+      <footer className="v2-footer">
+        <div className="v2-footer-inner v2-footer-inner--full">
+          <div className="v2-footer-brand">
+            <img src="/logo-icone-creme.png" alt="Deux Pas Un Monde" className="v2-footer-logo" />
+            <span className="v2-footer-copy">&copy; {new Date().getFullYear()} Deux Pas Un Monde</span>
+          </div>
+          <Link to="/admin" className="v2-footer-admin-link">Espace admin</Link>
+        </div>
       </footer>
-
-      <Link to="/admin" className="floating-admin-btn"><Settings size={15} />Admin</Link>
     </div>
   );
 };
@@ -1475,7 +1519,7 @@ const GuideDetailPage = () => {
             <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
               Guide voyage — {guide.destination}, {guide.country}
             </p>
-            <h1 style={{ fontFamily: "'Cormorant Garant', serif", fontWeight: 600, fontSize: 42, color: '#fff', margin: 0, lineHeight: 1.1, textShadow: '0 2px 16px rgba(0,0,0,0.35)' }}>
+            <h1 style={{ fontFamily: "'EB Garamond', Georgia, serif", fontWeight: 600, fontSize: 42, color: '#fff', margin: 0, lineHeight: 1.1, textShadow: '0 2px 16px rgba(0,0,0,0.35)' }}>
               {guide.title}
             </h1>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
@@ -1495,7 +1539,7 @@ const GuideDetailPage = () => {
 
           {/* Intro */}
           {guide.intro && (
-            <p style={{ fontFamily: "'Cormorant Garant', serif", fontStyle: 'italic', fontSize: 20, color: '#666',
+            <p style={{ fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'italic', fontSize: 20, color: '#666',
               lineHeight: 1.75, marginBottom: 44, textAlign: 'center' }}
               dangerouslySetInnerHTML={{ __html: guide.intro }} />
           )}
@@ -1540,7 +1584,7 @@ const GuideDetailPage = () => {
                     const day = guide.itinerary[activeDay];
                     return (
                       <div>
-                        <h2 style={{ fontFamily: "'Cormorant Garant', serif", fontWeight: 600, fontSize: 30, color: '#252826', marginBottom: 8 }}>
+                        <h2 style={{ fontFamily: "'EB Garamond', Georgia, serif", fontWeight: 600, fontSize: 30, color: '#252826', marginBottom: 8 }}>
                           Jour {day.day_number}
                           {day.title && <span style={{ fontWeight: 400, color: '#aaa', fontSize: 24 }}> — {day.title}</span>}
                         </h2>
@@ -1588,7 +1632,7 @@ const GuideDetailPage = () => {
                                       }}>{t.label}</span>
                                     )}
                                   </div>
-                                  <div style={{ fontFamily: "'Cormorant Garant', serif", fontWeight: 600, fontSize: 20, color: '#252826', lineHeight: 1.2, marginBottom: 6 }}>
+                                  <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontWeight: 600, fontSize: 20, color: '#252826', lineHeight: 1.2, marginBottom: 6 }}>
                                     {act.title}
                                   </div>
                                   {act.description && (
@@ -1600,7 +1644,7 @@ const GuideDetailPage = () => {
                                       display: 'inline-flex', alignItems: 'center', gap: 8,
                                       background: '#f5f1ea', borderRadius: 6, padding: '6px 12px',
                                       border: '1px solid #e5e0d5', cursor: 'pointer',
-                                      fontFamily: "'Cormorant Garant', serif", fontSize: 14, fontWeight: 600, color: '#252826',
+                                      fontFamily: "'EB Garamond', Georgia, serif", fontSize: 14, fontWeight: 600, color: '#252826',
                                     }}>
                                       <MapPin size={12} color="#c17c5a" />{linked.title}
                                       {linked.city && <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: '#aaa', fontWeight: 400 }}>{linked.city}</span>}
@@ -1729,7 +1773,7 @@ const GuideDetailPage = () => {
                                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: act.color, flexShrink: 0 }} />
                                   <span style={{ fontSize: 10, color: '#999' }}>Jour {act.dayNumber}</span>
                                 </div>
-                                <div style={{ fontFamily: "'Cormorant Garant', serif", fontSize: 15, fontWeight: 600, color: '#252826' }}>{act.title}</div>
+                                <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 15, fontWeight: 600, color: '#252826' }}>{act.title}</div>
                               </div>
                             </Popup>
                           </Marker>
@@ -1761,7 +1805,7 @@ const GuideDetailPage = () => {
                               Jour {act.dayNumber}
                             </div>
                             <div style={{
-                              fontFamily: "'Cormorant Garant', serif", fontWeight: 600,
+                              fontFamily: "'EB Garamond', Georgia, serif", fontWeight: 600,
                               fontSize: 14, color: '#252826', lineHeight: 1.2,
                               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                             }}>{act.title}</div>
@@ -2005,7 +2049,7 @@ const PlaceSearch = ({ act, dayIdx, actIdx, places, updateActivity }) => {
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <CategoryBadge categoryId={p.category} small />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Cormorant Garant', serif", fontSize: 14, fontWeight: 600, color: '#252826', lineHeight: 1.1 }}>{p.title}</div>
+                    <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 14, fontWeight: 600, color: '#252826', lineHeight: 1.1 }}>{p.title}</div>
                     <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: '#aaa' }}>{p.city}, {p.country}</div>
                   </div>
                 </div>
@@ -2908,12 +2952,215 @@ const AdminPage = () => {
   );
 };
 
+// ============================================================
+// ADRESSES PAGE
+// ============================================================
+const AdressesPage = () => {
+  const [places, setPlaces] = useState([]);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [viewMode, setViewMode] = useState('grid');
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [mapCenter, setMapCenter] = useState([46.603354, 1.888334]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
+
+  // Lire la catégorie depuis l'URL (?category=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get('category');
+    if (cat) setActiveCategory(cat);
+  }, []);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchPlaces(); }, [activeCategory]);
+
+  const fetchPlaces = async () => {
+    setLoading(true);
+    try {
+      const url = activeCategory === 'all'
+        ? `${API_URL}/api/places`
+        : `${API_URL}/api/places?category=${activeCategory}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      setPlaces(data);
+      if (data.length > 0) setMapCenter([data[0].latitude, data[0].longitude]);
+    } catch { toast.error('Erreur lors du chargement des lieux'); }
+    finally { setLoading(false); }
+  };
+
+  const filtered = searchQuery
+    ? places.filter(p =>
+        p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.country?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : places;
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+
+      {/* HERO COMPACT */}
+      <div className="adresses-hero">
+        <nav className="v2-nav">
+          <Link to="/" className="v2-nav-brand">
+            <img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" />
+          </Link>
+          <div className="v2-nav-links">
+            <Link to="/"          className="v2-nav-link">Accueil</Link>
+            <Link to="/adresses"  className="v2-nav-link active">Nos adresses</Link>
+            <Link to="/guides"    className="v2-nav-link">Guides voyage</Link>
+            <a href="#apropos"    className="v2-nav-link">À propos</a>
+          </div>
+          <div className="v2-nav-actions">
+            <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
+            <button className="v2-nav-icon-btn" aria-label="Compte">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </button>
+            <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-icon-btn" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+            </a>
+          </div>
+        </nav>
+        <div className="adresses-hero-content">
+          <p className="v2-section-eyebrow adresses-eyebrow">NOS BONNES ADRESSES</p>
+          <h1 className="adresses-hero-title">Toutes nos adresses</h1>
+          {!loading && <p className="adresses-hero-count">{filtered.length} adresse{filtered.length > 1 ? 's' : ''}</p>}
+        </div>
+      </div>
+
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} places={places} onSelectPlace={setSelectedPlace} />
+
+      {/* SEARCHBAR */}
+      <div className="adresses-searchbar-wrap">
+        <div className="v2-searchbar v2-searchbar--simple v2-searchbar--light">
+          <Search size={16} strokeWidth={1.5} style={{ color: 'rgba(0,0,0,0.35)', flexShrink: 0 }} />
+          <input
+            className="v2-searchbar-text"
+            placeholder="Rechercher une adresse, une ville, une région..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', color: 'rgba(0,0,0,0.35)', display: 'flex' }}>
+              <X size={14} />
+            </button>
+          )}
+          <button className="v2-searchbar-btn v2-searchbar-btn--dark" onClick={() => {}}>
+            <Search size={15} /> Rechercher
+          </button>
+        </div>
+      </div>
+
+      {/* BANDE CATÉGORIES */}
+      <div className="v2-cat-strip">
+        <div className="v2-cat-strip-inner">
+          {HOME_VISUAL_CATS.map((cat, i) => {
+            const isActive = activeCategory === cat.id;
+            return (
+              <React.Fragment key={i}>
+                {i > 0 && <div className="v2-cat-sep" />}
+                <button
+                  className={`v2-cat-item${isActive ? ' active' : ''}`}
+                  onClick={() => setActiveCategory(isActive ? 'all' : cat.id)}>
+                  <div className="v2-cat-icon">{CAT_SVG[cat.svg]}</div>
+                  <span className="v2-cat-label">{cat.line1}<br />{cat.line2}</span>
+                </button>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* BARRE OUTILS */}
+      <div className="adresses-toolbar">
+        <div className="adresses-view-toggles">
+          {[
+            ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
+            ['list', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>],
+            ['map',  <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>],
+          ].map(([mode, icon]) => (
+            <button key={mode} className={`view-toggle-btn ${viewMode === mode ? 'active' : ''}`}
+              onClick={() => setViewMode(mode)}>{icon}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* LISTE DES ADRESSES */}
+      <div className="adresses-places">
+        {viewMode === 'grid' ? (
+          <div className="places-grid v2-places-grid">
+            {loading ? <div className="loading">Chargement...</div>
+              : filtered.length === 0 ? (
+                <div className="empty-state">
+                  <MapPin size={40} /><h3>Aucune adresse trouvée</h3><p>Essayez une autre recherche ou catégorie.</p>
+                </div>
+              ) : filtered.map(place => (
+                <PlaceCard key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
+              ))}
+          </div>
+        ) : viewMode === 'list' ? (
+          <div>
+            {loading ? <div className="loading">Chargement...</div>
+              : filtered.length === 0 ? (
+                <div className="empty-state">
+                  <MapPin size={40} /><h3>Aucune adresse trouvée</h3>
+                </div>
+              ) : filtered.map(place => (
+                <PlaceListRow key={place.id} place={place} onClick={() => setSelectedPlace(place)} />
+              ))}
+          </div>
+        ) : (
+          <div className="map-wrapper" style={{ height: 520, borderRadius: 16, overflow: 'hidden' }}>
+            <MapContainer center={mapCenter} zoom={6} style={{ height: '100%', width: '100%' }}>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
+              <MapRecenter center={mapCenter} />
+              <FitBoundsToMarkers positions={filtered.filter(p => p.latitude && p.longitude).map(p => [p.latitude, p.longitude])} />
+              {filtered.filter(p => p.latitude && p.longitude).map(place => (
+                <Marker key={place.id} position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)}
+                  eventHandlers={{ click: () => setSelectedPlace(place) }}>
+                  <Popup>
+                    <div className="map-popup" onClick={() => setSelectedPlace(place)}>
+                      <h4>{place.title}</h4><p>{place.address}</p><StarRating rating={place.rating} readonly />
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          </div>
+        )}
+      </div>
+
+      {/* FOOTER */}
+      <footer className="v2-footer">
+        <div className="v2-footer-inner v2-footer-inner--full">
+          <div className="v2-footer-brand">
+            <img src="/logo-icone-creme.png" alt="Deux Pas Un Monde" className="v2-footer-logo" />
+            <span className="v2-footer-copy">&copy; {new Date().getFullYear()} Deux Pas Un Monde</span>
+          </div>
+          <Link to="/admin" className="v2-footer-admin-link">Espace admin</Link>
+        </div>
+      </footer>
+
+      {selectedPlace && (
+        <PlaceDetailModal place={selectedPlace} onClose={() => setSelectedPlace(null)} />
+      )}
+    </div>
+  );
+};
+
 function App() {
   return (
     <Router>
       <Toaster position="top-right" richColors theme="dark" />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/adresses" element={<AdressesPage />} />
         <Route path="/place/:id" element={<PlaceDetailPage />} />
         <Route path="/guides" element={<GuidesPage />} />
         <Route path="/guides/:id" element={<GuideDetailPage />} />
