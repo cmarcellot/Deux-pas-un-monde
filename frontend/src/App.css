@@ -2461,7 +2461,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(5,18,13,0.42);
+  background: linear-gradient(90deg, rgba(5,18,13,0.26), transparent 68%);
   pointer-events: none;
 }
 .guides-page-hero .v2-nav { background: rgba(0,0,0,0.28); }
@@ -2481,7 +2481,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(5,18,13,0.42);
+  background: linear-gradient(90deg, rgba(5,18,13,0.26), transparent 68%);
   pointer-events: none;
 }
 .adresses-hero .v2-nav { background: rgba(0,0,0,0.28); }
