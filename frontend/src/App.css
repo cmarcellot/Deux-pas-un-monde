@@ -2556,6 +2556,35 @@
   outline: none;
   width: 100%;
 }
+.adresses-sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.adresses-sort-label {
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.adresses-sort-select {
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 30px 7px 12px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  transition: border-color 0.15s;
+}
+.adresses-sort-select:focus { outline: none; border-color: var(--dark); }
+
 .adresses-view-toggles {
   margin-left: auto;
   display: flex;
@@ -2570,6 +2599,7 @@
   .adresses-hero { height: 210px; }
   .adresses-hero-content { padding-top: 90px; }
   .adresses-hero-title { font-size: 32px; }
-  .adresses-toolbar { padding: 12px 5%; }
+  .adresses-toolbar { padding: 12px 5%; flex-wrap: wrap; row-gap: 10px; }
+  .adresses-sort-label { display: none; }
   .adresses-places { padding: 20px 5% 40px; }
 }

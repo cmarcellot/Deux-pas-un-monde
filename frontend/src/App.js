@@ -2964,6 +2964,7 @@ const AdressesPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [sortBy, setSortBy] = useState('featured');
   const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
 
   // Lire la catégorie depuis l'URL (?category=...)
@@ -2990,13 +2991,19 @@ const AdressesPage = () => {
     finally { setLoading(false); }
   };
 
-  const filtered = searchQuery
+  const filtered = (searchQuery
     ? places.filter(p =>
         p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.country?.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : places;
+    : places
+  ).slice().sort((a, b) => {
+    if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
+    if (sortBy === 'recent') return (b.date || '').localeCompare(a.date || '');
+    if (sortBy === 'az') return (a.title || '').localeCompare(b.title || '');
+    return 0; // 'featured' — ordre par défaut de l'API
+  });
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
@@ -3079,6 +3086,15 @@ const AdressesPage = () => {
 
       {/* BARRE OUTILS */}
       <div className="adresses-toolbar">
+        <label className="adresses-sort">
+          <span className="adresses-sort-label">Trier par :</span>
+          <select className="adresses-sort-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            <option value="featured">Nos préférés</option>
+            <option value="rating">Mieux notées</option>
+            <option value="recent">Plus récentes</option>
+            <option value="az">Ordre alphabétique</option>
+          </select>
+        </label>
         <div className="adresses-view-toggles">
           {[
             ['grid', <svg viewBox="0 0 24 24" fill="currentColor" style={{width:15,height:15}}><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>],
