@@ -12,7 +12,7 @@ import {
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Eye, Save, Key, ZoomIn,
   BookOpen, Calendar, Globe, Wallet, Info, Plane,
-  Search, CheckCircle, Loader2, GripVertical, Heart
+  Search, CheckCircle, Loader2, GripVertical, Heart, Tag
 } from 'lucide-react';
 import './App.css';
 
@@ -481,6 +481,7 @@ const PlaceDetailModal = ({ place, onClose }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const thumbStripRef = useRef(null);
 
   if (!place) return null;
   const buildAllMedia = (p) => {
@@ -495,65 +496,104 @@ const PlaceDetailModal = ({ place, onClose }) => {
   };
   const allMedia = buildAllMedia(place);
   const current = allMedia[currentIdx];
+  const locationLabel = `${place.city || place.address}${place.city && place.country ? `, ${place.country}` : ''}`;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
+  const highlightPhoto = (allMedia.length > 1 ? allMedia[1] : allMedia[0]);
+  const scrollThumbs = (dir) => thumbStripRef.current?.scrollBy({ left: dir * 90, behavior: 'smooth' });
 
   return (
     <>
       <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
-        <motion.div className="place-detail-modal" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()} data-testid="place-detail-modal">
-          <button className="modal-close-btn" onClick={onClose} data-testid="close-modal-btn"><X size={24} /></button>
+        <motion.div className="pdm" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} data-testid="place-detail-modal">
 
-          <div className="modal-gallery">
+          {/* HERO */}
+          <div className="pdm-hero">
             {allMedia.length > 0 ? (
-              <>
-                {current.isVideo ? (
-                  <div className="modal-main-image">
-                    <video key={current.url} src={getPhotoSrc(current.url)} controls style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', borderRadius: '12px' }} />
-                  </div>
-                ) : (
-                  <div className="modal-main-image clickable-photo" onClick={() => { setLightboxIndex(currentIdx); setLightboxOpen(true); }} title="Cliquer pour agrandir">
-                    <img src={getPhotoSrc(current.url)} alt={place.title} />
-                    <div className="photo-zoom-hint"><ZoomIn size={18} /></div>
-                  </div>
-                )}
-                {allMedia.length > 1 && (
-                  <div className="modal-thumbnails">
-                    {allMedia.map((media, idx) => (
-                      <button key={idx} className={`modal-thumb ${idx === currentIdx ? 'active' : ''}`} onClick={() => setCurrentIdx(idx)}>
-                        {media.isVideo
-                          ? <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '6px', overflow: 'hidden' }}>
-                              <video src={getPhotoSrc(media.url)} preload="metadata" muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
-                              </div>
-                            </div>
-                          : <img src={getPhotoSrc(media.url)} alt={`${place.title} ${idx + 1}`} />
-                        }
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </>
+              current.isVideo ? (
+                <video key={current.url} src={getPhotoSrc(current.url)} controls className="pdm-hero-media" />
+              ) : (
+                <img src={getPhotoSrc(current.url)} alt={place.title} className="pdm-hero-media"
+                  onClick={() => { setLightboxIndex(currentIdx); setLightboxOpen(true); }} title="Cliquer pour agrandir" />
+              )
             ) : (
-              <div className="modal-no-image"><MapPin size={48} /></div>
+              <div className="pdm-hero-empty"><MapPin size={48} /></div>
+            )}
+
+            <div className="pdm-hero-badge"><CategoryBadge categoryId={place.category} /></div>
+            <button className="pdm-hero-close" onClick={onClose} aria-label="Fermer" data-testid="close-modal-btn"><X size={20} /></button>
+
+            {allMedia.length > 1 && (
+              <div className="pdm-hero-nav">
+                <span className="pdm-hero-counter">{currentIdx + 1} / {allMedia.length}</span>
+                <button className="pdm-hero-arrow" onClick={() => setCurrentIdx(i => Math.max(0, i - 1))} disabled={currentIdx === 0} aria-label="Photo précédente"><ChevronLeft size={16} /></button>
+                <button className="pdm-hero-arrow" onClick={() => setCurrentIdx(i => Math.min(allMedia.length - 1, i + 1))} disabled={currentIdx === allMedia.length - 1} aria-label="Photo suivante"><ChevronRight size={16} /></button>
+              </div>
             )}
           </div>
 
-          <div className="modal-body">
-            <h2 className="modal-title">{place.title}</h2>
-            <div className="modal-meta">
-              <CategoryBadge categoryId={place.category} />
-              <StarRating rating={place.rating} readonly size={15} />
+          {/* BODY */}
+          <div className="pdm-body">
+            <div className="pdm-main">
+              <p className="pdm-location"><MapPin size={13} strokeWidth={1.8} />{locationLabel}</p>
+              <h2 className="pdm-title">{place.title}</h2>
+              <div className="pdm-rating">
+                <StarRating rating={place.rating} readonly size={15} />
+                <span className="pdm-rating-note">{place.rating}/5</span>
+              </div>
+              <div className="pdm-description" dangerouslySetInnerHTML={{ __html: place.description }} />
+
+              {place.experience_tags?.length > 0 && (
+                <>
+                  <div className="pdm-divider" />
+                  <h3 className="pdm-subheading">L'expérience en bref</h3>
+                  <div className="pdm-tags">
+                    {place.experience_tags.map((tag, i) => <span key={i} className="pdm-tag">{tag}</span>)}
+                  </div>
+                </>
+              )}
+
+              {allMedia.length > 1 && (
+                <>
+                  <div className="pdm-divider" />
+                  <div className="pdm-gallery-strip">
+                    <button className="pdm-gallery-arrow" onClick={() => scrollThumbs(-1)} aria-label="Défiler à gauche"><ChevronLeft size={14} /></button>
+                    <div className="pdm-gallery-thumbs" ref={thumbStripRef}>
+                      {allMedia.map((media, idx) => (
+                        <button key={idx} className={`pdm-gallery-thumb ${idx === currentIdx ? 'active' : ''}`} onClick={() => setCurrentIdx(idx)}>
+                          {media.isVideo
+                            ? <video src={getPhotoSrc(media.url)} preload="metadata" muted />
+                            : <img src={getPhotoSrc(media.url)} alt="" />}
+                        </button>
+                      ))}
+                    </div>
+                    <button className="pdm-gallery-arrow" onClick={() => scrollThumbs(1)} aria-label="Défiler à droite"><ChevronRight size={14} /></button>
+                  </div>
+                </>
+              )}
             </div>
-            <div className="modal-address"><MapPin size={16} /><span>{place.address}</span></div>
-            {place.date && <div className="modal-address"><Calendar size={16} /><span>{formatMonthYear(place.date)}</span></div>}
-            <div className="modal-description" dangerouslySetInnerHTML={{ __html: place.description }} />
-            <div className="modal-map">
-              <MapContainer center={[place.latitude, place.longitude]} zoom={14}
-                style={{ height: '200px', width: '100%', borderRadius: '12px' }} scrollWheelZoom={false}>
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
-                <Marker position={[place.latitude, place.longitude]} icon={createMarkerIcon(place.category)} />
-              </MapContainer>
+
+            <div className="pdm-sidebar">
+              <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="pdm-btn pdm-btn-dark">
+                <MapPin size={15} /> Voir sur la carte
+              </a>
+              <button type="button" className="pdm-btn pdm-btn-outline">
+                <Heart size={15} /> Ajouter aux favoris
+              </button>
+
+              <div className="pdm-info-list">
+                <div className="pdm-info-row"><MapPin size={15} /><span>{locationLabel}</span></div>
+                {place.date && <div className="pdm-info-row"><Calendar size={15} /><span>Fait en {formatMonthYear(place.date)}</span></div>}
+                {place.price_from != null && place.price_from !== '' && (
+                  <div className="pdm-info-row"><Tag size={15} /><span>À partir de {place.price_from} € / nuit</span></div>
+                )}
+              </div>
+
+              {highlightPhoto && !highlightPhoto.isVideo && (
+                <div className="pdm-highlight">
+                  <img src={getPhotoSrc(highlightPhoto.url)} alt="" />
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
@@ -2455,6 +2495,7 @@ const AdminPage = () => {
     title: '', address: '', city: '', country: '', date: '',
     description: '', category: 'accommodation',
     rating: 3, latitude: 48.8566, longitude: 2.3522,
+    experience_tags: '', price_from: '',
   });
   const [placeFormId, setPlaceFormId] = useState(() => crypto.randomUUID());
   const [adminTab, setAdminTab] = useState('places');
@@ -2645,10 +2686,12 @@ const AdminPage = () => {
       const finalPhotos = resolvedItems.filter(i => !i.isVideo).map(i => i.url);
       const finalVideos = resolvedItems.filter(i => i.isVideo).map(i => i.url);
       const finalMediaOrder = resolvedItems.map(i => i.url);
+      const finalExperienceTags = formData.experience_tags.split(',').map(t => t.trim()).filter(Boolean);
+      const finalPriceFrom = formData.price_from === '' ? null : parseFloat(formData.price_from);
       const url = editingPlace ? `${API_URL}/api/places/${editingPlace.id}` : `${API_URL}/api/places`;
       const payload = editingPlace
-        ? { ...formData, photos: finalPhotos, videos: finalVideos, media_order: finalMediaOrder }
-        : { ...formData, id: placeFormId, photos: finalPhotos, videos: finalVideos, media_order: finalMediaOrder };
+        ? { ...formData, photos: finalPhotos, videos: finalVideos, media_order: finalMediaOrder, experience_tags: finalExperienceTags, price_from: finalPriceFrom }
+        : { ...formData, id: placeFormId, photos: finalPhotos, videos: finalVideos, media_order: finalMediaOrder, experience_tags: finalExperienceTags, price_from: finalPriceFrom };
       const res = await fetch(url, { method: editingPlace ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
       if (res.ok) {
         for (const mediaUrl of removedMedia) {
@@ -2673,7 +2716,7 @@ const AdminPage = () => {
     setRemovedMedia([]);
     setEditingPlace(place);
     setPlaceFormId(place.id);
-    setFormData({ title: place.title, address: place.address, city: place.city || '', country: place.country || '', date: place.date || '', description: place.description, category: place.category, rating: place.rating, latitude: place.latitude, longitude: place.longitude });
+    setFormData({ title: place.title, address: place.address, city: place.city || '', country: place.country || '', date: place.date || '', description: place.description, category: place.category, rating: place.rating, latitude: place.latitude, longitude: place.longitude, experience_tags: (place.experience_tags || []).join(', '), price_from: place.price_from ?? '' });
     setShowForm(true);
   };
 
@@ -2692,7 +2735,7 @@ const AdminPage = () => {
     setMediaItems([]); setRemovedMedia([]);
     setEditingPlace(null); setShowForm(false);
     setPlaceFormId(crypto.randomUUID());
-    setFormData({ title: '', address: '', city: '', country: '', date: '', description: '', category: 'accommodation', rating: 3, latitude: 48.8566, longitude: 2.3522 });
+    setFormData({ title: '', address: '', city: '', country: '', date: '', description: '', category: 'accommodation', rating: 3, latitude: 48.8566, longitude: 2.3522, experience_tags: '', price_from: '' });
     setGeocodeResult(null); setShowManualCoords(false);
   };
 
@@ -2822,6 +2865,8 @@ const AdminPage = () => {
                         </div>
                       </div>
                       <div className="form-group full-width"><label>Note</label><StarRating rating={formData.rating} onChange={(rating) => setFormData({ ...formData, rating })} readonly={false} /></div>
+                      <div className="form-group"><label>Tags d'expérience</label><input type="text" value={formData.experience_tags} onChange={(e) => setFormData({ ...formData, experience_tags: e.target.value })} placeholder="Ex: Nature, Insolite, Bien-être, Romantique" /></div>
+                      <div className="form-group"><label>Prix indicatif (€ / nuit)</label><input type="number" step="1" min="0" value={formData.price_from} onChange={(e) => setFormData({ ...formData, price_from: e.target.value })} placeholder="Ex: 180" /></div>
                       <div className="form-group full-width"><label>Photos et vidéos</label>
                         <div className="photo-upload-area">
                           <DropZone inputId="photo-upload" label="Glisser des photos ou vidéos ici" accept="image/*,video/*" onFiles={addFiles} />
