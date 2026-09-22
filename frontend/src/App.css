@@ -451,7 +451,7 @@
 
 .pdm-body {
   display: grid;
-  grid-template-columns: 1fr 280px;
+  grid-template-columns: minmax(0, 1fr) 280px;
   gap: 36px;
   padding: 28px 32px 32px;
 }
@@ -503,7 +503,7 @@
 .pdm-gallery-strip { display: flex; align-items: center; gap: 8px; }
 .pdm-gallery-thumbs {
   display: flex; gap: 10px; overflow-x: auto; scroll-behavior: smooth;
-  scrollbar-width: none; flex: 1;
+  scrollbar-width: none; flex: 1; min-width: 0;
 }
 .pdm-gallery-thumbs::-webkit-scrollbar { display: none; }
 .pdm-gallery-thumb {
