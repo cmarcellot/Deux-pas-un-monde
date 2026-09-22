@@ -83,6 +83,8 @@ class PlaceCreate(BaseModel):
     photos: List[str] = []
     videos: List[str] = []
     media_order: List[str] = []
+    experience_tags: List[str] = []
+    price_from: Optional[float] = None
 
 class PlaceUpdate(BaseModel):
     title: Optional[str] = None
@@ -98,6 +100,8 @@ class PlaceUpdate(BaseModel):
     photos: Optional[List[str]] = None
     videos: Optional[List[str]] = None
     media_order: Optional[List[str]] = None
+    experience_tags: Optional[List[str]] = None
+    price_from: Optional[float] = None
 
 class PlaceResponse(BaseModel):
     id: str
@@ -114,6 +118,8 @@ class PlaceResponse(BaseModel):
     photos: List[str]
     videos: List[str] = []
     media_order: List[str] = []
+    experience_tags: List[str] = []
+    price_from: Optional[float] = None
     created_at: str
 
 class ItineraryActivity(BaseModel):
