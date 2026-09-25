@@ -8,7 +8,7 @@ import { Toaster, toast } from 'sonner';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import {
-  Home, Star, MapPin, X, Plus, Trash2, Edit3,
+  Home, Star, MapPin, X, Plus, Trash2,
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
   Compass, Gem, Save, Key, ZoomIn,
   BookOpen, Calendar, Globe, Wallet, Info, Plane,
@@ -2499,17 +2499,166 @@ const ADMIN_NAV = [
 
 const ADMIN_HERO = {
   places: { title: 'Gérez vos adresses', sub: 'Ajoutez, modifiez ou supprimez vos adresses publiées sur le site.' },
-  guides: { title: 'Gérez vos guides', sub: 'Ajoutez, modifiez ou supprimez vos guides de voyage.' },
+  guides: { title: 'Gérez vos guides voyage', sub: 'Ajoutez, modifiez ou supprimez vos guides voyage sur le site.' },
 };
 
-// Les lieux n'ont pas encore de brouillon côté API : ils sont tous publiés
-const PLACE_STATUSES = [
+const ADMIN_STATUSES = [
   { id: 'published', label: 'Publié' },
   { id: 'draft',     label: 'Brouillon' },
 ];
+// Les lieux n'ont pas encore de brouillon côté API : ils sont tous publiés
 const getPlaceStatus = () => 'published';
+const getGuideStatus = (guide) => guide.published ? 'published' : 'draft';
 
-const PLACES_PAGE_SIZE = 8;
+const statusFilterDef = (getStatus) => ({
+  key: 'status', allLabel: 'Tous les status',
+  options: ADMIN_STATUSES.map(s => ({ value: s.id, label: s.label })),
+  match: (item, value) => getStatus(item) === value,
+});
+const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const sortedOptions = (values) => [...new Set(values.filter(Boolean))]
+  .sort((a, b) => a.localeCompare(b, 'fr'))
+  .map(v => ({ value: v, label: capitalize(v) }));
+
+const ADMIN_PAGE_SIZE = 8;
+
+// Liste admin (adresses, guides) : en-tête, filtres, sélection, tableau et pagination.
+// `getRow` traduit un élément en { image, icon, title, description, location, type, status }.
+const AdminCollection = ({
+  variant, testId, eyebrow, title, sub, searchPlaceholder, addLabel, noun, columns, widths,
+  items, filters, getRow, getSearchText, emptyIcon: EmptyIcon,
+  onAdd, onView, onEdit, onDuplicate, onDelete, onDeleteMany,
+}) => {
+  const [search, setSearch] = useState('');
+  const [filterValues, setFilterValues] = useState({});
+  const [page, setPage] = useState(1);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [compact, setCompact] = useState(false);
+
+  const query = search.trim().toLowerCase();
+  const filtered = items.filter(item =>
+    filters.every(f => !filterValues[f.key] || f.match(item, filterValues[f.key])) &&
+    (!query || getSearchText(item).toLowerCase().includes(query))
+  );
+  const pageCount = Math.max(1, Math.ceil(filtered.length / ADMIN_PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageItems = filtered.slice((currentPage - 1) * ADMIN_PAGE_SIZE, currentPage * ADMIN_PAGE_SIZE);
+  const selected = selectedIds.filter(id => items.some(i => i.id === id));
+  const allPageSelected = pageItems.length > 0 && pageItems.every(i => selected.includes(i.id));
+
+  const togglePage = () => setSelectedIds(allPageSelected
+    ? selected.filter(id => !pageItems.some(i => i.id === id))
+    : [...new Set([...selected, ...pageItems.map(i => i.id)])]);
+  const toggleOne = (id) => setSelectedIds(selected.includes(id) ? selected.filter(i => i !== id) : [...selected, id]);
+  const setFilter = (key, value) => { setFilterValues(v => ({ ...v, [key]: value === 'all' ? '' : value })); setPage(1); };
+  const deleteSelected = async () => { if (await onDeleteMany(selected)) setSelectedIds([]); };
+
+  return (
+    <>
+      <div className="adm-head">
+        <div>
+          <p className="adm-eyebrow">{eyebrow}</p>
+          <h2 className="adm-title">{title}</h2>
+          <p className="adm-sub">{sub}</p>
+        </div>
+        <div className="adm-head-actions">
+          <label className="adm-search">
+            <Search size={17} strokeWidth={1.8} />
+            <input type="text" value={search} placeholder={searchPlaceholder}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }} data-testid={`admin-${testId}-search`} />
+          </label>
+          <button className="adm-add-btn" onClick={onAdd} data-testid={`add-${testId}-btn`}>
+            <Plus size={18} strokeWidth={1.8} />{addLabel}
+          </button>
+        </div>
+      </div>
+
+      <div className="adm-filters">
+        {filters.map(f => (
+          <select key={f.key} className="adm-select" value={filterValues[f.key] || 'all'} onChange={(e) => setFilter(f.key, e.target.value)}>
+            <option value="all">{f.allLabel}</option>
+            {f.options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        ))}
+        <div className="adm-filters-right">
+          {selected.length > 0 ? (
+            <button className="adm-bulk-delete" onClick={deleteSelected}>
+              <Trash2 size={14} />Supprimer ({selected.length})
+            </button>
+          ) : (
+            <span className="adm-count">{filtered.length} {filtered.length > 1 ? noun.many : noun.one}</span>
+          )}
+          <div className="adm-view-toggle">
+            <button className={compact ? 'active' : ''} onClick={() => setCompact(true)} aria-label="Vue compacte"><List size={16} /></button>
+            <button className={compact ? '' : 'active'} onClick={() => setCompact(false)} aria-label="Vue détaillée"><LayoutList size={16} /></button>
+          </div>
+        </div>
+      </div>
+
+      <div className="adm-table-wrap" data-testid={`admin-${testId}s-list`}>
+        <table className={`adm-table ${variant}${compact ? ' compact' : ''}`}>
+          <colgroup>
+            <col style={{ width: widths[0] }} /><col style={{ width: widths[1] }} /><col className="adm-col-name" /><col className="adm-col-loc" />
+            <col style={{ width: widths[2] }} /><col style={{ width: widths[3] }} /><col style={{ width: widths[4] }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th><input type="checkbox" className="adm-check" checked={allPageSelected} onChange={togglePage} aria-label="Tout sélectionner" /></th>
+              <th>Aperçu</th><th>{columns.title}</th><th>{columns.location}</th><th>Type</th><th>Statut</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageItems.length === 0 ? (
+              <tr><td colSpan={7} className="adm-empty">
+                <EmptyIcon size={36} strokeWidth={1.4} />
+                {items.length === 0 ? `Aucun${noun.feminine ? 'e' : ''} ${noun.one} pour le moment` : `Aucun${noun.feminine ? 'e' : ''} ${noun.one} ne correspond à votre recherche`}
+              </td></tr>
+            ) : pageItems.map((item) => {
+              const row = getRow(item);
+              const RowIcon = row.icon;
+              const status = ADMIN_STATUSES.find(s => s.id === row.status);
+              const isSelected = selected.includes(item.id);
+              return (
+                <tr key={item.id} className={isSelected ? 'selected' : ''} data-testid={`admin-${testId}-${item.id}`}>
+                  <td><input type="checkbox" className="adm-check" checked={isSelected} onChange={() => toggleOne(item.id)} aria-label={`Sélectionner ${row.title}`} /></td>
+                  <td>
+                    <button type="button" className="adm-thumb" onClick={() => onView(item)} data-testid={`view-${item.id}`} aria-label={`Aperçu de ${row.title}`}>
+                      {row.image ? <img src={getPhotoSrc(row.image)} alt="" /> : <RowIcon size={22} />}
+                    </button>
+                  </td>
+                  <td>
+                    <p className="adm-name">{row.title}</p>
+                    <p className="adm-desc">{row.description}</p>
+                  </td>
+                  <td>{row.location && <span className="adm-loc"><MapPin size={13} strokeWidth={1.8} />{row.location}</span>}</td>
+                  <td>{row.type && <span className="adm-type">{row.type}</span>}</td>
+                  <td><span className={`adm-status ${status.id}`}>{status.label}</span></td>
+                  <td>
+                    <div className="adm-actions">
+                      <button onClick={() => onEdit(item)} title="Modifier" data-testid={`edit-${item.id}`}><Pencil size={14} strokeWidth={1.6} /></button>
+                      <button onClick={() => onDuplicate(item)} title="Dupliquer" data-testid={`duplicate-${item.id}`}><Copy size={14} strokeWidth={1.6} /></button>
+                      <button onClick={() => onDelete(item.id)} title="Supprimer" className="delete" data-testid={`delete-${item.id}`}><Trash2 size={14} strokeWidth={1.6} /></button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {pageCount > 1 && (
+        <nav className="adm-pagination" aria-label="Pagination">
+          <button className="adm-page-arrow" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)} aria-label="Page précédente"><ChevronLeft size={16} /></button>
+          {Array.from({ length: pageCount }, (_, i) => i + 1).map(n => (
+            <button key={n} className={`adm-page${n === currentPage ? ' active' : ''}`} onClick={() => setPage(n)}>{n}</button>
+          ))}
+          <button className="adm-page-arrow" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)} aria-label="Page suivante"><ChevronRight size={16} /></button>
+        </nav>
+      )}
+    </>
+  );
+};
 
 const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -2543,13 +2692,6 @@ const AdminPage = () => {
   const [showManualCoords, setShowManualCoords] = useState(false);
   const draggedMediaIdxRef = useRef(null);
   const [dragOverMediaIdx, setDragOverMediaIdx] = useState(null);
-  const [placeSearch, setPlaceSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [regionFilter, setRegionFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [placesPage, setPlacesPage] = useState(1);
-  const [selectedPlaceIds, setSelectedPlaceIds] = useState([]);
-  const [compactList, setCompactList] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -2647,6 +2789,38 @@ const AdminPage = () => {
   };
 
   const resetGuideForm = () => { setEditingGuide(null); setShowGuideForm(false); setGuideFormData({ ...EMPTY_GUIDE }); setGuideFormId(crypto.randomUUID()); };
+
+  const handleEditGuide = (guide) => { setEditingGuide(guide); setGuideFormId(guide.id); setGuideFormData({ ...guide }); setShowGuideForm(true); };
+
+  // Ouvre le formulaire de création pré-rempli, en brouillon. Les médias stockés
+  // dans le dossier du guide d'origine ne sont pas repris : ils sont supprimés avec lui.
+  const handleDuplicateGuide = (guide) => {
+    const { id, created_at, updated_at, ...rest } = guide;
+    const isOwnMedia = (url) => (url || '').includes(`/guides/${id}/`);
+    resetGuideForm();
+    setGuideFormData({
+      ...rest, title: `${guide.title} (copie)`, published: false,
+      cover_image: isOwnMedia(guide.cover_image) ? '' : guide.cover_image,
+      photos: (guide.photos || []).filter(url => !isOwnMedia(url)),
+    });
+    setShowGuideForm(true);
+  };
+
+  // Suppression groupée depuis la sélection d'une liste admin ; renvoie false si annulée
+  const handleDeleteMany = async (resource, ids, noun, refresh) => {
+    if (!window.confirm(`Supprimer ${ids.length} ${ids.length > 1 ? noun.many : noun.one} ?`)) return false;
+    const token = localStorage.getItem('admin_token');
+    try {
+      const results = await Promise.all(ids.map(id =>
+        fetch(`${API_URL}/api/${resource}/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+      ));
+      const failed = results.filter(r => !r.ok).length;
+      if (failed) toast.error(`${failed} suppression${failed > 1 ? 's' : ''} en échec`);
+      else toast.success(`Suppression effectuée (${ids.length})`);
+    } catch { toast.error('Erreur lors de la suppression'); }
+    refresh(token);
+    return true;
+  };
 
   const geocodeAddress = async () => {
     if (!formData.address.trim()) return;
@@ -2771,24 +2945,8 @@ const AdminPage = () => {
     const token = localStorage.getItem('admin_token');
     try {
       const res = await fetch(`${API_URL}/api/places/${placeId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) { toast.success('Lieu supprimé'); setSelectedPlaceIds(ids => ids.filter(id => id !== placeId)); fetchPlaces(token); }
+      if (res.ok) { toast.success('Lieu supprimé'); fetchPlaces(token); }
     } catch { toast.error('Erreur lors de la suppression'); }
-  };
-
-  const handleDeleteSelected = async () => {
-    const count = selectedPlaceIds.length;
-    if (!window.confirm(`Supprimer ${count} adresse${count > 1 ? 's' : ''} ?`)) return;
-    const token = localStorage.getItem('admin_token');
-    try {
-      const results = await Promise.all(selectedPlaceIds.map(id =>
-        fetch(`${API_URL}/api/places/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
-      ));
-      const failed = results.filter(r => !r.ok).length;
-      if (failed) toast.error(`${failed} suppression${failed > 1 ? 's' : ''} en échec`);
-      else toast.success(`${count} adresse${count > 1 ? 's supprimées' : ' supprimée'}`);
-    } catch { toast.error('Erreur lors de la suppression'); }
-    setSelectedPlaceIds([]);
-    fetchPlaces(token);
   };
 
   const resetForm = () => {
@@ -2830,24 +2988,9 @@ const AdminPage = () => {
     );
   }
 
-  const regions = [...new Set(places.map(p => p.country).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr'));
-  const query = placeSearch.trim().toLowerCase();
-  const filteredPlaces = places.filter(p =>
-    (typeFilter === 'all' || p.category === typeFilter) &&
-    (regionFilter === 'all' || p.country === regionFilter) &&
-    (statusFilter === 'all' || getPlaceStatus(p) === statusFilter) &&
-    (!query || [p.title, p.city, p.country, p.address, stripHtml(p.description)].some(v => (v || '').toLowerCase().includes(query)))
-  );
-  const pageCount = Math.max(1, Math.ceil(filteredPlaces.length / PLACES_PAGE_SIZE));
-  const currentPage = Math.min(placesPage, pageCount);
-  const pagePlaces = filteredPlaces.slice((currentPage - 1) * PLACES_PAGE_SIZE, currentPage * PLACES_PAGE_SIZE);
-  const allPageSelected = pagePlaces.length > 0 && pagePlaces.every(p => selectedPlaceIds.includes(p.id));
-  const togglePageSelection = () => setSelectedPlaceIds(ids => allPageSelected
-    ? ids.filter(id => !pagePlaces.some(p => p.id === id))
-    : [...new Set([...ids, ...pagePlaces.map(p => p.id)])]);
-  const togglePlaceSelection = (id) => setSelectedPlaceIds(ids => ids.includes(id) ? ids.filter(i => i !== id) : [...ids, id]);
-  const onFilterChange = (setter) => (e) => { setter(e.target.value); setPlacesPage(1); };
   const hero = ADMIN_HERO[adminTab];
+  const placeNoun = { one: 'adresse', many: 'adresses', feminine: true };
+  const guideNoun = { one: 'guide', many: 'guides' };
 
   return (
     <div className="admin-shell">
@@ -3005,113 +3148,29 @@ const AdminPage = () => {
           {/* ONGLET LIEUX — LISTE */}
           {adminTab === 'places' && !showForm && (
             <>
-              <div className="adm-head">
-                <div>
-                  <p className="adm-eyebrow">Adresses</p>
-                  <h2 className="adm-title">Toutes vos adresses</h2>
-                  <p className="adm-sub">Retrouvez ici l'ensemble des adresses publiées sur le site.</p>
-                </div>
-                <div className="adm-head-actions">
-                  <label className="adm-search">
-                    <Search size={17} strokeWidth={1.8} />
-                    <input type="text" value={placeSearch} placeholder="Rechercher une adresse..."
-                      onChange={onFilterChange(setPlaceSearch)} data-testid="admin-place-search" />
-                  </label>
-                  <button className="adm-add-btn" onClick={() => { resetForm(); setShowForm(true); }} data-testid="add-place-btn">
-                    <Plus size={18} strokeWidth={1.8} />Ajouter une adresse
-                  </button>
-                </div>
-              </div>
-
-              <div className="adm-filters">
-                <select className="adm-select" value={typeFilter} onChange={onFilterChange(setTypeFilter)}>
-                  <option value="all">Tous les types</option>
-                  {CATEGORIES.filter(c => c.id !== 'all').map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-                </select>
-                <select className="adm-select" value={regionFilter} onChange={onFilterChange(setRegionFilter)}>
-                  <option value="all">Toutes les régions</option>
-                  {regions.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-                <select className="adm-select" value={statusFilter} onChange={onFilterChange(setStatusFilter)}>
-                  <option value="all">Tous les status</option>
-                  {PLACE_STATUSES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-                </select>
-                <div className="adm-filters-right">
-                  {selectedPlaceIds.length > 0 ? (
-                    <button className="adm-bulk-delete" onClick={handleDeleteSelected}>
-                      <Trash2 size={14} />Supprimer ({selectedPlaceIds.length})
-                    </button>
-                  ) : (
-                    <span className="adm-count">{filteredPlaces.length} adresse{filteredPlaces.length > 1 ? 's' : ''}</span>
-                  )}
-                  <div className="adm-view-toggle">
-                    <button className={compactList ? 'active' : ''} onClick={() => setCompactList(true)} aria-label="Vue compacte"><List size={16} /></button>
-                    <button className={compactList ? '' : 'active'} onClick={() => setCompactList(false)} aria-label="Vue détaillée"><LayoutList size={16} /></button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="adm-table-wrap" data-testid="admin-places-list">
-                <table className={`adm-table${compactList ? ' compact' : ''}`}>
-                  <colgroup>
-                    <col style={{ width: 59 }} /><col style={{ width: 111 }} /><col className="adm-col-name" /><col className="adm-col-loc" />
-                    <col style={{ width: 175 }} /><col style={{ width: 149 }} /><col style={{ width: 117 }} />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th><input type="checkbox" className="adm-check" checked={allPageSelected} onChange={togglePageSelection} aria-label="Tout sélectionner" /></th>
-                      <th>Aperçu</th><th>Nom</th><th>Localisation</th><th>Type</th><th>Statut</th><th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pagePlaces.length === 0 ? (
-                      <tr><td colSpan={7} className="adm-empty">
-                        <MapPin size={36} strokeWidth={1.4} />
-                        {places.length === 0 ? 'Aucune adresse pour le moment' : 'Aucune adresse ne correspond à votre recherche'}
-                      </td></tr>
-                    ) : pagePlaces.map((place) => {
-                      const cat = getCatInfo(place.category);
-                      const CatIcon = cat?.icon || MapPin;
-                      const status = PLACE_STATUSES.find(s => s.id === getPlaceStatus(place));
-                      const location = [place.city, place.country].filter(Boolean).join(', ');
-                      return (
-                        <tr key={place.id} className={selectedPlaceIds.includes(place.id) ? 'selected' : ''} data-testid={`admin-place-${place.id}`}>
-                          <td><input type="checkbox" className="adm-check" checked={selectedPlaceIds.includes(place.id)} onChange={() => togglePlaceSelection(place.id)} aria-label={`Sélectionner ${place.title}`} /></td>
-                          <td>
-                            <button type="button" className="adm-thumb" onClick={() => setViewingPlace(place)} data-testid={`view-${place.id}`} aria-label={`Aperçu de ${place.title}`}>
-                              {place.photos?.[0] ? <img src={getPhotoSrc(place.photos[0])} alt="" /> : <CatIcon size={22} />}
-                            </button>
-                          </td>
-                          <td>
-                            <p className="adm-name">{place.title}</p>
-                            <p className="adm-desc">{stripHtml(place.description)}</p>
-                          </td>
-                          <td>{location && <span className="adm-loc"><MapPin size={13} strokeWidth={1.8} />{location}</span>}</td>
-                          <td><span className="adm-type">{cat.label}</span></td>
-                          <td><span className={`adm-status ${status.id}`}>{status.label}</span></td>
-                          <td>
-                            <div className="adm-actions">
-                              <button onClick={() => handleEdit(place)} title="Modifier" data-testid={`edit-${place.id}`}><Pencil size={14} strokeWidth={1.6} /></button>
-                              <button onClick={() => handleDuplicate(place)} title="Dupliquer" data-testid={`duplicate-${place.id}`}><Copy size={14} strokeWidth={1.6} /></button>
-                              <button onClick={() => handleDelete(place.id)} title="Supprimer" className="delete" data-testid={`delete-${place.id}`}><Trash2 size={14} strokeWidth={1.6} /></button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {pageCount > 1 && (
-                <nav className="adm-pagination" aria-label="Pagination">
-                  <button className="adm-page-arrow" disabled={currentPage === 1} onClick={() => setPlacesPage(currentPage - 1)} aria-label="Page précédente"><ChevronLeft size={16} /></button>
-                  {Array.from({ length: pageCount }, (_, i) => i + 1).map(n => (
-                    <button key={n} className={`adm-page${n === currentPage ? ' active' : ''}`} onClick={() => setPlacesPage(n)}>{n}</button>
-                  ))}
-                  <button className="adm-page-arrow" disabled={currentPage === pageCount} onClick={() => setPlacesPage(currentPage + 1)} aria-label="Page suivante"><ChevronRight size={16} /></button>
-                </nav>
-              )}
+              <AdminCollection
+                variant="places" testId="place" noun={placeNoun}
+                eyebrow="Adresses" title="Toutes vos adresses" sub="Retrouvez ici l'ensemble des adresses publiées sur le site."
+                searchPlaceholder="Rechercher une adresse..." addLabel="Ajouter une adresse"
+                columns={{ title: 'Nom', location: 'Localisation' }} widths={[59, 111, 175, 149, 117]}
+                items={places} emptyIcon={MapPin}
+                filters={[
+                  { key: 'type', allLabel: 'Tous les types', options: CATEGORIES.filter(c => c.id !== 'all').map(c => ({ value: c.id, label: c.label })), match: (p, v) => p.category === v },
+                  { key: 'region', allLabel: 'Toutes les régions', options: sortedOptions(places.map(p => p.country)), match: (p, v) => p.country === v },
+                  statusFilterDef(getPlaceStatus),
+                ]}
+                getSearchText={(p) => [p.title, p.city, p.country, p.address, stripHtml(p.description)].join(' ')}
+                getRow={(p) => {
+                  const cat = getCatInfo(p.category);
+                  return {
+                    image: p.photos?.[0], icon: cat?.icon || MapPin, title: p.title, description: stripHtml(p.description),
+                    location: [p.city, p.country].filter(Boolean).join(', '), type: cat.label, status: getPlaceStatus(p),
+                  };
+                }}
+                onAdd={() => { resetForm(); setShowForm(true); }}
+                onView={setViewingPlace} onEdit={handleEdit} onDuplicate={handleDuplicate} onDelete={handleDelete}
+                onDeleteMany={(ids) => handleDeleteMany('places', ids, placeNoun, fetchPlaces)}
+              />
 
               <AnimatePresence>
                 {viewingPlace && <PlaceDetailModal place={viewingPlace} onClose={() => setViewingPlace(null)} />}
@@ -3136,36 +3195,27 @@ const AdminPage = () => {
 
           {/* ONGLET GUIDES — LISTE */}
           {adminTab === 'guides' && !showGuideForm && (
-            <>
-              <div className="admin-toolbar">
-                <button className="btn-primary" onClick={() => { resetGuideForm(); setShowGuideForm(true); }}><Plus size={20} />Nouveau guide</button>
-              </div>
-
-              <div className="admin-places-list">
-                {guides.length === 0 ? (
-                  <div className="empty-admin"><BookOpen size={48} /><h3>Aucun guide</h3><p>Créez votre premier guide de voyage</p></div>
-                ) : guides.map((guide) => (
-                  <motion.div key={guide.id} className="admin-place-item" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <div className="admin-place-image">
-                      {guide.cover_image ? <img src={guide.cover_image} alt="" /> : <BookOpen size={32} />}
-                    </div>
-                    <div className="admin-place-info">
-                      <h3>{guide.title}</h3>
-                      <p>{guide.destination}, {guide.country} — {guide.duration_days} jour{guide.duration_days > 1 ? 's' : ''}</p>
-                      <div className="admin-place-meta">
-                        <span className="cat-badge" style={{ background: guide.published ? '#5cb85c' : '#6c6c6c', color: '#fff' }}>
-                          {guide.published ? 'Publié' : 'Brouillon'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="admin-place-actions">
-                      <button onClick={() => { setEditingGuide(guide); setGuideFormId(guide.id); setGuideFormData({ ...guide }); setShowGuideForm(true); }} className="action-btn"><Edit3 size={18} /></button>
-                      <button onClick={() => handleDeleteGuide(guide.id)} className="action-btn delete"><Trash2 size={18} /></button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </>
+            <AdminCollection
+              variant="guides" testId="guide" noun={guideNoun}
+              eyebrow="Guides voyage" title="Tous vos guides" sub="Retrouvez ici l'ensemble des guides voyage publiés sur le site."
+              searchPlaceholder="Rechercher un guide..." addLabel="Ajouter un guide"
+              columns={{ title: 'Titre', location: 'Destination' }} widths={[59, 125, 156, 162, 125]}
+              items={guides} emptyIcon={BookOpen}
+              filters={[
+                { key: 'type', allLabel: 'Tous les types', options: sortedOptions(guides.flatMap(g => g.tags || [])), match: (g, v) => (g.tags || []).includes(v) },
+                { key: 'destination', allLabel: 'Toutes les destinations', options: sortedOptions(guides.map(g => g.country)), match: (g, v) => g.country === v },
+                statusFilterDef(getGuideStatus),
+              ]}
+              getSearchText={(g) => [g.title, g.destination, g.country, ...(g.tags || []), stripHtml(g.intro)].join(' ')}
+              getRow={(g) => ({
+                image: g.cover_image || g.photos?.[0], icon: BookOpen, title: g.title, description: stripHtml(g.intro),
+                location: [g.destination, g.country].filter(Boolean).join(', '), type: capitalize(g.tags?.[0]), status: getGuideStatus(g),
+              })}
+              onAdd={() => { resetGuideForm(); setShowGuideForm(true); }}
+              onView={(g) => window.open(`/guides/${g.id}`, '_blank', 'noopener')}
+              onEdit={handleEditGuide} onDuplicate={handleDuplicateGuide} onDelete={handleDeleteGuide}
+              onDeleteMany={(ids) => handleDeleteMany('guides', ids, guideNoun, fetchGuides)}
+            />
           )}
         </div>
       </div>
