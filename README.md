@@ -124,6 +124,8 @@ ADMIN_PASSWORD=votre_mot_de_passe_admin
 REACT_APP_API_URL=http://localhost:8001
 ```
 
+⚠️ **En production (Dokploy)** : le fichier `.env` du repo est écrasé/vidé par le pipeline de déploiement Dokploy avant le build. `REACT_APP_API_URL` doit être défini dans l'onglet **Environment** de l'app frontend sur Dokploy, pas seulement dans le fichier commité — sinon le build retombe sur la valeur par défaut codée en dur dans `App.js`.
+
 ## Structure du projet
 
 ```
