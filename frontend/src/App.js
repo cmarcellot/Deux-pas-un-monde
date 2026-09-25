@@ -10,9 +10,10 @@ import 'react-quill/dist/quill.snow.css';
 import {
   Home, Star, MapPin, X, Plus, Trash2, Edit3,
   LogOut, Upload, ChevronLeft, ChevronRight, Filter, Bed, Utensils,
-  Compass, Gem, Eye, Save, Key, ZoomIn,
+  Compass, Gem, Save, Key, ZoomIn,
   BookOpen, Calendar, Globe, Wallet, Info, Plane,
-  Search, CheckCircle, Loader2, GripVertical, Heart, Tag
+  Search, CheckCircle, Loader2, GripVertical, Heart, Tag,
+  Map as MapIcon, Users, Settings, Bell, Copy, Pencil, List, LayoutList
 } from 'lucide-react';
 import './App.css';
 
@@ -368,7 +369,7 @@ const PhotoPlaceholder = ({ category, index = 0, height = 200, title = '' }) => 
 // ============================================================
 // PLACE CARD (light)
 // ============================================================
-const stripHtml = (html) => (html || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+const stripHtml = (html) => (new DOMParser().parseFromString(html || '', 'text/html').body.textContent || '').replace(/ /g, ' ').trim();
 
 const PlaceCard = ({ place, onClick }) => (
   <div className="place-card" onClick={onClick} data-testid={`place-card-${place.id}`}>
@@ -2480,6 +2481,36 @@ const AdminGuideForm = ({ show, guideFormData, setGuideFormData, editingGuide, o
 // ============================================================
 // ADMIN PAGE
 // ============================================================
+const placeToFormData = (place) => ({
+  title: place.title, address: place.address, city: place.city || '', country: place.country || '',
+  date: place.date || '', description: place.description, category: place.category, rating: place.rating,
+  latitude: place.latitude, longitude: place.longitude,
+  experience_tags: (place.experience_tags || []).join(', '), price_from: place.price_from ?? '',
+});
+
+// Entrées sans `tab` : pages pas encore implémentées, affichées sans destination
+const ADMIN_NAV = [
+  { label: 'Tableau de bord', icon: Home },
+  { label: 'Adresses',        icon: MapPin, tab: 'places' },
+  { label: 'Guides voyage',   icon: MapIcon, tab: 'guides' },
+  { label: 'Utilisateurs',    icon: Users },
+  { label: 'Paramètres',      icon: Settings },
+];
+
+const ADMIN_HERO = {
+  places: { title: 'Gérez vos adresses', sub: 'Ajoutez, modifiez ou supprimez vos adresses publiées sur le site.' },
+  guides: { title: 'Gérez vos guides', sub: 'Ajoutez, modifiez ou supprimez vos guides de voyage.' },
+};
+
+// Les lieux n'ont pas encore de brouillon côté API : ils sont tous publiés
+const PLACE_STATUSES = [
+  { id: 'published', label: 'Publié' },
+  { id: 'draft',     label: 'Brouillon' },
+];
+const getPlaceStatus = () => 'published';
+
+const PLACES_PAGE_SIZE = 8;
+
 const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -2512,6 +2543,13 @@ const AdminPage = () => {
   const [showManualCoords, setShowManualCoords] = useState(false);
   const draggedMediaIdxRef = useRef(null);
   const [dragOverMediaIdx, setDragOverMediaIdx] = useState(null);
+  const [placeSearch, setPlaceSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [regionFilter, setRegionFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [placesPage, setPlacesPage] = useState(1);
+  const [selectedPlaceIds, setSelectedPlaceIds] = useState([]);
+  const [compactList, setCompactList] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -2716,7 +2754,15 @@ const AdminPage = () => {
     setRemovedMedia([]);
     setEditingPlace(place);
     setPlaceFormId(place.id);
-    setFormData({ title: place.title, address: place.address, city: place.city || '', country: place.country || '', date: place.date || '', description: place.description, category: place.category, rating: place.rating, latitude: place.latitude, longitude: place.longitude, experience_tags: (place.experience_tags || []).join(', '), price_from: place.price_from ?? '' });
+    setFormData(placeToFormData(place));
+    setShowForm(true);
+  };
+
+  // Ouvre le formulaire de création pré-rempli. Les médias ne sont pas repris :
+  // ils sont stockés dans le dossier du lieu d'origine, supprimé avec lui.
+  const handleDuplicate = (place) => {
+    resetForm();
+    setFormData({ ...placeToFormData(place), title: `${place.title} (copie)` });
     setShowForm(true);
   };
 
@@ -2725,8 +2771,24 @@ const AdminPage = () => {
     const token = localStorage.getItem('admin_token');
     try {
       const res = await fetch(`${API_URL}/api/places/${placeId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) { toast.success('Lieu supprimé'); fetchPlaces(token); }
+      if (res.ok) { toast.success('Lieu supprimé'); setSelectedPlaceIds(ids => ids.filter(id => id !== placeId)); fetchPlaces(token); }
     } catch { toast.error('Erreur lors de la suppression'); }
+  };
+
+  const handleDeleteSelected = async () => {
+    const count = selectedPlaceIds.length;
+    if (!window.confirm(`Supprimer ${count} adresse${count > 1 ? 's' : ''} ?`)) return;
+    const token = localStorage.getItem('admin_token');
+    try {
+      const results = await Promise.all(selectedPlaceIds.map(id =>
+        fetch(`${API_URL}/api/places/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+      ));
+      const failed = results.filter(r => !r.ok).length;
+      if (failed) toast.error(`${failed} suppression${failed > 1 ? 's' : ''} en échec`);
+      else toast.success(`${count} adresse${count > 1 ? 's supprimées' : ' supprimée'}`);
+    } catch { toast.error('Erreur lors de la suppression'); }
+    setSelectedPlaceIds([]);
+    fetchPlaces(token);
   };
 
   const resetForm = () => {
@@ -2768,234 +2830,344 @@ const AdminPage = () => {
     );
   }
 
+  const regions = [...new Set(places.map(p => p.country).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr'));
+  const query = placeSearch.trim().toLowerCase();
+  const filteredPlaces = places.filter(p =>
+    (typeFilter === 'all' || p.category === typeFilter) &&
+    (regionFilter === 'all' || p.country === regionFilter) &&
+    (statusFilter === 'all' || getPlaceStatus(p) === statusFilter) &&
+    (!query || [p.title, p.city, p.country, p.address, stripHtml(p.description)].some(v => (v || '').toLowerCase().includes(query)))
+  );
+  const pageCount = Math.max(1, Math.ceil(filteredPlaces.length / PLACES_PAGE_SIZE));
+  const currentPage = Math.min(placesPage, pageCount);
+  const pagePlaces = filteredPlaces.slice((currentPage - 1) * PLACES_PAGE_SIZE, currentPage * PLACES_PAGE_SIZE);
+  const allPageSelected = pagePlaces.length > 0 && pagePlaces.every(p => selectedPlaceIds.includes(p.id));
+  const togglePageSelection = () => setSelectedPlaceIds(ids => allPageSelected
+    ? ids.filter(id => !pagePlaces.some(p => p.id === id))
+    : [...new Set([...ids, ...pagePlaces.map(p => p.id)])]);
+  const togglePlaceSelection = (id) => setSelectedPlaceIds(ids => ids.includes(id) ? ids.filter(i => i !== id) : [...ids, id]);
+  const onFilterChange = (setter) => (e) => { setter(e.target.value); setPlacesPage(1); };
+  const hero = ADMIN_HERO[adminTab];
+
   return (
-    <div className="admin-page">
-      <header className="admin-header">
-        <Link to="/"><DpmLogo /></Link>
-        <span className="admin-header-title">Administration</span>
-        <div className="admin-header-actions">
-          <button onClick={() => setShowPasswordModal(true)} className="admin-header-btn" data-testid="change-password-btn"><Key size={16} />Mot de passe</button>
-          <button onClick={handleLogout} className="admin-header-btn danger" data-testid="logout-btn"><LogOut size={16} />Déconnexion</button>
+    <div className="admin-shell">
+      <aside className="admin-sidebar">
+        <div className="admin-sidebar-brand">
+          <Link to="/"><DpmLogo height={82} /></Link>
+          <p>Espace d'administration</p>
         </div>
-      </header>
+        <nav className="admin-nav">
+          {ADMIN_NAV.map(({ label, icon: Icon, tab }) => (
+            <button key={label} type="button"
+              className={`admin-nav-item${tab && adminTab === tab ? ' active' : ''}`}
+              onClick={tab ? () => setAdminTab(tab) : undefined}>
+              <Icon size={22} strokeWidth={1.6} />{label}
+            </button>
+          ))}
+        </nav>
+        <button type="button" className="admin-sidebar-user" onClick={() => setShowPasswordModal(true)}
+          title="Changer le mot de passe" data-testid="change-password-btn">
+          <span className="admin-avatar">C</span>
+          <span className="admin-sidebar-user-text"><strong>Camille</strong><small>Administrateur</small></span>
+          <ChevronRight size={18} />
+        </button>
+      </aside>
 
-      <AnimatePresence>
-        {showPasswordModal && (
-          <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowPasswordModal(false)}>
-            <motion.div className="password-modal" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
-              <div className="form-header">
-                <h2>Changer le mot de passe</h2>
-                <button onClick={() => setShowPasswordModal(false)} className="close-btn"><X size={24} /></button>
-              </div>
-              <form onSubmit={handleChangePassword} className="password-form" data-testid="password-change-form">
-                <div className="form-group"><label>Mot de passe actuel</label><input type="password" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} required data-testid="current-password-input" /></div>
-                <div className="form-group"><label>Nouveau mot de passe</label><input type="password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} required minLength={6} data-testid="new-password-input" /></div>
-                <div className="form-group"><label>Confirmer le nouveau mot de passe</label><input type="password" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} required minLength={6} data-testid="confirm-password-input" /></div>
-                <div className="form-actions">
-                  <button type="button" onClick={() => setShowPasswordModal(false)} className="btn-secondary">Annuler</button>
-                  <button type="submit" className="btn-primary" disabled={loading}><Key size={18} />{loading ? 'Modification...' : 'Modifier'}</button>
+      <div className="admin-main">
+        <header className="admin-hero">
+          <div className="admin-hero-actions">
+            <button type="button" className="admin-hero-bell" aria-label="Notifications"><Bell size={22} strokeWidth={1.5} /></button>
+            <button type="button" className="admin-hero-logout" onClick={handleLogout} data-testid="logout-btn"><LogOut size={14} />Se déconnecter</button>
+          </div>
+          <p className="admin-hero-eyebrow">Bonjour Camille,</p>
+          <h1 className="admin-hero-title">{hero.title}</h1>
+          <p className="admin-hero-sub">{hero.sub}</p>
+        </header>
+
+        <AnimatePresence>
+          {showPasswordModal && (
+            <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowPasswordModal(false)}>
+              <motion.div className="password-modal" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
+                <div className="form-header">
+                  <h2>Changer le mot de passe</h2>
+                  <button onClick={() => setShowPasswordModal(false)} className="close-btn"><X size={24} /></button>
                 </div>
-              </form>
+                <form onSubmit={handleChangePassword} className="password-form" data-testid="password-change-form">
+                  <div className="form-group"><label>Mot de passe actuel</label><input type="password" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} required data-testid="current-password-input" /></div>
+                  <div className="form-group"><label>Nouveau mot de passe</label><input type="password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} required minLength={6} data-testid="new-password-input" /></div>
+                  <div className="form-group"><label>Confirmer le nouveau mot de passe</label><input type="password" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} required minLength={6} data-testid="confirm-password-input" /></div>
+                  <div className="form-actions">
+                    <button type="button" onClick={() => setShowPasswordModal(false)} className="btn-secondary">Annuler</button>
+                    <button type="submit" className="btn-primary" disabled={loading}><Key size={18} />{loading ? 'Modification...' : 'Modifier'}</button>
+                  </div>
+                </form>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
 
-      {/* Admin tabs */}
-      <div className="admin-tabs">
-        <button className={`admin-tab-btn ${adminTab === 'places' ? 'active' : ''}`} onClick={() => setAdminTab('places')}>
-          <MapPin size={16} />Lieux
-        </button>
-        <button className={`admin-tab-btn ${adminTab === 'guides' ? 'active' : ''}`} onClick={() => setAdminTab('guides')}>
-          <BookOpen size={16} />Guides de voyage
-        </button>
-      </div>
-
-      <div className="admin-content">
-        {/* ONGLET LIEUX — FORMULAIRE */}
-        {adminTab === 'places' && showForm && (
-          <div className="admin-inline-form">
-            <div className="form-header">
-              <h2>{editingPlace ? 'Modifier le lieu' : 'Nouveau lieu'}</h2>
-              <button onClick={resetForm} className="close-btn" data-testid="close-form-btn"><X size={24} /></button>
-            </div>
-            <form onSubmit={handleSubmit} className="place-form" data-testid="place-form">
-                    <div className="form-grid">
-                      <div className="form-group"><label>Titre</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required data-testid="title-input" /></div>
-                      <div className="form-group"><label>Catégorie</label>
-                        <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} data-testid="category-select">
-                          {CATEGORIES.filter(c => c.id !== 'all').map((cat) => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
-                        </select>
-                      </div>
-                      <div className="form-group full-width">
-                        <label>Adresse</label>
-                        <div className="address-geocode-row">
-                          <input type="text" value={formData.address}
-                            onChange={(e) => { setFormData({ ...formData, address: e.target.value }); setGeocodeResult(null); }}
-                            required data-testid="address-input" placeholder="Ex: 12 rue de la Paix, Paris" />
-                          <button type="button" className="geocode-btn" onClick={geocodeAddress} disabled={geocoding}>
-                            {geocoding ? <Loader2 size={16} className="spin" /> : <Search size={16} />}
-                            {geocoding ? 'Recherche…' : 'Géolocaliser'}
+        <div className="admin-content">
+          {/* ONGLET LIEUX — FORMULAIRE */}
+          {adminTab === 'places' && showForm && (
+            <div className="admin-inline-form">
+              <div className="form-header">
+                <h2>{editingPlace ? 'Modifier le lieu' : 'Nouveau lieu'}</h2>
+                <button onClick={resetForm} className="close-btn" data-testid="close-form-btn"><X size={24} /></button>
+              </div>
+              <form onSubmit={handleSubmit} className="place-form" data-testid="place-form">
+                      <div className="form-grid">
+                        <div className="form-group"><label>Titre</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required data-testid="title-input" /></div>
+                        <div className="form-group"><label>Catégorie</label>
+                          <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} data-testid="category-select">
+                            {CATEGORIES.filter(c => c.id !== 'all').map((cat) => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
+                          </select>
+                        </div>
+                        <div className="form-group full-width">
+                          <label>Adresse</label>
+                          <div className="address-geocode-row">
+                            <input type="text" value={formData.address}
+                              onChange={(e) => { setFormData({ ...formData, address: e.target.value }); setGeocodeResult(null); }}
+                              required data-testid="address-input" placeholder="Ex: 12 rue de la Paix, Paris" />
+                            <button type="button" className="geocode-btn" onClick={geocodeAddress} disabled={geocoding}>
+                              {geocoding ? <Loader2 size={16} className="spin" /> : <Search size={16} />}
+                              {geocoding ? 'Recherche…' : 'Géolocaliser'}
+                            </button>
+                          </div>
+                          {geocodeResult && (
+                            <div className="geocode-result">
+                              <CheckCircle size={13} />
+                              {geocodeResult.display_name}
+                              <span className="geocode-coords">{geocodeResult.lat.toFixed(5)}, {geocodeResult.lng.toFixed(5)}</span>
+                            </div>
+                          )}
+                          <button type="button" className="coords-manual-toggle"
+                            onClick={() => setShowManualCoords(v => !v)}>
+                            {showManualCoords ? 'Masquer' : 'Saisir les coordonnées manuellement'}
                           </button>
-                        </div>
-                        {geocodeResult && (
-                          <div className="geocode-result">
-                            <CheckCircle size={13} />
-                            {geocodeResult.display_name}
-                            <span className="geocode-coords">{geocodeResult.lat.toFixed(5)}, {geocodeResult.lng.toFixed(5)}</span>
-                          </div>
-                        )}
-                        <button type="button" className="coords-manual-toggle"
-                          onClick={() => setShowManualCoords(v => !v)}>
-                          {showManualCoords ? 'Masquer' : 'Saisir les coordonnées manuellement'}
-                        </button>
-                        {showManualCoords && (
-                          <div className="coords-manual-fields">
-                            <div className="form-group"><label>Latitude</label><input type="number" step="any" value={formData.latitude} onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })} required data-testid="latitude-input" /></div>
-                            <div className="form-group"><label>Longitude</label><input type="number" step="any" value={formData.longitude} onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })} required data-testid="longitude-input" /></div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="form-group"><label>Ville</label><input type="text" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Ex: Lyon" /></div>
-                      <div className="form-group"><label>Pays</label><input type="text" value={formData.country} onChange={(e) => setFormData({ ...formData, country: e.target.value })} placeholder="Ex: France" /></div>
-                      <div className="form-group full-width"><label>Date de visite</label><input type="month" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} /></div>
-                      <div className="form-group full-width"><label>Description</label>
-                        <div className="quill-wrapper" data-testid="description-input">
-                          <ReactQuill theme="snow" value={formData.description} onChange={(value) => setFormData({ ...formData, description: value })} modules={quillModules} formats={quillFormats} placeholder="Décrivez ce lieu..." />
-                        </div>
-                      </div>
-                      <div className="form-group full-width"><label>Note</label><StarRating rating={formData.rating} onChange={(rating) => setFormData({ ...formData, rating })} readonly={false} /></div>
-                      <div className="form-group"><label>Tags d'expérience</label><input type="text" value={formData.experience_tags} onChange={(e) => setFormData({ ...formData, experience_tags: e.target.value })} placeholder="Ex: Nature, Insolite, Bien-être, Romantique" /></div>
-                      <div className="form-group"><label>Prix indicatif (€ / nuit)</label><input type="number" step="1" min="0" value={formData.price_from} onChange={(e) => setFormData({ ...formData, price_from: e.target.value })} placeholder="Ex: 180" /></div>
-                      <div className="form-group full-width"><label>Photos et vidéos</label>
-                        <div className="photo-upload-area">
-                          <DropZone inputId="photo-upload" label="Glisser des photos ou vidéos ici" accept="image/*,video/*" onFiles={addFiles} />
-                          {mediaItems.length > 0 && (
-                            <div className="uploaded-photos">
-                              {mediaItems.map((item, idx) => (
-                                <div key={item.id}
-                                  className={`uploaded-photo draggable-photo ${dragOverMediaIdx === idx ? 'drag-over' : ''}`}
-                                  draggable
-                                  onDragStart={() => { draggedMediaIdxRef.current = idx; }}
-                                  onDragOver={e => { e.preventDefault(); setDragOverMediaIdx(idx); }}
-                                  onDragLeave={() => setDragOverMediaIdx(null)}
-                                  onDrop={e => { e.preventDefault(); reorderMedia(draggedMediaIdxRef.current, idx); draggedMediaIdxRef.current = null; setDragOverMediaIdx(null); }}
-                                  onDragEnd={() => { draggedMediaIdxRef.current = null; setDragOverMediaIdx(null); }}>
-                                  {item.isVideo
-                                    ? <video src={item.preview || getPhotoSrc(item.url)} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px', pointerEvents: 'none' }} />
-                                    : <img src={item.preview || getPhotoSrc(item.url)} alt="" draggable={false} />
-                                  }
-                                  {item.isVideo && (
-                                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }}>
-                                      <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }}><polygon points="5,3 19,12 5,21"/></svg>
-                                    </div>
-                                  )}
-                                  <div className="photo-drag-handle"><GripVertical size={14} /></div>
-                                  <button type="button" onClick={() => removeMedia(item.id)} className="remove-photo"><X size={14} /></button>
-                                </div>
-                              ))}
+                          {showManualCoords && (
+                            <div className="coords-manual-fields">
+                              <div className="form-group"><label>Latitude</label><input type="number" step="any" value={formData.latitude} onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })} required data-testid="latitude-input" /></div>
+                              <div className="form-group"><label>Longitude</label><input type="number" step="any" value={formData.longitude} onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })} required data-testid="longitude-input" /></div>
                             </div>
                           )}
                         </div>
+                        <div className="form-group"><label>Ville</label><input type="text" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Ex: Lyon" /></div>
+                        <div className="form-group"><label>Pays</label><input type="text" value={formData.country} onChange={(e) => setFormData({ ...formData, country: e.target.value })} placeholder="Ex: France" /></div>
+                        <div className="form-group full-width"><label>Date de visite</label><input type="month" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} /></div>
+                        <div className="form-group full-width"><label>Description</label>
+                          <div className="quill-wrapper" data-testid="description-input">
+                            <ReactQuill theme="snow" value={formData.description} onChange={(value) => setFormData({ ...formData, description: value })} modules={quillModules} formats={quillFormats} placeholder="Décrivez ce lieu..." />
+                          </div>
+                        </div>
+                        <div className="form-group full-width"><label>Note</label><StarRating rating={formData.rating} onChange={(rating) => setFormData({ ...formData, rating })} readonly={false} /></div>
+                        <div className="form-group"><label>Tags d'expérience</label><input type="text" value={formData.experience_tags} onChange={(e) => setFormData({ ...formData, experience_tags: e.target.value })} placeholder="Ex: Nature, Insolite, Bien-être, Romantique" /></div>
+                        <div className="form-group"><label>Prix indicatif (€ / nuit)</label><input type="number" step="1" min="0" value={formData.price_from} onChange={(e) => setFormData({ ...formData, price_from: e.target.value })} placeholder="Ex: 180" /></div>
+                        <div className="form-group full-width"><label>Photos et vidéos</label>
+                          <div className="photo-upload-area">
+                            <DropZone inputId="photo-upload" label="Glisser des photos ou vidéos ici" accept="image/*,video/*" onFiles={addFiles} />
+                            {mediaItems.length > 0 && (
+                              <div className="uploaded-photos">
+                                {mediaItems.map((item, idx) => (
+                                  <div key={item.id}
+                                    className={`uploaded-photo draggable-photo ${dragOverMediaIdx === idx ? 'drag-over' : ''}`}
+                                    draggable
+                                    onDragStart={() => { draggedMediaIdxRef.current = idx; }}
+                                    onDragOver={e => { e.preventDefault(); setDragOverMediaIdx(idx); }}
+                                    onDragLeave={() => setDragOverMediaIdx(null)}
+                                    onDrop={e => { e.preventDefault(); reorderMedia(draggedMediaIdxRef.current, idx); draggedMediaIdxRef.current = null; setDragOverMediaIdx(null); }}
+                                    onDragEnd={() => { draggedMediaIdxRef.current = null; setDragOverMediaIdx(null); }}>
+                                    {item.isVideo
+                                      ? <video src={item.preview || getPhotoSrc(item.url)} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px', pointerEvents: 'none' }} />
+                                      : <img src={item.preview || getPhotoSrc(item.url)} alt="" draggable={false} />
+                                    }
+                                    {item.isVideo && (
+                                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }}>
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }}><polygon points="5,3 19,12 5,21"/></svg>
+                                      </div>
+                                    )}
+                                    <div className="photo-drag-handle"><GripVertical size={14} /></div>
+                                    <button type="button" onClick={() => removeMedia(item.id)} className="remove-photo"><X size={14} /></button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="form-actions">
-                      <button type="button" onClick={resetForm} className="btn-secondary" data-testid="cancel-btn">Annuler</button>
-                      <button type="submit" className="btn-primary" disabled={loading} data-testid="save-btn"><Save size={18} />{loading ? 'Enregistrement...' : 'Enregistrer'}</button>
-                    </div>
-                  </form>
-          </div>
-        )}
-
-        {/* ONGLET LIEUX — LISTE */}
-        {adminTab === 'places' && !showForm && (
-          <>
-            <div className="admin-toolbar">
-              <button className="btn-primary" onClick={() => { resetForm(); setShowForm(true); }} data-testid="add-place-btn"><Plus size={20} />Ajouter un lieu</button>
+                      <div className="form-actions">
+                        <button type="button" onClick={resetForm} className="btn-secondary" data-testid="cancel-btn">Annuler</button>
+                        <button type="submit" className="btn-primary" disabled={loading} data-testid="save-btn"><Save size={18} />{loading ? 'Enregistrement...' : 'Enregistrer'}</button>
+                      </div>
+                    </form>
             </div>
+          )}
 
-            <div className="admin-places-list" data-testid="admin-places-list">
-              {places.length === 0 ? (
-                <div className="empty-admin"><MapPin size={48} /><h3>Aucun lieu</h3><p>Commencez par ajouter votre premier lieu</p></div>
-              ) : places.map((place) => {
-                const cat = getCatInfo(place.category);
-                const CatIcon = cat?.icon || MapPin;
-                return (
-                  <motion.div key={place.id} className="admin-place-item" initial={{ opacity: 0 }} animate={{ opacity: 1 }} data-testid={`admin-place-${place.id}`}>
+          {/* ONGLET LIEUX — LISTE */}
+          {adminTab === 'places' && !showForm && (
+            <>
+              <div className="adm-head">
+                <div>
+                  <p className="adm-eyebrow">Adresses</p>
+                  <h2 className="adm-title">Toutes vos adresses</h2>
+                  <p className="adm-sub">Retrouvez ici l'ensemble des adresses publiées sur le site.</p>
+                </div>
+                <div className="adm-head-actions">
+                  <label className="adm-search">
+                    <Search size={17} strokeWidth={1.8} />
+                    <input type="text" value={placeSearch} placeholder="Rechercher une adresse..."
+                      onChange={onFilterChange(setPlaceSearch)} data-testid="admin-place-search" />
+                  </label>
+                  <button className="adm-add-btn" onClick={() => { resetForm(); setShowForm(true); }} data-testid="add-place-btn">
+                    <Plus size={18} strokeWidth={1.8} />Ajouter une adresse
+                  </button>
+                </div>
+              </div>
+
+              <div className="adm-filters">
+                <select className="adm-select" value={typeFilter} onChange={onFilterChange(setTypeFilter)}>
+                  <option value="all">Tous les types</option>
+                  {CATEGORIES.filter(c => c.id !== 'all').map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                </select>
+                <select className="adm-select" value={regionFilter} onChange={onFilterChange(setRegionFilter)}>
+                  <option value="all">Toutes les régions</option>
+                  {regions.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+                <select className="adm-select" value={statusFilter} onChange={onFilterChange(setStatusFilter)}>
+                  <option value="all">Tous les status</option>
+                  {PLACE_STATUSES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                </select>
+                <div className="adm-filters-right">
+                  {selectedPlaceIds.length > 0 ? (
+                    <button className="adm-bulk-delete" onClick={handleDeleteSelected}>
+                      <Trash2 size={14} />Supprimer ({selectedPlaceIds.length})
+                    </button>
+                  ) : (
+                    <span className="adm-count">{filteredPlaces.length} adresse{filteredPlaces.length > 1 ? 's' : ''}</span>
+                  )}
+                  <div className="adm-view-toggle">
+                    <button className={compactList ? 'active' : ''} onClick={() => setCompactList(true)} aria-label="Vue compacte"><List size={16} /></button>
+                    <button className={compactList ? '' : 'active'} onClick={() => setCompactList(false)} aria-label="Vue détaillée"><LayoutList size={16} /></button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="adm-table-wrap" data-testid="admin-places-list">
+                <table className={`adm-table${compactList ? ' compact' : ''}`}>
+                  <colgroup>
+                    <col style={{ width: 59 }} /><col style={{ width: 111 }} /><col className="adm-col-name" /><col className="adm-col-loc" />
+                    <col style={{ width: 175 }} /><col style={{ width: 149 }} /><col style={{ width: 117 }} />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th><input type="checkbox" className="adm-check" checked={allPageSelected} onChange={togglePageSelection} aria-label="Tout sélectionner" /></th>
+                      <th>Aperçu</th><th>Nom</th><th>Localisation</th><th>Type</th><th>Statut</th><th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pagePlaces.length === 0 ? (
+                      <tr><td colSpan={7} className="adm-empty">
+                        <MapPin size={36} strokeWidth={1.4} />
+                        {places.length === 0 ? 'Aucune adresse pour le moment' : 'Aucune adresse ne correspond à votre recherche'}
+                      </td></tr>
+                    ) : pagePlaces.map((place) => {
+                      const cat = getCatInfo(place.category);
+                      const CatIcon = cat?.icon || MapPin;
+                      const status = PLACE_STATUSES.find(s => s.id === getPlaceStatus(place));
+                      const location = [place.city, place.country].filter(Boolean).join(', ');
+                      return (
+                        <tr key={place.id} className={selectedPlaceIds.includes(place.id) ? 'selected' : ''} data-testid={`admin-place-${place.id}`}>
+                          <td><input type="checkbox" className="adm-check" checked={selectedPlaceIds.includes(place.id)} onChange={() => togglePlaceSelection(place.id)} aria-label={`Sélectionner ${place.title}`} /></td>
+                          <td>
+                            <button type="button" className="adm-thumb" onClick={() => setViewingPlace(place)} data-testid={`view-${place.id}`} aria-label={`Aperçu de ${place.title}`}>
+                              {place.photos?.[0] ? <img src={getPhotoSrc(place.photos[0])} alt="" /> : <CatIcon size={22} />}
+                            </button>
+                          </td>
+                          <td>
+                            <p className="adm-name">{place.title}</p>
+                            <p className="adm-desc">{stripHtml(place.description)}</p>
+                          </td>
+                          <td>{location && <span className="adm-loc"><MapPin size={13} strokeWidth={1.8} />{location}</span>}</td>
+                          <td><span className="adm-type">{cat.label}</span></td>
+                          <td><span className={`adm-status ${status.id}`}>{status.label}</span></td>
+                          <td>
+                            <div className="adm-actions">
+                              <button onClick={() => handleEdit(place)} title="Modifier" data-testid={`edit-${place.id}`}><Pencil size={14} strokeWidth={1.6} /></button>
+                              <button onClick={() => handleDuplicate(place)} title="Dupliquer" data-testid={`duplicate-${place.id}`}><Copy size={14} strokeWidth={1.6} /></button>
+                              <button onClick={() => handleDelete(place.id)} title="Supprimer" className="delete" data-testid={`delete-${place.id}`}><Trash2 size={14} strokeWidth={1.6} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {pageCount > 1 && (
+                <nav className="adm-pagination" aria-label="Pagination">
+                  <button className="adm-page-arrow" disabled={currentPage === 1} onClick={() => setPlacesPage(currentPage - 1)} aria-label="Page précédente"><ChevronLeft size={16} /></button>
+                  {Array.from({ length: pageCount }, (_, i) => i + 1).map(n => (
+                    <button key={n} className={`adm-page${n === currentPage ? ' active' : ''}`} onClick={() => setPlacesPage(n)}>{n}</button>
+                  ))}
+                  <button className="adm-page-arrow" disabled={currentPage === pageCount} onClick={() => setPlacesPage(currentPage + 1)} aria-label="Page suivante"><ChevronRight size={16} /></button>
+                </nav>
+              )}
+
+              <AnimatePresence>
+                {viewingPlace && <PlaceDetailModal place={viewingPlace} onClose={() => setViewingPlace(null)} />}
+              </AnimatePresence>
+            </>
+          )}
+
+          {/* ONGLET GUIDES — FORMULAIRE */}
+          {adminTab === 'guides' && showGuideForm && (
+            <AdminGuideForm
+              show={showGuideForm}
+              guideFormData={guideFormData}
+              setGuideFormData={setGuideFormData}
+              editingGuide={editingGuide}
+              onSubmit={handleGuideSubmit}
+              onClose={resetGuideForm}
+              loading={loading}
+              places={places}
+              entityId={guideFormId}
+            />
+          )}
+
+          {/* ONGLET GUIDES — LISTE */}
+          {adminTab === 'guides' && !showGuideForm && (
+            <>
+              <div className="admin-toolbar">
+                <button className="btn-primary" onClick={() => { resetGuideForm(); setShowGuideForm(true); }}><Plus size={20} />Nouveau guide</button>
+              </div>
+
+              <div className="admin-places-list">
+                {guides.length === 0 ? (
+                  <div className="empty-admin"><BookOpen size={48} /><h3>Aucun guide</h3><p>Créez votre premier guide de voyage</p></div>
+                ) : guides.map((guide) => (
+                  <motion.div key={guide.id} className="admin-place-item" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <div className="admin-place-image">
-                      {place.photos?.[0] ? <img src={getPhotoSrc(place.photos[0])} alt="" /> : <CatIcon size={32} />}
+                      {guide.cover_image ? <img src={guide.cover_image} alt="" /> : <BookOpen size={32} />}
                     </div>
                     <div className="admin-place-info">
-                      <h3>{place.title}</h3><p>{place.address}</p>
+                      <h3>{guide.title}</h3>
+                      <p>{guide.destination}, {guide.country} — {guide.duration_days} jour{guide.duration_days > 1 ? 's' : ''}</p>
                       <div className="admin-place-meta">
-                        <CategoryBadge categoryId={place.category} small />
-                        <StarRating rating={place.rating} readonly />
+                        <span className="cat-badge" style={{ background: guide.published ? '#5cb85c' : '#6c6c6c', color: '#fff' }}>
+                          {guide.published ? 'Publié' : 'Brouillon'}
+                        </span>
                       </div>
                     </div>
                     <div className="admin-place-actions">
-                      <button onClick={() => setViewingPlace(place)} className="action-btn" data-testid={`view-${place.id}`}><Eye size={18} /></button>
-                      <button onClick={() => handleEdit(place)} className="action-btn" data-testid={`edit-${place.id}`}><Edit3 size={18} /></button>
-                      <button onClick={() => handleDelete(place.id)} className="action-btn delete" data-testid={`delete-${place.id}`}><Trash2 size={18} /></button>
+                      <button onClick={() => { setEditingGuide(guide); setGuideFormId(guide.id); setGuideFormData({ ...guide }); setShowGuideForm(true); }} className="action-btn"><Edit3 size={18} /></button>
+                      <button onClick={() => handleDeleteGuide(guide.id)} className="action-btn delete"><Trash2 size={18} /></button>
                     </div>
                   </motion.div>
-                );
-              })}
-            </div>
-
-            <AnimatePresence>
-              {viewingPlace && <PlaceDetailModal place={viewingPlace} onClose={() => setViewingPlace(null)} />}
-            </AnimatePresence>
-          </>
-        )}
-
-        {/* ONGLET GUIDES — FORMULAIRE */}
-        {adminTab === 'guides' && showGuideForm && (
-          <AdminGuideForm
-            show={showGuideForm}
-            guideFormData={guideFormData}
-            setGuideFormData={setGuideFormData}
-            editingGuide={editingGuide}
-            onSubmit={handleGuideSubmit}
-            onClose={resetGuideForm}
-            loading={loading}
-            places={places}
-            entityId={guideFormId}
-          />
-        )}
-
-        {/* ONGLET GUIDES — LISTE */}
-        {adminTab === 'guides' && !showGuideForm && (
-          <>
-            <div className="admin-toolbar">
-              <button className="btn-primary" onClick={() => { resetGuideForm(); setShowGuideForm(true); }}><Plus size={20} />Nouveau guide</button>
-            </div>
-
-            <div className="admin-places-list">
-              {guides.length === 0 ? (
-                <div className="empty-admin"><BookOpen size={48} /><h3>Aucun guide</h3><p>Créez votre premier guide de voyage</p></div>
-              ) : guides.map((guide) => (
-                <motion.div key={guide.id} className="admin-place-item" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <div className="admin-place-image">
-                    {guide.cover_image ? <img src={guide.cover_image} alt="" /> : <BookOpen size={32} />}
-                  </div>
-                  <div className="admin-place-info">
-                    <h3>{guide.title}</h3>
-                    <p>{guide.destination}, {guide.country} — {guide.duration_days} jour{guide.duration_days > 1 ? 's' : ''}</p>
-                    <div className="admin-place-meta">
-                      <span className="cat-badge" style={{ background: guide.published ? '#5cb85c' : '#6c6c6c', color: '#fff' }}>
-                        {guide.published ? 'Publié' : 'Brouillon'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="admin-place-actions">
-                    <button onClick={() => { setEditingGuide(guide); setGuideFormId(guide.id); setGuideFormData({ ...guide }); setShowGuideForm(true); }} className="action-btn"><Edit3 size={18} /></button>
-                    <button onClick={() => handleDeleteGuide(guide.id)} className="action-btn delete"><Trash2 size={18} /></button>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </>
-        )}
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
