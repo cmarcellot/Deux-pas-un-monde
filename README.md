@@ -98,7 +98,7 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 ```bash
 cd backend
 pip install -r requirements.txt
-cp .env.example .env  # remplir les variables
+# créer backend/.env (voir « Variables d'environnement »)
 python server.py
 ```
 
@@ -118,6 +118,15 @@ DB_NAME=deux_pas_un_monde
 JWT_SECRET=votre_secret_jwt
 ADMIN_PASSWORD=votre_mot_de_passe_admin
 ```
+
+| Variable | Obligatoire | Rôle |
+|----------|-------------|------|
+| `MONGO_URL` | oui | URL de connexion MongoDB (avec identifiants en production) |
+| `DB_NAME` | non | Nom de la base, `deux_pas_un_monde` par défaut |
+| `JWT_SECRET` | oui | Clé de signature des sessions admin. Chaîne aléatoire longue, par exemple `python -c "import secrets; print(secrets.token_hex(32))"`. La changer déconnecte les sessions en cours |
+| `ADMIN_PASSWORD` | oui | Mot de passe admin initial. Dès qu'il est changé depuis l'admin, c'est le mot de passe enregistré en base (hashé avec bcrypt) qui est utilisé, et cette variable n'est plus lue |
+
+Le backend refuse de démarrer si `MONGO_URL`, `JWT_SECRET` ou `ADMIN_PASSWORD` est absente, et affiche dans les logs le nom des variables manquantes. En production, elles sont définies dans l'onglet **Environment** de l'app backend sur Dokploy. Ne commitez jamais de fichier `.env` ni de valeur de secret.
 
 ### Frontend (`/frontend/.env`)
 ```env
@@ -161,7 +170,7 @@ REACT_APP_API_URL=http://localhost:8001
 ### Authentification
 | Méthode | Endpoint | Auth | Description |
 |---------|----------|------|-------------|
-| POST | `/api/auth/login` | — | Connexion admin |
+| POST | `/api/auth/login` | — | Connexion admin (5 échecs max par IP sur 15 min, puis erreur 429) |
 | GET | `/api/auth/verify` | ✓ | Vérifier le token |
 | POST | `/api/auth/change-password` | ✓ | Changer le mot de passe |
 

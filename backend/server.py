@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, status
+from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -7,9 +7,15 @@ from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 from jose import JWTError, jwt
 import os
+import sys
+import hmac
+import math
+import time
+import threading
 import uuid
 import shutil
 import pathlib
+import bcrypt
 from dotenv import load_dotenv
 from pymongo import MongoClient
 
@@ -31,10 +37,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MONGO_URL = os.environ.get("MONGO_URL")
+# Pas de valeur par défaut pour les secrets : le backend refuse de démarrer s'il en manque un
+REQUIRED_ENV_VARS = ("MONGO_URL", "JWT_SECRET", "ADMIN_PASSWORD")
+missing_env_vars = [name for name in REQUIRED_ENV_VARS if not os.environ.get(name)]
+if missing_env_vars:
+    sys.exit(
+        "Variables d'environnement manquantes : " + ", ".join(missing_env_vars)
+        + ". Le backend ne peut pas démarrer sans elles (voir la section « Variables d'environnement » du README)."
+    )
+
+MONGO_URL = os.environ["MONGO_URL"]
 DB_NAME = os.environ.get("DB_NAME", "deux_pas_un_monde")
-JWT_SECRET = os.environ.get("JWT_SECRET", "default_secret")
-DEFAULT_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+JWT_SECRET = os.environ["JWT_SECRET"]
+DEFAULT_ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 
 UPLOAD_DIR = pathlib.Path("/app/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -46,18 +61,39 @@ places_collection = db["places"]
 settings_collection = db["settings"]
 guides_collection = db["guides"]
 
-def get_admin_password():
+def check_admin_password(password):
+    # Le mot de passe changé depuis l'admin (en base) prime sur ADMIN_PASSWORD
     settings = settings_collection.find_one({"key": "admin_password"})
-    if settings:
-        return settings["value"]
-    return DEFAULT_ADMIN_PASSWORD
+    if not settings:
+        return hmac.compare_digest(password.encode("utf-8"), DEFAULT_ADMIN_PASSWORD.encode("utf-8"))
+    if "hash" in settings:
+        return bcrypt.checkpw(password.encode("utf-8"), settings["hash"].encode("utf-8"))
+    # Ancien format stocké en clair : remplacé par un hash à la première connexion réussie
+    if hmac.compare_digest(password.encode("utf-8"), settings["value"].encode("utf-8")):
+        set_admin_password(password)
+        return True
+    return False
 
 def set_admin_password(new_password):
+    password_hash = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     settings_collection.update_one(
         {"key": "admin_password"},
-        {"$set": {"key": "admin_password", "value": new_password}},
+        {"$set": {"key": "admin_password", "hash": password_hash}, "$unset": {"value": ""}},
         upsert=True
     )
+
+# Limite des tentatives de connexion, en mémoire (remise à zéro au redémarrage)
+LOGIN_MAX_FAILURES = 5
+LOGIN_WINDOW_SECONDS = 15 * 60
+login_failures = {}  # IP -> horodatages des échecs récents
+login_failures_lock = threading.Lock()
+
+def get_client_ip(http_request: Request):
+    # Derrière le proxy de Dokploy, l'IP du visiteur est la dernière ajoutée à X-Forwarded-For
+    forwarded_for = http_request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[-1].strip()
+    return http_request.client.host if http_request.client else "inconnue"
 
 security = HTTPBearer()
 
@@ -220,11 +256,21 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 @app.post("/api/auth/login")
-def login(request: LoginRequest):
-    admin_password = get_admin_password()
-    if request.password == admin_password:
-        token = create_token({"sub": "admin"})
-        return {"token": token, "message": "Connexion réussie"}
+def login(request: LoginRequest, http_request: Request):
+    ip = get_client_ip(http_request)
+    now = time.monotonic()
+    with login_failures_lock:
+        for key in [key for key, times in login_failures.items() if now - times[-1] >= LOGIN_WINDOW_SECONDS]:
+            del login_failures[key]
+        failures = [t for t in login_failures.get(ip, []) if now - t < LOGIN_WINDOW_SECONDS]
+        if len(failures) >= LOGIN_MAX_FAILURES:
+            minutes = math.ceil((LOGIN_WINDOW_SECONDS - (now - failures[0])) / 60)
+            raise HTTPException(status_code=429, detail=f"Trop de tentatives. Réessayez dans {minutes} min.")
+        if check_admin_password(request.password):
+            login_failures.pop(ip, None)
+            token = create_token({"sub": "admin"})
+            return {"token": token, "message": "Connexion réussie"}
+        login_failures[ip] = failures + [now]
     raise HTTPException(status_code=401, detail="Mot de passe incorrect")
 
 @app.get("/api/auth/verify")
@@ -233,11 +279,13 @@ def verify_auth(payload: dict = Depends(verify_token)):
 
 @app.post("/api/auth/change-password")
 def change_password(request: ChangePasswordRequest, payload: dict = Depends(verify_token)):
-    current_password = get_admin_password()
-    if request.current_password != current_password:
+    if not check_admin_password(request.current_password):
         raise HTTPException(status_code=401, detail="Mot de passe actuel incorrect")
     if len(request.new_password) < 6:
         raise HTTPException(status_code=400, detail="Le nouveau mot de passe doit contenir au moins 6 caractères")
+    # bcrypt ne prend en compte que les 72 premiers octets
+    if len(request.new_password.encode("utf-8")) > 72:
+        raise HTTPException(status_code=400, detail="Le nouveau mot de passe ne doit pas dépasser 72 caractères")
     set_admin_password(request.new_password)
     return {"message": "Mot de passe modifié avec succès"}
 
