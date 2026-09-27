@@ -1,10 +1,18 @@
+# Tests de l'API. Ce script crée, modifie puis supprime un lieu : à lancer sur un
+# backend local, jamais sur la prod.
+#   ADMIN_PASSWORD=... python backend_test.py
+#   API_URL (optionnel) : URL du backend testé, http://localhost:8001 par défaut
+import os
 import requests
 import sys
 import json
 from datetime import datetime
 
+API_URL = os.environ.get("API_URL", "http://localhost:8001")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+
 class DeuxPasUnMondeAPITester:
-    def __init__(self, base_url="https://680991b7-c7a2-4c6b-9fbe-f299f45c49c5.preview.emergentagent.com"):
+    def __init__(self, base_url=API_URL):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
@@ -77,7 +85,7 @@ class DeuxPasUnMondeAPITester:
             "POST", 
             "api/auth/login", 
             200,
-            data={"password": "deuxpasunmonde2024"}
+            data={"password": ADMIN_PASSWORD}
         )
         if success and 'token' in response:
             self.token = response['token']
@@ -219,6 +227,10 @@ class DeuxPasUnMondeAPITester:
         return success
 
 def main():
+    if not ADMIN_PASSWORD:
+        print("❌ Variable d'environnement ADMIN_PASSWORD manquante : définissez-la avec le mot de passe admin du backend testé.")
+        return 1
+
     print("🚀 Starting Deux pas un monde API Tests")
     print("=" * 60)
     
