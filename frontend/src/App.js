@@ -2663,7 +2663,7 @@ const AdminCollection = ({
 const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const [places, setPlaces] = useState([]);
   const [editingPlace, setEditingPlace] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -2707,13 +2707,13 @@ const AdminPage = () => {
   };
 
   const handleLogin = async (e) => {
-    e.preventDefault(); setLoading(true); setLoginError(false);
+    e.preventDefault(); setLoading(true); setLoginError('');
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
       const data = await res.json();
       if (res.ok) { localStorage.setItem('admin_token', data.token); setIsAuthenticated(true); fetchPlaces(data.token); fetchGuides(data.token); }
-      else { setLoginError(true); }
-    } catch { setLoginError(true); }
+      else { setLoginError(res.status === 429 ? data.detail : 'Mot de passe incorrect.'); }
+    } catch { setLoginError('Mot de passe incorrect.'); }
     finally { setLoading(false); }
   };
 
@@ -2972,12 +2972,12 @@ const AdminPage = () => {
             <input
               type="password"
               value={password}
-              onChange={(e) => { setPassword(e.target.value); setLoginError(false); }}
+              onChange={(e) => { setPassword(e.target.value); setLoginError(''); }}
               placeholder="••••••••"
               className={`login-input${loginError ? ' error' : ''}`}
               data-testid="password-input"
             />
-            {loginError && <p className="login-error">Mot de passe incorrect.</p>}
+            {loginError && <p className="login-error">{loginError}</p>}
             <button type="submit" className="login-submit-btn" disabled={loading} data-testid="login-btn">
               {loading ? 'Connexion…' : 'SE CONNECTER'}
             </button>
