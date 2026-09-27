@@ -125,8 +125,11 @@ ADMIN_PASSWORD=votre_mot_de_passe_admin
 | `DB_NAME` | non | Nom de la base, `deux_pas_un_monde` par défaut |
 | `JWT_SECRET` | oui | Clé de signature des sessions admin. Chaîne aléatoire longue, par exemple `python -c "import secrets; print(secrets.token_hex(32))"`. La changer déconnecte les sessions en cours |
 | `ADMIN_PASSWORD` | oui | Mot de passe admin initial. Dès qu'il est changé depuis l'admin, c'est le mot de passe enregistré en base (hashé avec bcrypt) qui est utilisé, et cette variable n'est plus lue |
+| `UMAMI_URL` | non | Adresse de l'instance Umami, avec `https://` et sans `/` final |
+| `UMAMI_WEBSITE_ID` | non | Identifiant du site dans Umami (Umami : Settings → Websites) |
+| `UMAMI_API_KEY` | non | Clé API Umami (Umami : Settings → API keys), secrète. Permet au backend de lire les statistiques |
 
-Le backend refuse de démarrer si `MONGO_URL`, `JWT_SECRET` ou `ADMIN_PASSWORD` est absente, et affiche dans les logs le nom des variables manquantes. En production, elles sont définies dans l'onglet **Environment** de l'app backend sur Dokploy. Ne commitez jamais de fichier `.env` ni de valeur de secret.
+Le backend refuse de démarrer si `MONGO_URL`, `JWT_SECRET` ou `ADMIN_PASSWORD` est absente, et affiche dans les logs le nom des variables manquantes. Les variables `UMAMI_*` sont facultatives : sans elles, le backend démarre normalement et `/api/admin/analytics` répond `configured: false`. En production, toutes sont définies dans l'onglet **Environment** de l'app backend sur Dokploy. Ne commitez jamais de fichier `.env` ni de valeur de secret.
 
 ### Frontend (`/frontend/.env`)
 ```env
@@ -134,6 +137,14 @@ REACT_APP_API_URL=http://localhost:8001
 ```
 
 ⚠️ **En production (Dokploy)** : le fichier `.env` du repo est écrasé/vidé par le pipeline de déploiement Dokploy avant le build. `REACT_APP_API_URL` doit être défini dans l'onglet **Environment** de l'app frontend sur Dokploy, pas seulement dans le fichier commité — sinon le build retombe sur la valeur par défaut codée en dur dans `App.js`.
+
+| Variable | Obligatoire | Rôle |
+|----------|-------------|------|
+| `REACT_APP_API_URL` | oui | Adresse de l'API backend |
+| `REACT_APP_UMAMI_URL` | non | Adresse de l'instance Umami, qui sert le script de suivi |
+| `REACT_APP_UMAMI_WEBSITE_ID` | non | Identifiant du site dans Umami. Il n'est pas secret : il apparaît dans le code de la page |
+
+Le script Umami n'est chargé que si les deux variables `REACT_APP_UMAMI_*` sont définies. Il ne compte que les visites sur `deuxpasunmonde.fr` et `www.deuxpasunmonde.fr` (pas le développement local) et n'envoie rien depuis les pages `/admin`. Pour ne pas compter ses propres visites, exécuter une fois `localStorage.setItem('umami.disabled', 1)` dans la console du navigateur, sur chacun des deux domaines.
 
 ## Structure du projet
 
@@ -202,6 +213,20 @@ REACT_APP_API_URL=http://localhost:8001
 | GET | `/api/health` | — | Vérification du serveur |
 
 Les fichiers sont stockés dans `/app/uploads/{entity_type}/{entity_id}/{uuid}.ext`.
+
+### Mesure d'audience
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| GET | `/api/admin/analytics` | ✓ | Vues du site lues dans Umami (`?period=7d`, `30d` ou `90d`, `7d` par défaut) |
+
+Réponse, jours calculés dans le fuseau `Europe/Paris` :
+- `configured` : `false` si une variable `UMAMI_*` manque (les autres champs valent alors `[]` ou `null`) ;
+- `period` : la période demandée ;
+- `daily` : `[{ "date": "YYYY-MM-DD", "views": 12 }, …]`, un élément par jour de la période, aujourd'hui compris, `0` pour les jours sans visite ;
+- `total_views` et `previous_period_views` : vues de la période et de la période précédente de même durée ;
+- `last_30_days_views` et `previous_30_days_views` : vues des 30 derniers jours et des 30 jours d'avant.
+
+Si Umami ne répond pas ou refuse la requête : erreur 503 avec un message explicite. Période inconnue : erreur 400.
 
 ## Catégories de lieux
 
