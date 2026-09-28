@@ -4,17 +4,22 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, time as dt_time
+from zoneinfo import ZoneInfo
 from jose import JWTError, jwt
 import os
 import sys
 import hmac
+import json
 import math
 import time
 import threading
 import uuid
 import shutil
 import pathlib
+import urllib.error
+import urllib.parse
+import urllib.request
 import bcrypt
 from dotenv import load_dotenv
 from pymongo import MongoClient
@@ -50,6 +55,13 @@ MONGO_URL = os.environ["MONGO_URL"]
 DB_NAME = os.environ.get("DB_NAME", "deux_pas_un_monde")
 JWT_SECRET = os.environ["JWT_SECRET"]
 DEFAULT_ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
+
+# Mesure d'audience (Umami) : optionnelle, le backend démarre sans ces variables
+UMAMI_URL = os.environ.get("UMAMI_URL", "").rstrip("/")
+UMAMI_WEBSITE_ID = os.environ.get("UMAMI_WEBSITE_ID", "")
+UMAMI_API_KEY = os.environ.get("UMAMI_API_KEY", "")
+ANALYTICS_TIMEZONE = "Europe/Paris"
+ANALYTICS_PERIODS = {"7d": 7, "30d": 30, "90d": 90}
 
 UPLOAD_DIR = pathlib.Path("/app/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -447,6 +459,83 @@ def delete_guide(guide_id: str, payload: dict = Depends(verify_token)):
     if guide_dir.exists():
         shutil.rmtree(guide_dir)
     return {"message": "Guide supprimé"}
+
+def fetch_umami_daily_views(start: datetime, end: datetime):
+    # Vues par jour (heure de Paris) renvoyées par l'API d'Umami, sous la forme {"YYYY-MM-DD": vues}
+    query = urllib.parse.urlencode({
+        "startAt": int(start.timestamp() * 1000),
+        "endAt": int(end.timestamp() * 1000),
+        "unit": "day",
+        "timezone": ANALYTICS_TIMEZONE,
+    })
+    try:
+        umami_request = urllib.request.Request(
+            f"{UMAMI_URL}/api/websites/{urllib.parse.quote(UMAMI_WEBSITE_ID)}/pageviews?{query}",
+            headers={"Authorization": f"Bearer {UMAMI_API_KEY}", "Accept": "application/json"},
+        )
+        with urllib.request.urlopen(umami_request, timeout=10) as response:
+            data = json.loads(response.read().decode("utf-8"))
+        views_by_day = {}
+        for point in data["pageviews"]:
+            day = point["x"][:10]
+            views_by_day[day] = views_by_day.get(day, 0) + int(point["y"])
+        return views_by_day
+    except urllib.error.HTTPError as error:
+        if error.code in (401, 403):
+            detail = "Umami a refusé la clé API (vérifiez UMAMI_API_KEY)"
+        elif error.code == 404:
+            detail = "Site introuvable dans Umami (vérifiez UMAMI_WEBSITE_ID)"
+        else:
+            detail = f"Umami a renvoyé une erreur {error.code}"
+        raise HTTPException(status_code=503, detail=f"Statistiques indisponibles : {detail}")
+    except (urllib.error.URLError, TimeoutError, ValueError, KeyError, TypeError):
+        raise HTTPException(status_code=503, detail="Statistiques indisponibles : Umami ne répond pas")
+
+@app.get("/api/admin/analytics")
+def get_analytics(period: str = "7d", payload: dict = Depends(verify_token)):
+    if period not in ANALYTICS_PERIODS:
+        raise HTTPException(status_code=400, detail="Période invalide (7d, 30d ou 90d)")
+    if not (UMAMI_URL and UMAMI_WEBSITE_ID and UMAMI_API_KEY):
+        return {
+            "configured": False,
+            "period": period,
+            "daily": [],
+            "total_views": None,
+            "previous_period_views": None,
+            "last_30_days_views": None,
+            "previous_30_days_views": None,
+        }
+
+    days = ANALYTICS_PERIODS[period]
+    paris = ZoneInfo(ANALYTICS_TIMEZONE)
+    now = datetime.now(paris)
+    today = now.date()
+    # Une seule requête couvre la période, la période précédente et les 60 derniers jours
+    span = max(2 * days, 60)
+    first_day = today - timedelta(days=span - 1)
+    views_by_day = fetch_umami_daily_views(datetime.combine(first_day, dt_time.min, tzinfo=paris), now)
+
+    def sum_views(start_offset, end_offset):
+        # Somme des vues de today - start_offset à today - end_offset inclus
+        return sum(
+            views_by_day.get((today - timedelta(days=offset)).isoformat(), 0)
+            for offset in range(end_offset, start_offset + 1)
+        )
+
+    daily = []
+    for offset in range(days - 1, -1, -1):
+        day = (today - timedelta(days=offset)).isoformat()
+        daily.append({"date": day, "views": views_by_day.get(day, 0)})
+
+    return {
+        "configured": True,
+        "period": period,
+        "daily": daily,
+        "total_views": sum_views(days - 1, 0),
+        "previous_period_views": sum_views(2 * days - 1, days),
+        "last_30_days_views": sum_views(29, 0),
+        "previous_30_days_views": sum_views(59, 30),
+    }
 
 
 
