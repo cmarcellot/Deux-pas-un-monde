@@ -13,7 +13,8 @@ import {
   Compass, Gem, Save, Key, ZoomIn,
   BookOpen, Calendar, Globe, Wallet, Info, Plane,
   Search, CheckCircle, Loader2, GripVertical, Heart, Tag,
-  Map as MapIcon, Users, Settings, Bell, Copy, Pencil, List, LayoutList
+  Map as MapIcon, Users, Settings, Bell, Copy, Pencil, List, LayoutList,
+  User, Eye, EyeOff, MountainSnow, BarChart, ArrowUp, ArrowDown, ArrowLeft, ArrowRight
 } from 'lucide-react';
 import './App.css';
 
@@ -2490,7 +2491,7 @@ const placeToFormData = (place) => ({
 
 // Entrées sans `tab` : pages pas encore implémentées, affichées sans destination
 const ADMIN_NAV = [
-  { label: 'Tableau de bord', icon: Home },
+  { label: 'Tableau de bord', icon: Home, tab: 'dashboard' },
   { label: 'Adresses',        icon: MapPin, tab: 'places' },
   { label: 'Guides voyage',   icon: MapIcon, tab: 'guides' },
   { label: 'Utilisateurs',    icon: Users },
@@ -2498,6 +2499,7 @@ const ADMIN_NAV = [
 ];
 
 const ADMIN_HERO = {
+  dashboard: { title: 'Tableau de bord', sub: 'Voici un aperçu de l\'activité de votre site et de vos contenus.' },
   places: { title: 'Gérez vos adresses', sub: 'Ajoutez, modifiez ou supprimez vos adresses publiées sur le site.' },
   guides: { title: 'Gérez vos guides voyage', sub: 'Ajoutez, modifiez ou supprimez vos guides voyage sur le site.' },
 };
@@ -2524,13 +2526,14 @@ const ADMIN_PAGE_SIZE = 8;
 
 // Liste admin (adresses, guides) : en-tête, filtres, sélection, tableau et pagination.
 // `getRow` traduit un élément en { image, icon, title, description, location, type, status }.
+// `initialFilters` pré-sélectionne des filtres (ex. { status: 'draft' }) à l'ouverture de la liste.
 const AdminCollection = ({
   variant, testId, eyebrow, title, sub, searchPlaceholder, addLabel, noun, columns, widths,
-  items, filters, getRow, getSearchText, emptyIcon: EmptyIcon,
+  items, filters, initialFilters, getRow, getSearchText, emptyIcon: EmptyIcon,
   onAdd, onView, onEdit, onDuplicate, onDelete, onDeleteMany,
 }) => {
   const [search, setSearch] = useState('');
-  const [filterValues, setFilterValues] = useState({});
+  const [filterValues, setFilterValues] = useState(initialFilters || {});
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState([]);
   const [compact, setCompact] = useState(false);
@@ -2660,6 +2663,467 @@ const AdminCollection = ({
   );
 };
 
+// ============================================================
+// ADMIN — TABLEAU DE BORD
+// ============================================================
+const DASH_PERIODS = [
+  { value: '7d',  days: 7,  label: '7 derniers jours' },
+  { value: '30d', days: 30, label: '30 derniers jours' },
+  { value: '90d', days: 90, label: '90 derniers jours' },
+];
+
+// Libellés du journal d'activité (GET /api/admin/activity), par type de contenu puis par action
+const DASH_EVENT_LABELS = {
+  place: { created: 'Nouvelle adresse ajoutée', updated: 'Adresse modifiée', deleted: 'Adresse supprimée' },
+  guide: {
+    created: 'Nouveau guide ajouté', updated: 'Guide modifié', deleted: 'Guide supprimé',
+    published: 'Guide publié', unpublished: 'Guide repassé en brouillon',
+  },
+};
+const getEventIcon = (event) => {
+  if (event.action === 'deleted') return Trash2;
+  if (event.action === 'published') return Eye;
+  if (event.action === 'unpublished') return EyeOff;
+  return event.entity_type === 'guide' ? MapIcon : MapPin;
+};
+
+// Fiche d'adresse incomplète : sans photo, sans tags d'expérience ou sans prix
+const isPlaceIncomplete = (p) => !p.photos?.length || !p.experience_tags?.length || p.price_from == null;
+
+const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
+const formatCount = (n) => n.toLocaleString('fr-FR');
+const formatShortDate = (iso) => new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+// "2026-09-29" (jour déjà exprimé à l'heure de Paris par l'API) → "29 sept."
+const formatChartDay = (day) => {
+  const [y, m, d] = day.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+};
+const formatRelativeTime = (iso) => {
+  const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (minutes < 1) return 'À l\'instant';
+  if (minutes < 60) return `Il y a ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Il y a ${hours} h`;
+  const days = Math.floor(hours / 24);
+  return days <= 30 ? `Il y a ${days} j` : formatShortDate(iso);
+};
+
+// Adresses et guides mélangés, du plus récent au plus ancien
+const getContentItems = (places, guides) => [
+  ...places.map(p => ({
+    key: `place-${p.id}`, type: 'Adresse', title: p.title, image: p.photos?.[0],
+    icon: getCatInfo(p.category).icon, created_at: p.created_at, status: getPlaceStatus(p),
+  })),
+  ...guides.map(g => ({
+    key: `guide-${g.id}`, type: 'Guide voyage', title: g.title, image: g.cover_image || g.photos?.[0],
+    icon: BookOpen, created_at: g.created_at, status: getGuideStatus(g),
+  })),
+].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+// "+N cette semaine" : contenus créés dans les 7 derniers jours
+const getWeekTrend = (items) => {
+  const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const count = items.filter(i => new Date(i.created_at).getTime() >= since).length;
+  return count > 0 ? { direction: 'up', value: `+${count}`, text: 'cette semaine' } : { text: 'Aucun ajout cette semaine' };
+};
+
+// Carte « Vues du site » : vues des 30 derniers jours, comparées aux 30 jours précédents
+const getViewsCard = ({ status, data }) => {
+  if (!data) return { value: '—', trend: { text: status === 'error' ? 'Statistiques indisponibles' : 'Chargement…' } };
+  if (!data.configured) return { value: '—', trend: { text: 'Mesure d\'audience non configurée' } };
+  const last = data.last_30_days_views;
+  const previous = data.previous_30_days_views;
+  // Pas de pourcentage sans période de comparaison (comptage démarré récemment)
+  if (!previous) return { value: formatCount(last), trend: { text: 'sur les 30 derniers jours' } };
+  const pct = Math.round(((last - previous) / previous) * 100);
+  return {
+    value: formatCount(last),
+    trend: {
+      direction: pct > 0 ? 'up' : pct < 0 ? 'down' : null,
+      value: `${pct > 0 ? '+' : pct < 0 ? '−' : ''}${Math.abs(pct)} %`,
+      text: 'par rapport aux 30 jours précédents',
+    },
+  };
+};
+
+// Graduation de l'axe des vues : 4 intervalles « ronds » (1, 2 ou 5 × 10^n), entiers
+const getChartMax = (max) => {
+  if (max <= 4) return 4;
+  const raw = max / 4;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  return [1, 2, 5, 10].map(m => m * magnitude).find(step => step >= raw) * 4;
+};
+
+// Courbe lissée monotone (Fritsch–Carlson) : ne dépasse jamais les points, donc jamais sous zéro
+const getSmoothPath = (pts) => {
+  const n = pts.length;
+  const dx = [], slopes = [];
+  for (let i = 0; i < n - 1; i++) {
+    dx.push(pts[i + 1][0] - pts[i][0]);
+    slopes.push((pts[i + 1][1] - pts[i][1]) / dx[i]);
+  }
+  const tangents = [slopes[0]];
+  for (let i = 1; i < n - 1; i++) tangents.push(slopes[i - 1] * slopes[i] <= 0 ? 0 : (slopes[i - 1] + slopes[i]) / 2);
+  tangents.push(slopes[n - 2]);
+  for (let i = 0; i < n - 1; i++) {
+    if (slopes[i] === 0) { tangents[i] = 0; tangents[i + 1] = 0; continue; }
+    const a = tangents[i] / slopes[i], b = tangents[i + 1] / slopes[i], h = a * a + b * b;
+    if (h > 9) { const s = 3 / Math.sqrt(h); tangents[i] = s * a * slopes[i]; tangents[i + 1] = s * b * slopes[i]; }
+  }
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 0; i < n - 1; i++) {
+    const h = dx[i] / 3;
+    d += ` C${pts[i][0] + h},${pts[i][1] + tangents[i] * h} ${pts[i + 1][0] - h},${pts[i + 1][1] - tangents[i + 1] * h} ${pts[i + 1][0]},${pts[i + 1][1]}`;
+  }
+  return d;
+};
+
+// Courbe des vues par jour (SVG), à la largeur réelle du bloc
+const DashViewsChart = ({ daily, loading }) => {
+  const wrapRef = useRef(null);
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(wrapRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const height = 150;
+  const pad = { top: 8, right: 26, bottom: 26, left: 44 };
+  const plotW = Math.max(width - pad.left - pad.right, 0);
+  const plotH = height - pad.top - pad.bottom;
+  const bottom = pad.top + plotH;
+  const n = daily.length;
+  const chartMax = getChartMax(Math.max(...daily.map(d => d.views)));
+  const points = daily.map((d, i) => [pad.left + (i * plotW) / (n - 1), pad.top + plotH * (1 - d.views / chartMax)]);
+  const line = getSmoothPath(points);
+  const labelStep = Math.ceil(n / 7); // 7 dates au plus, en partant du jour le plus récent
+
+  return (
+    <div ref={wrapRef} className={`dash-chart${loading ? ' loading' : ''}`}>
+      {width > 0 && (
+        <svg width={width} height={height} role="img" aria-label={`Vues par jour sur les ${n} derniers jours`}>
+          <defs>
+            <linearGradient id="dash-chart-area" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3d7259" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#3d7259" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+          {[0, 1, 2, 3, 4].map(i => {
+            const y = pad.top + plotH * (1 - i / 4);
+            return (
+              <g key={`y${i}`}>
+                <line className="dash-chart-grid" x1={pad.left} x2={pad.left + plotW} y1={y} y2={y} />
+                <text className="dash-chart-axis" x={pad.left - 14} y={y} textAnchor="end" dominantBaseline="middle">{formatCount((chartMax * i) / 4)}</text>
+              </g>
+            );
+          })}
+          {points.map(([x], i) => (n - 1 - i) % labelStep === 0 && (
+            <g key={`x${i}`}>
+              <line className="dash-chart-grid" x1={x} x2={x} y1={pad.top} y2={bottom + 4} />
+              <text className="dash-chart-axis" x={x} y={bottom + 18} textAnchor="middle">{formatChartDay(daily[i].date)}</text>
+            </g>
+          ))}
+          <path d={`${line} L${points[n - 1][0]},${bottom} L${points[0][0]},${bottom} Z`} fill="url(#dash-chart-area)" />
+          <path className="dash-chart-line" d={line} />
+          {points.map(([x, y], i) => (
+            <g key={daily[i].date}>
+              {n <= 31 && <circle className="dash-chart-dot" cx={x} cy={y} r="3.2" />}
+              <circle className="dash-chart-hit" cx={x} cy={y} r="9">
+                <title>{`${formatChartDay(daily[i].date)} : ${plural(daily[i].views, 'vue', 'vues')}`}</title>
+              </circle>
+            </g>
+          ))}
+        </svg>
+      )}
+    </div>
+  );
+};
+
+const DashStatCard = ({ icon: Icon, deco: Deco, label, value, trend }) => (
+  <div className="dash-card dash-stat">
+    <span className="dash-stat-icon"><Icon size={19} strokeWidth={1.6} /></span>
+    <div className="dash-stat-body">
+      <p className="dash-stat-label">{label}</p>
+      <p className="dash-stat-value">{value}</p>
+      <p className={`dash-stat-trend${trend.direction ? ` ${trend.direction}` : ''}`}>
+        {trend.direction === 'up' && <ArrowUp size={12} strokeWidth={2} />}
+        {trend.direction === 'down' && <ArrowDown size={12} strokeWidth={2} />}
+        {trend.value && <strong>{trend.value}</strong>}
+        {trend.text}
+      </p>
+    </div>
+    <Deco className="dash-stat-deco" size={34} strokeWidth={1.1} aria-hidden="true" />
+  </div>
+);
+
+const DashDonut = ({ parts, total }) => {
+  const radius = 54.5;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+  return (
+    <div className="dash-donut">
+      <svg viewBox="0 0 127 127" aria-hidden="true">
+        {total === 0 && <circle cx="63.5" cy="63.5" r={radius} fill="none" stroke="var(--adm-line)" strokeWidth="18" />}
+        {parts.map(part => {
+          const length = total ? (circumference * part.count) / total : 0;
+          const arc = (
+            <circle key={part.key} cx="63.5" cy="63.5" r={radius} fill="none" stroke={part.color} strokeWidth="18"
+              strokeDasharray={`${length} ${circumference}`} strokeDashoffset={-offset} transform="rotate(-90 63.5 63.5)" />
+          );
+          offset += length;
+          return arc;
+        })}
+      </svg>
+      <p className="dash-donut-center"><strong>{formatCount(total)}</strong>{total > 1 ? 'contenus' : 'contenu'}</p>
+    </div>
+  );
+};
+
+const DashContentList = ({ items }) => (
+  <ul className="dash-content-list">
+    {items.map(item => {
+      const Icon = item.icon;
+      const status = ADMIN_STATUSES.find(s => s.id === item.status);
+      return (
+        <li key={item.key} className="dash-content-row">
+          <span className="dash-content-thumb">
+            {item.image ? <img src={getPhotoSrc(item.image)} alt="" /> : <Icon size={20} strokeWidth={1.5} />}
+          </span>
+          <div className="dash-content-text">
+            <p className="dash-content-title">{item.title}</p>
+            <p className="dash-content-meta">{item.type}<span aria-hidden="true">•</span>{formatShortDate(item.created_at)}</p>
+          </div>
+          <span className={`adm-status ${status.id}`}>{status.label}</span>
+        </li>
+      );
+    })}
+  </ul>
+);
+
+// Illustrations décoratives du bloc « Envie d'ajouter une nouvelle adresse ? »
+const DashMountainArt = () => (
+  <svg className="dash-cta-art" viewBox="0 0 72 72" aria-hidden="true">
+    <defs><clipPath id="dash-cta-circle"><circle cx="36" cy="36" r="36" /></clipPath></defs>
+    <g clipPath="url(#dash-cta-circle)">
+      <rect width="72" height="72" fill="#f4ead6" />
+      <rect y="52" width="72" height="20" fill="#ddd6c6" />
+    </g>
+    <g fill="#b3c2b6" stroke="#1d3a2e" strokeWidth="1.8" strokeLinejoin="round">
+      <path d="M9 52 19 37l10 15z" />
+      <path d="M44 52 53 39l9 13z" />
+      <path d="M21 52 35 22l15 30z" />
+    </g>
+    <path d="M35 22l-3 9 4-3 2 5M19 37l-2 5 3-2" fill="none" stroke="#1d3a2e" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M8 52h56" stroke="#1d3a2e" strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M17 24q1.5-1.5 3 0q1.5-1.5 3 0" fill="none" stroke="#1d3a2e" strokeWidth="1" strokeLinecap="round" />
+  </svg>
+);
+const DashPlaneArt = () => (
+  <svg className="dash-cta-plane" viewBox="0 0 96 56" aria-hidden="true" fill="none" stroke="#1d3a2e" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 53c9-1 16-6 15-12s-9-6-9-1 9 7 20 4 28-15 38-27" strokeWidth="1" strokeDasharray="2.5 3" opacity="0.7" />
+    <g transform="translate(66 1)" strokeWidth="1.5">
+      <path d="m22 2-7 20-4-9-9-4Z" />
+      <path d="M22 2 11 13" />
+    </g>
+  </svg>
+);
+
+const AdminDashboard = ({ places, guides, onOpenList, onAddPlace, onShowAll }) => {
+  const [period, setPeriod] = useState('7d');
+  const [analytics, setAnalytics] = useState({ status: 'loading' });
+  const [activity, setActivity] = useState({ status: 'loading', items: [] });
+
+  // Vues du site (Umami, via le backend). Pendant un changement de période, l'ancienne courbe reste affichée.
+  useEffect(() => {
+    let cancelled = false;
+    setAnalytics(a => ({ ...a, status: 'loading' }));
+    fetch(`${API_URL}/api/admin/analytics?period=${period}`, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } })
+      .then(async (res) => {
+        const data = await res.json().catch(() => null);
+        if (cancelled) return;
+        if (res.ok) setAnalytics({ status: 'ready', data });
+        // 503 : Umami injoignable ou mal configuré, le backend explique pourquoi
+        else setAnalytics({ status: 'error', message: res.status === 503 ? data?.detail : undefined });
+      })
+      .catch(() => { if (!cancelled) setAnalytics({ status: 'error' }); });
+    return () => { cancelled = true; };
+  }, [period]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/admin/activity?limit=4`, { headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } })
+      .then(res => (res.ok ? res.json() : Promise.reject(res)))
+      .then(items => setActivity({ status: 'ready', items }))
+      .catch(() => setActivity({ status: 'error', items: [] }));
+  }, []);
+
+  const total = places.length + guides.length;
+  const placesPct = total ? Math.round((places.length / total) * 100) : 0;
+  const split = [
+    { key: 'places', label: 'Adresses', icon: MapPin, count: places.length, pct: placesPct, color: '#244135' },
+    { key: 'guides', label: 'Guides voyage', icon: MapIcon, count: guides.length, pct: total ? 100 - placesPct : 0, color: '#9dc3aa' },
+  ];
+
+  const draftGuides = guides.filter(g => getGuideStatus(g) === 'draft').length;
+  const incompletePlaces = places.filter(isPlaceIncomplete).length;
+  const todo = [
+    draftGuides > 0 && plural(draftGuides, 'guide en brouillon', 'guides en brouillon'),
+    incompletePlaces > 0 && `${plural(incompletePlaces, 'adresse incomplète', 'adresses incomplètes')} (sans photo, sans tags d'expérience ou sans prix)`,
+  ].filter(Boolean);
+
+  const periodDays = DASH_PERIODS.find(p => p.value === period).days;
+  const chartData = analytics.data;
+  const recent = getContentItems(places, guides).slice(0, 5);
+
+  return (
+    <div className="dash">
+      <div className="dash-stats">
+        <DashStatCard icon={MapPin} deco={MountainSnow} label="Adresses" value={formatCount(places.length)} trend={getWeekTrend(places)} />
+        <DashStatCard icon={MapIcon} deco={Compass} label="Guides voyage" value={formatCount(guides.length)} trend={getWeekTrend(guides)} />
+        <DashStatCard icon={User} deco={Users} label="Utilisateurs" value="—" trend={{ text: 'Bientôt disponible' }} />
+        <DashStatCard icon={Eye} deco={BarChart} label="Vues du site" {...getViewsCard(analytics)} />
+      </div>
+
+      <div className="dash-main">
+        <div className="dash-col">
+          <section className="dash-card dash-views">
+            <div className="dash-card-head">
+              <div>
+                <h2 className="dash-card-title">Activité du site</h2>
+                <p className="dash-card-sub">Nombre de vues sur les {periodDays} derniers jours</p>
+              </div>
+              <select className="adm-select dash-period" value={period} onChange={(e) => setPeriod(e.target.value)} aria-label="Période affichée">
+                {DASH_PERIODS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+              </select>
+            </div>
+            {chartData?.configured ? (
+              <DashViewsChart daily={chartData.daily} loading={analytics.status === 'loading'} />
+            ) : (
+              <div className="dash-chart-empty">
+                <BarChart size={26} strokeWidth={1.4} />
+                {analytics.status === 'loading' && !chartData ? 'Chargement des statistiques…'
+                  : analytics.status === 'error' ? (analytics.message || 'Statistiques momentanément indisponibles')
+                  : 'Mesure d\'audience non configurée : les vues s\'afficheront ici une fois Umami relié au site.'}
+              </div>
+            )}
+          </section>
+
+          <div className="dash-duo">
+            <section className="dash-card dash-split">
+              <h2 className="dash-card-title">Répartition des contenus</h2>
+              <div className="dash-split-body">
+                <DashDonut parts={split} total={total} />
+                <ul className="dash-split-legend">
+                  {split.map(({ key, label, icon: Icon, count, pct }) => (
+                    <li key={key}>
+                      <Icon size={14} strokeWidth={1.8} />
+                      <span className="dash-split-label">{label}</span>
+                      <strong>{formatCount(count)}</strong>
+                      <span className="dash-split-pct">{pct}%</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+
+            <section className="dash-card dash-feed">
+              <h2 className="dash-card-title">Dernières activités</h2>
+              {activity.items.length > 0 ? (
+                <ul className="dash-feed-list">
+                  {activity.items.map(event => {
+                    const Icon = getEventIcon(event);
+                    return (
+                      <li key={event.id} className="dash-feed-row">
+                        <span className="dash-feed-icon"><Icon size={15} strokeWidth={1.6} /></span>
+                        <div className="dash-feed-text">
+                          <p className="dash-feed-label">{DASH_EVENT_LABELS[event.entity_type][event.action]}</p>
+                          <p className="dash-feed-title">{event.title}</p>
+                        </div>
+                        <time className="dash-feed-time" dateTime={event.timestamp} title={new Date(event.timestamp).toLocaleString('fr-FR')}>
+                          {formatRelativeTime(event.timestamp)}
+                        </time>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="dash-empty">
+                  {activity.status === 'loading' ? 'Chargement…' : activity.status === 'error' ? 'Journal d\'activité indisponible' : 'Aucune activité pour le moment'}
+                </p>
+              )}
+            </section>
+          </div>
+
+          <section className="dash-todo">
+            <img className="dash-todo-bg" src="/guides-hero.png" alt="" />
+            <div className="dash-todo-body">
+              <p className="dash-todo-eyebrow">Bon à savoir</p>
+              <h2 className="dash-todo-title">{todo.length ? 'Contenus à finaliser' : 'Tout est à jour'}</h2>
+              <p className="dash-todo-text">
+                {todo.length ? `Il vous reste ${todo.join(' et ')}.` : 'Tous vos guides sont publiés et toutes vos adresses sont complètes. Bravo !'}
+              </p>
+              {todo.length > 0 && (
+                <div className="dash-todo-actions">
+                  {draftGuides > 0 && (
+                    <button type="button" className="dash-todo-btn" onClick={() => onOpenList('guides', { status: 'draft' })}>
+                      Voir les brouillons<ArrowRight size={13} />
+                    </button>
+                  )}
+                  {incompletePlaces > 0 && (
+                    <button type="button" className="dash-todo-btn" onClick={() => onOpenList('places', { completeness: 'incomplete' })}>
+                      Voir les adresses à compléter<ArrowRight size={13} />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+
+        <div className="dash-col">
+          <section className="dash-card dash-recent">
+            <div className="dash-card-head">
+              <h2 className="dash-card-title">Contenus récents</h2>
+              {recent.length > 0 && (
+                <button type="button" className="dash-link" onClick={onShowAll}>Voir tout<ArrowRight size={12} /></button>
+              )}
+            </div>
+            {recent.length > 0 ? <DashContentList items={recent} /> : <p className="dash-empty">Aucun contenu pour le moment</p>}
+          </section>
+
+          <section className="dash-card dash-cta">
+            <DashPlaneArt />
+            <div className="dash-cta-body">
+              <DashMountainArt />
+              <div>
+                <h2 className="dash-cta-title">Envie d’ajouter une nouvelle adresse&nbsp;?</h2>
+                <p className="dash-cta-sub">En quelques clics, partagez un lieu unique avec la communauté.</p>
+                <button type="button" className="adm-add-btn" onClick={onAddPlace}>
+                  <Plus size={16} strokeWidth={1.8} />Ajouter une adresse
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// « Voir tout » des contenus récents : tous les contenus, même présentation que le bloc
+const AdminAllContents = ({ items, onBack }) => (
+  <section className="dash-card dash-recent dash-all">
+    <div className="dash-card-head">
+      <div>
+        <h2 className="dash-card-title">Tous les contenus</h2>
+        <p className="dash-card-sub">{plural(items.length, 'contenu', 'contenus')}, du plus récent au plus ancien</p>
+      </div>
+      <button type="button" className="dash-link" onClick={onBack}><ArrowLeft size={12} />Tableau de bord</button>
+    </div>
+    {items.length > 0 ? <DashContentList items={items} /> : <p className="dash-empty">Aucun contenu pour le moment</p>}
+  </section>
+);
+
 const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -2678,7 +3142,8 @@ const AdminPage = () => {
     experience_tags: '', price_from: '',
   });
   const [placeFormId, setPlaceFormId] = useState(() => crypto.randomUUID());
-  const [adminTab, setAdminTab] = useState('places');
+  const [adminTab, setAdminTab] = useState('dashboard');
+  const [listFilters, setListFilters] = useState({}); // filtres appliqués à l'ouverture d'une liste
   const [guides, setGuides] = useState([]);
   const [editingGuide, setEditingGuide] = useState(null);
   const [showGuideForm, setShowGuideForm] = useState(false);
@@ -2988,9 +3453,12 @@ const AdminPage = () => {
     );
   }
 
-  const hero = ADMIN_HERO[adminTab];
+  // « Tous les contenus » est une sous-vue du tableau de bord
+  const activeNav = adminTab === 'contents' ? 'dashboard' : adminTab;
+  const hero = ADMIN_HERO[activeNav];
   const placeNoun = { one: 'adresse', many: 'adresses', feminine: true };
   const guideNoun = { one: 'guide', many: 'guides' };
+  const openAdminTab = (tab, filters = {}) => { setListFilters(filters); setAdminTab(tab); };
 
   return (
     <div className="admin-shell">
@@ -3002,8 +3470,8 @@ const AdminPage = () => {
         <nav className="admin-nav">
           {ADMIN_NAV.map(({ label, icon: Icon, tab }) => (
             <button key={label} type="button"
-              className={`admin-nav-item${tab && adminTab === tab ? ' active' : ''}`}
-              onClick={tab ? () => setAdminTab(tab) : undefined}>
+              className={`admin-nav-item${tab && activeNav === tab ? ' active' : ''}`}
+              onClick={tab ? () => openAdminTab(tab) : undefined}>
               <Icon size={22} strokeWidth={1.6} />{label}
             </button>
           ))}
@@ -3050,6 +3518,19 @@ const AdminPage = () => {
         </AnimatePresence>
 
         <div className="admin-content">
+          {/* TABLEAU DE BORD */}
+          {adminTab === 'dashboard' && (
+            <AdminDashboard
+              places={places} guides={guides}
+              onOpenList={openAdminTab}
+              onAddPlace={() => { resetForm(); setShowForm(true); openAdminTab('places'); }}
+              onShowAll={() => openAdminTab('contents')}
+            />
+          )}
+          {adminTab === 'contents' && (
+            <AdminAllContents items={getContentItems(places, guides)} onBack={() => openAdminTab('dashboard')} />
+          )}
+
           {/* ONGLET LIEUX — FORMULAIRE */}
           {adminTab === 'places' && showForm && (
             <div className="admin-inline-form">
@@ -3153,11 +3634,12 @@ const AdminPage = () => {
                 eyebrow="Adresses" title="Toutes vos adresses" sub="Retrouvez ici l'ensemble des adresses publiées sur le site."
                 searchPlaceholder="Rechercher une adresse..." addLabel="Ajouter une adresse"
                 columns={{ title: 'Nom', location: 'Localisation' }} widths={[59, 111, 175, 149, 117]}
-                items={places} emptyIcon={MapPin}
+                items={places} emptyIcon={MapPin} initialFilters={listFilters}
                 filters={[
                   { key: 'type', allLabel: 'Tous les types', options: CATEGORIES.filter(c => c.id !== 'all').map(c => ({ value: c.id, label: c.label })), match: (p, v) => p.category === v },
                   { key: 'region', allLabel: 'Toutes les régions', options: sortedOptions(places.map(p => p.country)), match: (p, v) => p.country === v },
                   statusFilterDef(getPlaceStatus),
+                  { key: 'completeness', allLabel: 'Toutes les fiches', options: [{ value: 'incomplete', label: 'Fiches incomplètes' }], match: (p) => isPlaceIncomplete(p) },
                 ]}
                 getSearchText={(p) => [p.title, p.city, p.country, p.address, stripHtml(p.description)].join(' ')}
                 getRow={(p) => {
@@ -3200,7 +3682,7 @@ const AdminPage = () => {
               eyebrow="Guides voyage" title="Tous vos guides" sub="Retrouvez ici l'ensemble des guides voyage publiés sur le site."
               searchPlaceholder="Rechercher un guide..." addLabel="Ajouter un guide"
               columns={{ title: 'Titre', location: 'Destination' }} widths={[59, 125, 156, 162, 125]}
-              items={guides} emptyIcon={BookOpen}
+              items={guides} emptyIcon={BookOpen} initialFilters={listFilters}
               filters={[
                 { key: 'type', allLabel: 'Tous les types', options: sortedOptions(guides.flatMap(g => g.tags || [])), match: (g, v) => (g.tags || []).includes(v) },
                 { key: 'destination', allLabel: 'Toutes les destinations', options: sortedOptions(guides.map(g => g.country)), match: (g, v) => g.country === v },

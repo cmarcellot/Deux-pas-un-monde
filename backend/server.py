@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request, status
+from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -72,6 +72,50 @@ db = client[DB_NAME]
 places_collection = db["places"]
 settings_collection = db["settings"]
 guides_collection = db["guides"]
+activity_collection = db["activity_log"]
+
+def log_activity(action, entity_type, entity_id, title, timestamp=None):
+    # Journal des actions de l'admin : created, updated, deleted, published ou unpublished,
+    # sur une adresse (place) ou un guide. Le titre est conservé même après une suppression.
+    activity_collection.insert_one({
+        "id": str(uuid.uuid4()),
+        "action": action,
+        "entity_type": entity_type,
+        "entity_id": entity_id,
+        "title": title,
+        "timestamp": timestamp or datetime.now(timezone.utc).isoformat(),
+    })
+
+def backfill_activity_log():
+    # Reprise de l'historique, uniquement si le journal est vide : un ajout par contenu (created_at)
+    # et une modification par guide modifié depuis (updated_at). Les adresses n'ont pas de date de modification.
+    if activity_collection.find_one() is not None:
+        return 0
+    events = []
+    for place in places_collection.find({}, {"_id": 0, "id": 1, "title": 1, "created_at": 1}):
+        events.append(("created", "place", place, place["created_at"]))
+    for guide in guides_collection.find({}, {"_id": 0, "id": 1, "title": 1, "created_at": 1, "updated_at": 1}):
+        events.append(("created", "guide", guide, guide["created_at"]))
+        if guide.get("updated_at") and guide["updated_at"] > guide["created_at"]:
+            events.append(("updated", "guide", guide, guide["updated_at"]))
+    events.sort(key=lambda event: event[3])
+    if events:
+        activity_collection.insert_many([
+            {"id": str(uuid.uuid4()), "action": action, "entity_type": entity_type,
+             "entity_id": doc["id"], "title": doc["title"], "timestamp": timestamp}
+            for action, entity_type, doc, timestamp in events
+        ])
+    return len(events)
+
+@app.on_event("startup")
+def backfill_activity_log_on_startup():
+    # Un échec de la reprise (Mongo injoignable…) ne doit pas empêcher l'API de démarrer : elle sera retentée au prochain démarrage
+    try:
+        count = backfill_activity_log()
+        if count:
+            print(f"Journal d'activité : {count} événements repris de l'historique")
+    except Exception as error:
+        print(f"Journal d'activité : reprise de l'historique impossible ({error})", file=sys.stderr)
 
 def check_admin_password(password):
     # Le mot de passe changé depuis l'admin (en base) prime sur ADMIN_PASSWORD
@@ -323,6 +367,7 @@ def create_place(place: PlaceCreate, payload: dict = Depends(verify_token)):
     place_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     places_collection.insert_one(place_dict)
     del place_dict["_id"]
+    log_activity("created", "place", place_dict["id"], place_dict["title"], place_dict["created_at"])
     return place_dict
 
 @app.put("/api/places/{place_id}", response_model=PlaceResponse)
@@ -334,13 +379,15 @@ def update_place(place_id: str, place: PlaceUpdate, payload: dict = Depends(veri
     if update_data:
         places_collection.update_one({"id": place_id}, {"$set": update_data})
     updated = places_collection.find_one({"id": place_id}, {"_id": 0})
+    log_activity("updated", "place", place_id, updated["title"])
     return updated
 
 @app.delete("/api/places/{place_id}")
 def delete_place(place_id: str, payload: dict = Depends(verify_token)):
-    result = places_collection.delete_one({"id": place_id})
-    if result.deleted_count == 0:
+    deleted = places_collection.find_one_and_delete({"id": place_id})
+    if not deleted:
         raise HTTPException(status_code=404, detail="Lieu non trouvé")
+    log_activity("deleted", "place", place_id, deleted["title"])
     place_dir = UPLOAD_DIR / "places" / place_id
     if place_dir.exists():
         shutil.rmtree(place_dir)
@@ -436,6 +483,7 @@ def create_guide(guide: GuideCreate, payload: dict = Depends(verify_token)):
     guide_dict["updated_at"] = now
     guides_collection.insert_one(guide_dict)
     del guide_dict["_id"]
+    log_activity("created", "guide", guide_dict["id"], guide_dict["title"], now)
     return guide_dict
 
 @app.put("/api/guides/{guide_id}", response_model=GuideResponse)
@@ -448,13 +496,19 @@ def update_guide(guide_id: str, guide: GuideUpdate, payload: dict = Depends(veri
     if update_data:
         guides_collection.update_one({"id": guide_id}, {"$set": update_data})
     updated = guides_collection.find_one({"id": guide_id}, {"_id": 0})
+    # Un seul événement par enregistrement : le changement de statut prime sur la modification
+    action = "updated"
+    if "published" in update_data and bool(update_data["published"]) != bool(existing.get("published")):
+        action = "published" if update_data["published"] else "unpublished"
+    log_activity(action, "guide", guide_id, updated["title"], update_data["updated_at"])
     return updated
 
 @app.delete("/api/guides/{guide_id}")
 def delete_guide(guide_id: str, payload: dict = Depends(verify_token)):
-    result = guides_collection.delete_one({"id": guide_id})
-    if result.deleted_count == 0:
+    deleted = guides_collection.find_one_and_delete({"id": guide_id})
+    if not deleted:
         raise HTTPException(status_code=404, detail="Guide non trouvé")
+    log_activity("deleted", "guide", guide_id, deleted["title"])
     guide_dir = UPLOAD_DIR / "guides" / guide_id
     if guide_dir.exists():
         shutil.rmtree(guide_dir)
@@ -536,6 +590,11 @@ def get_analytics(period: str = "7d", payload: dict = Depends(verify_token)):
         "last_30_days_views": sum_views(29, 0),
         "previous_30_days_views": sum_views(59, 30),
     }
+
+@app.get("/api/admin/activity")
+def get_activity(limit: int = Query(10, ge=1, le=100), payload: dict = Depends(verify_token)):
+    # Dernières entrées du journal, de la plus récente à la plus ancienne
+    return list(activity_collection.find({}, {"_id": 0}).sort([("timestamp", -1), ("_id", -1)]).limit(limit))
 
 
 

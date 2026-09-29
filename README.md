@@ -37,6 +37,12 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 
 ### Pour les administrateurs
 - **Interface d'administration sécurisée** : Accès protégé par JWT (`/admin`)
+- **Tableau de bord** (vue d'accueil de l'admin) :
+  - Nombre d'adresses et de guides (brouillons compris), ajouts des 7 derniers jours, répartition adresses / guides
+  - Vues du site (Umami) : total des 30 derniers jours et courbe des vues par jour sur 7, 30 ou 90 jours
+  - Dernières activités, lues dans le journal d'activité (ajouts, modifications, suppressions, publications)
+  - Contenus récents, avec une liste complète de tous les contenus
+  - Contenus à finaliser : guides en brouillon et adresses incomplètes (sans photo, sans tags d'expérience ou sans prix), avec un lien vers la liste filtrée
 - **Gestion des lieux** :
   - Ajouter, modifier, supprimer des lieux
   - Champs : titre, adresse, ville, pays, date de visite, description, catégorie, note, coordonnées GPS
@@ -227,6 +233,15 @@ Réponse, jours calculés dans le fuseau `Europe/Paris` :
 - `last_30_days_views` et `previous_30_days_views` : vues des 30 derniers jours et des 30 jours d'avant.
 
 Si Umami ne répond pas ou refuse la requête : erreur 503 avec un message explicite. Période inconnue : erreur 400.
+
+### Journal d'activité
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| GET | `/api/admin/activity` | ✓ | Dernières entrées du journal, de la plus récente à la plus ancienne (`?limit=10` par défaut, de 1 à 100) |
+
+Chaque entrée (collection Mongo `activity_log`) contient `id`, `action` (`created`, `updated`, `deleted`, `published` ou `unpublished`), `entity_type` (`place` ou `guide`), `entity_id`, `title` (conservé après une suppression) et `timestamp` (ISO, UTC). Les entrées sont écrites par les endpoints de création, modification et suppression des lieux et des guides ; un enregistrement de guide qui change son statut de publication produit `published` ou `unpublished` au lieu de `updated`.
+
+Au démarrage, si le journal est vide, le backend reprend l'historique existant : un `created` par lieu et par guide (date `created_at`) et un `updated` par guide modifié depuis (date `updated_at`). Les lieux n'ont pas de date de modification, donc pas de `updated` rétroactif.
 
 ## Catégories de lieux
 
