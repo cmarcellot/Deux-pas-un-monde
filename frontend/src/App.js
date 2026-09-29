@@ -2720,11 +2720,13 @@ const getContentItems = (places, guides) => [
   })),
 ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-// "+N cette semaine" : contenus créés dans les 7 derniers jours
-const getWeekTrend = (items) => {
-  const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
+// "+N sur les 30 derniers jours" : contenus créés sur les 30 derniers jours glissants (comme la carte des vues)
+const getMonthTrend = (items) => {
+  const since = Date.now() - 30 * 24 * 60 * 60 * 1000;
   const count = items.filter(i => new Date(i.created_at).getTime() >= since).length;
-  return count > 0 ? { direction: 'up', value: `+${count}`, text: 'cette semaine' } : { text: 'Aucun ajout cette semaine' };
+  return count > 0
+    ? { direction: 'up', value: `+${count}`, text: 'sur les 30 derniers jours' }
+    : { text: 'Aucun ajout sur les 30 derniers jours' };
 };
 
 // Carte « Vues du site » : vues des 30 derniers jours, comparées aux 30 jours précédents
@@ -2978,8 +2980,8 @@ const AdminDashboard = ({ places, guides, onOpenList, onAddPlace, onShowAll }) =
   return (
     <div className="dash">
       <div className="dash-stats">
-        <DashStatCard icon={MapPin} deco={MountainSnow} label="Adresses" value={formatCount(places.length)} trend={getWeekTrend(places)} />
-        <DashStatCard icon={MapIcon} deco={Compass} label="Guides voyage" value={formatCount(guides.length)} trend={getWeekTrend(guides)} />
+        <DashStatCard icon={MapPin} deco={MountainSnow} label="Adresses" value={formatCount(places.length)} trend={getMonthTrend(places)} />
+        <DashStatCard icon={MapIcon} deco={Compass} label="Guides voyage" value={formatCount(guides.length)} trend={getMonthTrend(guides)} />
         <DashStatCard icon={User} deco={Users} label="Utilisateurs" value="—" trend={{ text: 'Bientôt disponible' }} />
         <DashStatCard icon={Eye} deco={BarChart} label="Vues du site" {...getViewsCard(analytics)} />
       </div>

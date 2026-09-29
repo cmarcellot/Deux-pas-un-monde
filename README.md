@@ -38,7 +38,7 @@ Site web compagnon du compte Instagram [@deuxpas_unmonde](https://www.instagram.
 ### Pour les administrateurs
 - **Interface d'administration sécurisée** : Accès protégé par JWT (`/admin`)
 - **Tableau de bord** (vue d'accueil de l'admin) :
-  - Nombre d'adresses et de guides (brouillons compris), ajouts des 7 derniers jours, répartition adresses / guides
+  - Nombre d'adresses et de guides (brouillons compris), ajouts des 30 derniers jours, répartition adresses / guides
   - Vues du site (Umami) : total des 30 derniers jours et courbe des vues par jour sur 7, 30 ou 90 jours
   - Dernières activités, lues dans le journal d'activité (ajouts, modifications, suppressions, publications)
   - Contenus récents, avec une liste complète de tous les contenus
