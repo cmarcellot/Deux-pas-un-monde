@@ -828,7 +828,6 @@ const HomePage = () => {
           <Link to="/"          className="v2-nav-link active">Accueil</Link>
           <Link to="/adresses" className="v2-nav-link">Nos adresses</Link>
           <Link to="/guides"   className="v2-nav-link">Guides voyage</Link>
-          <a href="#apropos"   className="v2-nav-link">À propos</a>
         </div>
         <div className="v2-nav-actions">
           <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
@@ -1322,7 +1321,6 @@ const GuidesPage = () => {
             <Link to="/"         className="v2-nav-link">Accueil</Link>
             <Link to="/adresses" className="v2-nav-link">Nos adresses</Link>
             <Link to="/guides"   className="v2-nav-link active">Guides voyage</Link>
-            <a href="#apropos"   className="v2-nav-link">À propos</a>
           </div>
           <div className="v2-nav-actions">
             <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
@@ -3774,7 +3772,6 @@ const AdressesPage = () => {
             <Link to="/"          className="v2-nav-link">Accueil</Link>
             <Link to="/adresses"  className="v2-nav-link active">Nos adresses</Link>
             <Link to="/guides"    className="v2-nav-link">Guides voyage</Link>
-            <a href="#apropos"    className="v2-nav-link">À propos</a>
           </div>
           <div className="v2-nav-actions">
             <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
@@ -3942,7 +3939,6 @@ const MentionsLegalesPage = () => {
             <Link to="/"          className="v2-nav-link">Accueil</Link>
             <Link to="/adresses"  className="v2-nav-link">Nos adresses</Link>
             <Link to="/guides"    className="v2-nav-link">Guides voyage</Link>
-            <a href="#apropos"    className="v2-nav-link">À propos</a>
           </div>
           <div className="v2-nav-actions">
             <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
