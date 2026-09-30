@@ -1,0 +1,12 @@
+{
+  "short_name": "Deux pas un monde",
+  "name": "Deux pas un monde",
+  "icons": [
+    { "src": "icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "favicon-512.png", "type": "image/png", "sizes": "512x512" }
+  ],
+  "start_url": "/",
+  "display": "browser",
+  "theme_color": "#414441",
+  "background_color": "#414441"
+}
