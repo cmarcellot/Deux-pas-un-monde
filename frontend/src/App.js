@@ -742,6 +742,24 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
 };
 
 // ============================================================
+// SITE FOOTER — commun à toutes les pages publiques
+// ============================================================
+const SiteFooter = () => (
+  <footer className="v2-footer">
+    <div className="v2-footer-inner v2-footer-inner--full">
+      <div className="v2-footer-brand">
+        <img src="/logo-icone-creme.png" alt="Deux Pas Un Monde" className="v2-footer-logo" />
+        <span className="v2-footer-copy">&copy; {new Date().getFullYear()} Deux Pas Un Monde</span>
+      </div>
+      <div className="v2-footer-links">
+        <Link to="/mentions-legales" className="v2-footer-admin-link">Mentions légales &amp; confidentialité</Link>
+        <Link to="/admin" className="v2-footer-admin-link">Espace admin</Link>
+      </div>
+    </div>
+  </footer>
+);
+
+// ============================================================
 // HOME PAGE
 // ============================================================
 const CAT_SVG = {
@@ -921,16 +939,7 @@ const HomePage = () => {
             })}
           </div>
       </section>
-      {/* FOOTER */}
-      <footer className="v2-footer">
-        <div className="v2-footer-inner v2-footer-inner--full">
-          <div className="v2-footer-brand">
-            <img src="/logo-icone-creme.png" alt="Deux Pas Un Monde" className="v2-footer-logo" />
-            <span className="v2-footer-copy">&copy; {new Date().getFullYear()} Deux Pas Un Monde</span>
-          </div>
-          <Link to="/admin" className="v2-footer-admin-link">Espace admin</Link>
-        </div>
-      </footer>
+      <SiteFooter />
 
       <AnimatePresence>
         {selectedPlace && <PlaceDetailModal place={selectedPlace} onClose={() => setSelectedPlace(null)} />}
@@ -1401,15 +1410,7 @@ const GuidesPage = () => {
         )}
       </div>
 
-      <footer className="v2-footer">
-        <div className="v2-footer-inner v2-footer-inner--full">
-          <div className="v2-footer-brand">
-            <img src="/logo-icone-creme.png" alt="Deux Pas Un Monde" className="v2-footer-logo" />
-            <span className="v2-footer-copy">&copy; {new Date().getFullYear()} Deux Pas Un Monde</span>
-          </div>
-          <Link to="/admin" className="v2-footer-admin-link">Espace admin</Link>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 };
@@ -3907,20 +3908,168 @@ const AdressesPage = () => {
         )}
       </div>
 
-      {/* FOOTER */}
-      <footer className="v2-footer">
-        <div className="v2-footer-inner v2-footer-inner--full">
-          <div className="v2-footer-brand">
-            <img src="/logo-icone-creme.png" alt="Deux Pas Un Monde" className="v2-footer-logo" />
-            <span className="v2-footer-copy">&copy; {new Date().getFullYear()} Deux Pas Un Monde</span>
-          </div>
-          <Link to="/admin" className="v2-footer-admin-link">Espace admin</Link>
-        </div>
-      </footer>
+      <SiteFooter />
 
       {selectedPlace && (
         <PlaceDetailModal place={selectedPlace} onClose={() => setSelectedPlace(null)} />
       )}
+    </div>
+  );
+};
+
+// ============================================================
+// MENTIONS LÉGALES & CONFIDENTIALITÉ
+// ============================================================
+const LEGAL_CONTACT_EMAIL = 'deuxpasunmonde@gmail.com';
+const LEGAL_LAST_UPDATE = '30 septembre 2026';
+
+const MentionsLegalesPage = () => {
+  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
+  const contactLink = <a href={`mailto:${LEGAL_CONTACT_EMAIL}`}>{LEGAL_CONTACT_EMAIL}</a>;
+
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+
+      {/* HERO COMPACT */}
+      <div className="adresses-hero">
+        <nav className="v2-nav">
+          <Link to="/" className="v2-nav-brand">
+            <img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" />
+          </Link>
+          <div className="v2-nav-links">
+            <Link to="/"          className="v2-nav-link">Accueil</Link>
+            <Link to="/adresses"  className="v2-nav-link">Nos adresses</Link>
+            <Link to="/guides"    className="v2-nav-link">Guides voyage</Link>
+            <a href="#apropos"    className="v2-nav-link">À propos</a>
+          </div>
+          <div className="v2-nav-actions">
+            <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
+            <button className="v2-nav-icon-btn" aria-label="Compte">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </button>
+            <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-icon-btn" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+            </a>
+          </div>
+        </nav>
+        <div className="adresses-hero-content">
+          <p className="v2-section-eyebrow adresses-eyebrow">INFORMATIONS LÉGALES</p>
+          <h1 className="adresses-hero-title">Mentions légales &amp; confidentialité</h1>
+        </div>
+      </div>
+
+      {/* TEXTE */}
+      <main className="legal-page">
+        <div className="legal-inner">
+
+          <section>
+            <h2>Éditeur du site</h2>
+            <p>
+              Le site <strong>Deux pas un monde</strong> (deuxpasunmonde.fr) est édité par des particuliers, à titre
+              personnel et sans activité professionnelle. Les éditeurs ont communiqué leur identité à l’hébergeur, ce
+              que la loi pour la confiance dans l’économie numérique du 21 juin 2004 permet en échange de ne pas
+              l’afficher ici.
+            </p>
+            <dl className="legal-facts">
+              <dt>Éditeur</dt><dd>Deux pas un monde</dd>
+              <dt>Directeur de la publication</dt><dd>Deux pas un monde</dd>
+              <dt>Contact</dt><dd>{contactLink}</dd>
+            </dl>
+          </section>
+
+          <section>
+            <h2>Hébergement</h2>
+            <p>Le site est hébergé par&nbsp;:</p>
+            <dl className="legal-facts">
+              <dt>Hébergeur</dt><dd>Hostinger International Ltd</dd>
+              <dt>Adresse</dt><dd>61 Lordou Vironos Street, 6023 Larnaca, Chypre</dd>
+              <dt>Site web</dt><dd><a href="https://www.hostinger.fr" target="_blank" rel="noopener noreferrer">www.hostinger.fr</a></dd>
+            </dl>
+          </section>
+
+          <section>
+            <h2>Propriété intellectuelle</h2>
+            <p>
+              Les textes, les photographies, le logo et les éléments graphiques du site appartiennent à Deux pas un
+              monde. Toute reproduction, représentation, modification ou diffusion, en tout ou partie, est soumise à
+              notre autorisation préalable&nbsp;: écrivez-nous à {contactLink}.
+            </p>
+            <p>
+              Les fonds de carte sont fournis par OpenStreetMap&nbsp;: © les contributeurs d’
+              <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>.
+            </p>
+          </section>
+
+          <section>
+            <h2>Confidentialité et données personnelles</h2>
+            <p>
+              Le site ne vous demande aucune information personnelle&nbsp;: il n’y a ni compte visiteur, ni formulaire, et
+              il ne dépose aucun cookie. C’est pourquoi vous ne voyez pas de bandeau de consentement.
+            </p>
+
+            <h3>Mesure d’audience</h3>
+            <p>
+              Pour savoir combien de personnes visitent le site et quelles pages les intéressent, nous utilisons
+              {' '}<a href="https://umami.is" target="_blank" rel="noopener noreferrer">Umami</a>, un outil de mesure
+              d’audience respectueux de la vie privée. Il est installé sur notre propre serveur&nbsp;: aucune donnée n’est
+              transmise à une société tierce. Il n’utilise aucun cookie, ne vous suit pas d’un site à l’autre et ne
+              permet pas de vous identifier. Il enregistre uniquement des informations générales&nbsp;: pages vues, site
+              d’origine de la visite, navigateur, système, type d’appareil et pays. L’espace d’administration du
+              site n’est pas compté.
+            </p>
+
+            <h3>Services tiers qui reçoivent votre adresse IP</h3>
+            <p>
+              Comme pour tout site, votre navigateur doit contacter certains services pour afficher le contenu. Ces
+              services reçoivent alors votre adresse IP&nbsp;:
+            </p>
+            <ul>
+              <li>
+                <strong>OpenStreetMap</strong> (fondation OpenStreetMap, Royaume-Uni)&nbsp;: fonds de carte des pages
+                d’adresses et de guides, et recherche de lieux pour le globe 3D des guides.
+              </li>
+              <li>
+                <strong>unpkg.com</strong> (service de diffusion de fichiers libres)&nbsp;: feuille de style des cartes,
+                chargée sur chaque page, et image de la Terre du globe 3D.
+              </li>
+            </ul>
+            <p>
+              Les polices de caractères sont hébergées sur le site lui-même&nbsp;: elles ne sont plus chargées depuis
+              Google.
+            </p>
+
+            <h3>Liens vers d’autres sites</h3>
+            <p>
+              Le site contient des liens vers Instagram et Google Maps. Ces sites ne reçoivent des informations que
+              si vous cliquez sur le lien, et ont leur propre politique de confidentialité.
+            </p>
+
+            <h3>Journaux techniques</h3>
+            <p>
+              Comme tout serveur, ceux qui hébergent le site peuvent conserver des journaux techniques (adresse IP,
+              date et page demandée), nécessaires à la sécurité et au bon fonctionnement du service. Nous ne les
+              utilisons pas pour vous identifier.
+            </p>
+
+            <h3>Vos droits</h3>
+            <p>
+              Vous pouvez demander l’accès, la rectification ou la suppression des données qui vous concernent, ou
+              vous opposer à leur traitement, en écrivant à {contactLink}. Vous pouvez aussi adresser une réclamation
+              à la <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">CNIL</a>.
+            </p>
+          </section>
+
+          <p className="legal-update">Dernière mise à jour&nbsp;: {LEGAL_LAST_UPDATE}</p>
+        </div>
+      </main>
+
+      <SiteFooter />
     </div>
   );
 };
@@ -3935,6 +4084,7 @@ function App() {
         <Route path="/place/:id" element={<PlaceDetailPage />} />
         <Route path="/guides" element={<GuidesPage />} />
         <Route path="/guides/:id" element={<GuideDetailPage />} />
+        <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
         <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </Router>
