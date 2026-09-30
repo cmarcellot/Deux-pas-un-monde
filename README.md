@@ -163,7 +163,7 @@ Le script Umami n'est chargé que si les deux variables `REACT_APP_UMAMI_*` sont
 ├── frontend/
 │   ├── public/
 │   │   ├── index.html     # HTML avec meta SEO + fonts
-│   │   ├── favicon.png
+│   │   ├── favicon.ico, favicon.svg, favicon-*.png  # Favicons (+ apple-touch-icon.png, icon-192.png, manifest.json)
 │   │   ├── logo-deux-pas-un-monde-creme.png  # Logo nav (fond sombre)
 │   │   ├── logo-deux-pas-un-monde-encre.png  # Logo (fond clair)
 │   │   ├── logo-icone-creme.png              # Icône logo, pied de page
