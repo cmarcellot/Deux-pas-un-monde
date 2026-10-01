@@ -1684,6 +1684,20 @@
   margin-top: 12px;
 }
 
+/* Globe 3D (styles en ligne dans GlobeCanvas / GlobeView) : texte d'aide selon souris ou doigt */
+.globe-hint-touch { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .globe-hint-mouse { display: none; }
+  .globe-hint-touch { display: inline; }
+}
+@media (max-width: 640px) {
+  .globe-stage { height: 380px !important; }
+}
+/* Téléphone en paysage : le globe tient dans la hauteur de l'écran */
+@media (pointer: coarse) and (max-height: 600px) {
+  .globe-stage { height: max(260px, calc(100vh - 80px)) !important; }
+}
+
 /* ============================================================
    GUIDE CARD (light)
    ============================================================ */
