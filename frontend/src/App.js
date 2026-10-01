@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import * as THREE from 'three';
+import { createPortal } from 'react-dom';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -760,6 +761,102 @@ const SiteFooter = () => (
 );
 
 // ============================================================
+// SITE HEADER — menu commun à toutes les pages publiques (burger sous 640px)
+// ============================================================
+const INSTAGRAM_URL = 'https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr';
+
+const NAV_LINKS = [
+  { id: 'home',     to: '/',         label: 'Accueil' },
+  { id: 'adresses', to: '/adresses', label: 'Nos adresses' },
+  { id: 'guides',   to: '/guides',   label: 'Guides voyage' },
+];
+
+const InstagramIcon = ({ size = 18 }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" width={size} height={size}>
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+  </svg>
+);
+
+const SiteHeader = ({ active }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const burgerRef = useRef(null);
+  const closeRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const burger = burgerRef.current;
+    const handleKey = (e) => { if (e.key === 'Escape') setMenuOpen(false); };
+    // Le burger n'existe que sous 640px : si l'écran s'élargit, on referme le panneau
+    const wide = window.matchMedia('(min-width: 641px)');
+    const handleWide = (e) => { if (e.matches) setMenuOpen(false); };
+    window.addEventListener('keydown', handleKey);
+    wide.addEventListener('change', handleWide);
+    document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+      wide.removeEventListener('change', handleWide);
+      document.body.style.overflow = '';
+      burger?.focus();
+    };
+  }, [menuOpen]);
+
+  const closeMenu = () => setMenuOpen(false);
+
+  return (
+    <nav className="v2-nav">
+      <Link to="/" className="v2-nav-brand"><img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" /></Link>
+      <div className="v2-nav-links">
+        {NAV_LINKS.map(link => (
+          <Link key={link.id} to={link.to} className={`v2-nav-link${active === link.id ? ' active' : ''}`}>{link.label}</Link>
+        ))}
+      </div>
+      <div className="v2-nav-actions">
+        <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
+        <button className="v2-nav-icon-btn" aria-label="Compte">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
+            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+        </button>
+        <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="v2-nav-icon-btn" aria-label="Instagram">
+          <InstagramIcon />
+        </a>
+        <button ref={burgerRef} type="button" className="v2-nav-icon-btn v2-nav-burger" aria-label="Ouvrir le menu"
+          aria-expanded={menuOpen} aria-controls="site-menu" onClick={() => setMenuOpen(true)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" width="24" height="24">
+            <path d="M4 7h16M4 12h16M4 17h16"/>
+          </svg>
+        </button>
+      </div>
+
+      {menuOpen && createPortal(
+        <div id="site-menu" className="site-menu" role="dialog" aria-modal="true" aria-label="Menu">
+          <div className="site-menu-top">
+            <Link to="/" className="v2-nav-brand" onClick={closeMenu}><img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" /></Link>
+            <button ref={closeRef} type="button" className="site-menu-close" aria-label="Fermer le menu" onClick={closeMenu}>
+              <X size={24} strokeWidth={1.5} />
+            </button>
+          </div>
+          <div className="site-menu-links">
+            {NAV_LINKS.map(link => (
+              <Link key={link.id} to={link.to} onClick={closeMenu}
+                className={`site-menu-link${active === link.id ? ' active' : ''}`}
+                aria-current={active === link.id ? 'page' : undefined}>
+                {link.label}
+              </Link>
+            ))}
+          </div>
+          <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="site-menu-instagram" onClick={closeMenu}>
+            <InstagramIcon size={20} /> @deuxpas_unmonde
+          </a>
+        </div>,
+        document.body
+      )}
+    </nav>
+  );
+};
+
+// ============================================================
 // HOME PAGE
 // ============================================================
 const CAT_SVG = {
@@ -815,34 +912,12 @@ const HomePage = () => {
     } catch {}
   };
 
-  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
-
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
 
       {/* HERO */}
       <div className="v2-hero">
-        <nav className="v2-nav">
-        <Link to="/" className="v2-nav-brand"><img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" /></Link>
-        <div className="v2-nav-links">
-          <Link to="/"          className="v2-nav-link active">Accueil</Link>
-          <Link to="/adresses" className="v2-nav-link">Nos adresses</Link>
-          <Link to="/guides"   className="v2-nav-link">Guides voyage</Link>
-        </div>
-        <div className="v2-nav-actions">
-          <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
-          <button className="v2-nav-icon-btn" aria-label="Compte">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
-              <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-            </svg>
-          </button>
-          <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-icon-btn" aria-label="Instagram">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-            </svg>
-          </a>
-        </div>
-        </nav>
+        <SiteHeader active="home" />
         <div className="v2-hero-overlay" />
         <div className="v2-hero-text">
           <p className="v2-hero-eyebrow">Des lieux extraordinaires</p>
@@ -1288,8 +1363,6 @@ const GuidesPage = () => {
   const [searchOpen, setSearchOpen]   = useState(false);
   const navigate = useNavigate();
 
-  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
-
   useEffect(() => { fetchGuides(); }, []);
 
   const fetchGuides = async () => {
@@ -1313,29 +1386,7 @@ const GuidesPage = () => {
 
       {/* HERO */}
       <div className="guides-page-hero">
-        <nav className="v2-nav">
-          <Link to="/" className="v2-nav-brand">
-            <img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" />
-          </Link>
-          <div className="v2-nav-links">
-            <Link to="/"         className="v2-nav-link">Accueil</Link>
-            <Link to="/adresses" className="v2-nav-link">Nos adresses</Link>
-            <Link to="/guides"   className="v2-nav-link active">Guides voyage</Link>
-          </div>
-          <div className="v2-nav-actions">
-            <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
-            <button className="v2-nav-icon-btn" aria-label="Compte">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
-                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-              </svg>
-            </button>
-            <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-icon-btn" aria-label="Instagram">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-              </svg>
-            </a>
-          </div>
-        </nav>
+        <SiteHeader active="guides" />
         <div className="adresses-hero-content">
           <p className="v2-section-eyebrow adresses-eyebrow">GUIDES VOYAGE</p>
           <h1 className="adresses-hero-title">Tous nos guides</h1>
@@ -3719,7 +3770,6 @@ const AdressesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [sortBy, setSortBy] = useState('featured');
-  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
 
   // Lire la catégorie depuis l'URL (?category=...)
   useEffect(() => {
@@ -3764,29 +3814,7 @@ const AdressesPage = () => {
 
       {/* HERO COMPACT */}
       <div className="adresses-hero">
-        <nav className="v2-nav">
-          <Link to="/" className="v2-nav-brand">
-            <img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" />
-          </Link>
-          <div className="v2-nav-links">
-            <Link to="/"          className="v2-nav-link">Accueil</Link>
-            <Link to="/adresses"  className="v2-nav-link active">Nos adresses</Link>
-            <Link to="/guides"    className="v2-nav-link">Guides voyage</Link>
-          </div>
-          <div className="v2-nav-actions">
-            <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
-            <button className="v2-nav-icon-btn" aria-label="Compte">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
-                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-              </svg>
-            </button>
-            <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-icon-btn" aria-label="Instagram">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-              </svg>
-            </a>
-          </div>
-        </nav>
+        <SiteHeader active="adresses" />
         <div className="adresses-hero-content">
           <p className="v2-section-eyebrow adresses-eyebrow">NOS BONNES ADRESSES</p>
           <h1 className="adresses-hero-title">Toutes nos adresses</h1>
@@ -3921,7 +3949,6 @@ const LEGAL_CONTACT_EMAIL = 'deuxpasunmonde@gmail.com';
 const LEGAL_LAST_UPDATE = '30 septembre 2026';
 
 const MentionsLegalesPage = () => {
-  const igUrl = "https://www.instagram.com/deuxpas_unmonde?igsh=MTFtYm0ydnI0aDQ0Zw%3D%3D&utm_source=qr";
   const contactLink = <a href={`mailto:${LEGAL_CONTACT_EMAIL}`}>{LEGAL_CONTACT_EMAIL}</a>;
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
@@ -3931,29 +3958,7 @@ const MentionsLegalesPage = () => {
 
       {/* HERO COMPACT */}
       <div className="adresses-hero">
-        <nav className="v2-nav">
-          <Link to="/" className="v2-nav-brand">
-            <img src="/logo-deux-pas-un-monde-creme.png" alt="Deux Pas Un Monde" className="v2-nav-logo" />
-          </Link>
-          <div className="v2-nav-links">
-            <Link to="/"          className="v2-nav-link">Accueil</Link>
-            <Link to="/adresses"  className="v2-nav-link">Nos adresses</Link>
-            <Link to="/guides"    className="v2-nav-link">Guides voyage</Link>
-          </div>
-          <div className="v2-nav-actions">
-            <button className="v2-nav-icon-btn" aria-label="Favoris"><Heart size={18} strokeWidth={1.5} /></button>
-            <button className="v2-nav-icon-btn" aria-label="Compte">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
-                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-              </svg>
-            </button>
-            <a href={igUrl} target="_blank" rel="noopener noreferrer" className="v2-nav-icon-btn" aria-label="Instagram">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-              </svg>
-            </a>
-          </div>
-        </nav>
+        <SiteHeader />
         <div className="adresses-hero-content">
           <p className="v2-section-eyebrow adresses-eyebrow">INFORMATIONS LÉGALES</p>
           <h1 className="adresses-hero-title">Mentions légales &amp; confidentialité</h1>
