@@ -995,7 +995,7 @@ const HomePage = () => {
       {/* NOS GUIDES */}
       <section className="v2-guides-section">
         <div className="v2-guides-img">
-          <img src="/guides-hero.png" alt="Voyageuse contemplant un village côtier" />
+          <img src="/guides-hero.jpg" alt="Voyageuse contemplant un village côtier" />
         </div>
         <div className="v2-guides-body">
           <p className="v2-section-eyebrow">NOS GUIDES</p>
@@ -3190,7 +3190,7 @@ const AdminDashboard = ({ places, guides, onOpenList, onAddPlace, onShowAll }) =
           </div>
 
           <section className="dash-todo">
-            <img className="dash-todo-bg" src="/guides-hero.png" alt="" />
+            <img className="dash-todo-bg" src="/guides-hero.jpg" alt="" />
             <div className="dash-todo-body">
               <p className="dash-todo-eyebrow">Bon à savoir</p>
               <h2 className="dash-todo-title">{todo.length ? 'Contenus à finaliser' : 'Tout est à jour'}</h2>
