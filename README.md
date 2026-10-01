@@ -164,16 +164,16 @@ Le script Umami n'est chargé que si les deux variables `REACT_APP_UMAMI_*` sont
 │   ├── public/
 │   │   ├── index.html     # HTML avec meta SEO + fonts
 │   │   ├── favicon.ico, favicon.svg, favicon-*.png  # Favicons (+ apple-touch-icon.png, icon-192.png, manifest.json)
-│   │   ├── logo-deux-pas-un-monde-creme.png  # Logo nav (fond sombre)
+│   │   ├── logo-deux-pas-un-monde-creme.png  # Logo nav (fond sombre), 240 px de large
 │   │   ├── logo-deux-pas-un-monde-encre.png  # Logo (fond clair)
 │   │   ├── logo-icone-creme.png              # Icône logo, pied de page
 │   │   ├── logo-icone-encre.png
-│   │   ├── hero.png                          # Image héro (accueil, adresses, guides)
-│   │   └── guides-hero.png
+│   │   ├── hero.png                          # Ancienne copie de l'image héro (non référencée par le code)
+│   │   └── guides-hero.jpg                   # Image de la section guides (accueil, tableau de bord admin)
 │   ├── src/
 │   │   ├── App.js         # Composant principal (toutes les pages)
 │   │   ├── App.css        # Styles et animations
-│   │   ├── hero.png        # Copie source de l'image héro (référencée en CSS)
+│   │   ├── hero.jpg        # Image héro, référencée en CSS (accueil, adresses, guides, mentions légales, admin)
 │   │   ├── index.js       # Point d'entrée React
 │   │   └── index.css      # Variables CSS globales + thème
 │   ├── package.json

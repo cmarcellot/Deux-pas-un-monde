@@ -816,7 +816,7 @@
 .admin-hero {
   position: relative; height: 182px; padding: 46px 58px 0; flex-shrink: 0; color: white;
   background: linear-gradient(90deg, rgba(10,18,14,0.45) 0%, rgba(10,18,14,0.12) 45%, rgba(10,18,14,0) 70%),
-    url('./hero.png') center 18% / cover no-repeat,
+    url('./hero.jpg') center 18% / cover no-repeat,
     linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
 }
 .admin-hero-eyebrow {
@@ -2508,7 +2508,7 @@
   position: relative;
   height: 370px;
   color: #f7f5ef;
-  background: url('./hero.png') center top / cover no-repeat,
+  background: url('./hero.jpg') center top / cover no-repeat,
     linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
   overflow: hidden;
 }
@@ -3078,7 +3078,7 @@
 .guides-page-hero {
   position: relative;
   height: 250px;
-  background: url('./hero.png') center top / cover no-repeat,
+  background: url('./hero.jpg') center top / cover no-repeat,
     linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
   color: #f7f5ef;
   overflow: hidden;
@@ -3094,7 +3094,7 @@
 .adresses-hero {
   position: relative;
   height: 250px;
-  background: url('./hero.png') center top / cover no-repeat,
+  background: url('./hero.jpg') center top / cover no-repeat,
     linear-gradient(135deg, #2c3a2e 0%, #4a3220 50%, #c07840 100%);
   color: #f7f5ef;
   overflow: hidden;
