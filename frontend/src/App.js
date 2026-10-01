@@ -1068,7 +1068,9 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 1000);
-    camera.position.z = 2.8;
+    // Écran plus haut que large (téléphone) : on recule la caméra pour que le globe tienne en largeur
+    const fitZ = (aspect) => (aspect >= 1 ? 2.8 : Math.max(2.8, 1.12 / (Math.tan(THREE.MathUtils.degToRad(22.5)) * aspect)));
+    camera.position.z = fitZ(W / H);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(W, H);
@@ -1166,6 +1168,12 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
     const mouse = new THREE.Vector2();
     let isDragging = false, prevX = 0, prevY = 0, rotX = 0, rotY = 0, autoRotate = true;
     const Z_MIN = 1.4, Z_MAX = 5.0;
+    // Reprend l'angle atteint par la rotation automatique (sinon le globe sautait à sa position de départ)
+    const stopAutoRotate = () => {
+      if (!autoRotate) return;
+      rotY = globe.rotation.y;
+      autoRotate = false;
+    };
 
     const onWheel = (evt) => {
       evt.preventDefault();
@@ -1175,14 +1183,14 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
 
     const onMouseMove = (evt) => {
       const rect = container.getBoundingClientRect();
-      mouse.x = ((evt.clientX - rect.left) / W) * 2 - 1;
-      mouse.y = -((evt.clientY - rect.top) / H) * 2 + 1;
+      mouse.x = ((evt.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((evt.clientY - rect.top) / rect.height) * 2 + 1;
       if (isDragging) {
+        stopAutoRotate();
         rotY += (evt.clientX - prevX) * 0.005;
         rotX += (evt.clientY - prevY) * 0.005;
         rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotX));
         prevX = evt.clientX; prevY = evt.clientY;
-        autoRotate = false;
       }
       raycaster.setFromCamera(mouse, camera);
       const hits = raycaster.intersectObjects(markers);
@@ -1219,35 +1227,85 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
     container.addEventListener('mouseup', onMouseUp);
     container.addEventListener('mouseleave', onMouseLeave);
 
-    let lastTouchX = 0, lastTouchY = 0, hasTouchStart = false, lastPinchDist = 0;
-    container.addEventListener('touchstart', (e) => {
+    // Marqueur le plus proche d'un point de l'écran (zone de 28 px : les marqueurs font 3–4 px sur téléphone)
+    const pickMarkerAt = (clientX, clientY) => {
+      const rect = container.getBoundingClientRect();
+      const toCamera = camera.position.clone().normalize();
+      const pos = new THREE.Vector3();
+      let picked = null, bestDist = 28;
+      markers.forEach(dot => {
+        dot.getWorldPosition(pos);
+        if (pos.clone().normalize().dot(toCamera) < 0.15) return; // face cachée du globe
+        pos.project(camera);
+        const x = rect.left + (pos.x + 1) / 2 * rect.width;
+        const y = rect.top + (1 - pos.y) / 2 * rect.height;
+        const dist = Math.hypot(x - clientX, y - clientY);
+        if (dist < bestDist) { bestDist = dist; picked = dot.userData.guide; }
+      });
+      return picked;
+    };
+
+    // Tactile : glisser horizontalement fait tourner le globe, glisser verticalement fait défiler la page
+    // (touch-action: pan-y), pincer zoome, toucher un marqueur ouvre le guide
+    const TAP_SLOP = 8;
+    let touchStartX = 0, touchStartY = 0, lastTouchX = 0, lastTouchY = 0, touchAxis = null, pinching = false, lastPinchDist = 0;
+    const pinchDist = (e) => Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    const onTouchStart = (e) => {
+      if (e.touches.length === 2) { pinching = true; lastPinchDist = pinchDist(e); return; }
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      touchStartX = lastTouchX = t.clientX; touchStartY = lastTouchY = t.clientY;
+      touchAxis = null; pinching = false;
+    };
+    const onTouchMove = (e) => {
       if (e.touches.length === 2) {
-        lastPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      } else {
-        lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
-        hasTouchStart = true; autoRotate = false;
-      }
-    });
-    container.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 2) {
-        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        const dist = pinchDist(e);
         camera.position.z = Math.max(Z_MIN, Math.min(Z_MAX, camera.position.z - (dist - lastPinchDist) * 0.02));
         lastPinchDist = dist;
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
         return;
       }
-      if (!hasTouchStart) return;
+      if (pinching || e.touches.length !== 1) return;
       const t = e.touches[0];
-      rotY += (t.clientX - lastTouchX) * 0.005; rotX += (t.clientY - lastTouchY) * 0.005;
+      if (!touchAxis) {
+        const dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < TAP_SLOP) return;
+        touchAxis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      }
+      if (touchAxis !== 'x') return; // geste vertical : le navigateur fait défiler la page
+      stopAutoRotate();
+      rotY += (t.clientX - lastTouchX) * 0.005;
+      rotX += (t.clientY - lastTouchY) * 0.005;
       rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotX));
-      lastTouchX = t.clientX; lastTouchY = t.clientY; e.preventDefault();
-    }, { passive: false });
-    container.addEventListener('touchend', () => { hasTouchStart = false; });
+      lastTouchX = t.clientX; lastTouchY = t.clientY;
+      if (e.cancelable) e.preventDefault();
+    };
+    const onTouchEnd = (e) => {
+      if (e.touches.length > 0) return;
+      const wasTap = !pinching && !touchAxis && e.changedTouches.length === 1;
+      pinching = false;
+      if (!wasTap) return;
+      const t = e.changedTouches[0];
+      const guide = pickMarkerAt(t.clientX, t.clientY);
+      // preventDefault : pas d'événements souris simulés derrière, donc pas de double ouverture
+      if (guide) { e.preventDefault(); onSelectGuide(guide); }
+    };
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchmove', onTouchMove, { passive: false });
+    container.addEventListener('touchend', onTouchEnd, { passive: false });
+
+    // Pas de rendu quand le globe est hors de l'écran (batterie des téléphones)
+    let onScreen = true;
+    const visibility = 'IntersectionObserver' in window
+      ? new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; })
+      : null;
+    visibility?.observe(container);
 
     let raf;
     const clock = new THREE.Clock();
     const animate = () => {
       raf = requestAnimationFrame(animate);
+      if (!onScreen) return;
       const elapsed = clock.getElapsedTime();
       if (autoRotate) { globe.rotation.y += 0.002; markerGroup.rotation.y = globe.rotation.y; }
       else { globe.rotation.set(rotX, rotY, 0); markerGroup.rotation.set(rotX, rotY, 0); }
@@ -1262,14 +1320,22 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
     };
     animate();
 
+    let curW = W, curH = H;
     const onResize = () => {
       const nW = container.clientWidth, nH = container.clientHeight;
-      camera.aspect = nW / nH; camera.updateProjectionMatrix(); renderer.setSize(nW, nH);
+      if (nW === curW && nH === curH) return;
+      // Rotation du téléphone : on recadre le globe (en bureau, le zoom choisi est conservé)
+      const wasPortrait = curW < curH;
+      curW = nW; curH = nH;
+      camera.aspect = nW / nH;
+      if (wasPortrait || nW < nH) camera.position.z = fitZ(camera.aspect);
+      camera.updateProjectionMatrix(); renderer.setSize(nW, nH);
     };
     window.addEventListener('resize', onResize);
 
     return () => {
       cancelAnimationFrame(raf);
+      visibility?.disconnect();
       renderer.dispose();
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
       container.removeEventListener('mousemove', onMouseMove);
@@ -1277,6 +1343,9 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
       container.removeEventListener('mouseup', onMouseUp);
       container.removeEventListener('mouseleave', onMouseLeave);
       container.removeEventListener('wheel', onWheel);
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('resize', onResize);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1284,10 +1353,10 @@ const GlobeCanvas = ({ resolvedGuides, onSelectGuide }) => {
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
-      <div ref={mountRef} style={{
+      <div ref={mountRef} className="globe-stage" style={{
         width: '100%', height: 520, borderRadius: 12, overflow: 'hidden',
         background: 'linear-gradient(135deg, #0a0e1a 0%, #0d1b2a 50%, #0a0e1a 100%)',
-        cursor: 'grab', userSelect: 'none',
+        cursor: 'grab', userSelect: 'none', touchAction: 'pan-y',
       }} />
       <div ref={tooltipRef} style={{
         position: 'absolute', display: 'none', pointerEvents: 'none',
@@ -1327,7 +1396,7 @@ const GlobeView = ({ guides, navigate }) => {
   return (
     <div>
       {geocoding ? (
-        <div style={{
+        <div className="globe-stage" style={{
           width: '100%', height: 520, borderRadius: 12, overflow: 'hidden',
           background: 'linear-gradient(135deg, #0a0e1a 0%, #0d1b2a 50%, #0a0e1a 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1359,7 +1428,8 @@ const GlobeView = ({ guides, navigate }) => {
         </div>
       )}
       <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 14 }}>
-        Cliquez et glissez pour faire tourner · Cliquez un marqueur pour ouvrir le guide
+        <span className="globe-hint-mouse">Cliquez et glissez pour faire tourner · Cliquez un marqueur pour ouvrir le guide</span>
+        <span className="globe-hint-touch">Glissez de côté pour faire tourner · Touchez un marqueur pour ouvrir le guide</span>
       </p>
     </div>
   );
