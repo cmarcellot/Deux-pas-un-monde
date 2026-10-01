@@ -215,10 +215,12 @@ const Lightbox = ({ photos, initialIndex, onClose }) => {
       else if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKey);
+    // On restaure l'état précédent : ouverte depuis la fenêtre d'une adresse, la page doit rester bloquée
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       window.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = '';
+      document.body.style.overflow = previousOverflow;
     };
   }, [goPrev, goNext, onClose]);
 
@@ -344,8 +346,10 @@ const PHOTO_COLORS = {
 
 const PhotoPlaceholder = ({ category, index = 0, height = 200, title = '' }) => {
   const colors = PHOTO_COLORS[category] || ['#888','#999','#aaa'];
-  const c1 = colors[index % colors.length];
-  const c2 = colors[(index + 1) % colors.length];
+  // Les ids des lieux sont des chaînes : on en tire un nombre stable pour choisir le dégradé
+  const n = typeof index === 'number' ? index : [...String(index)].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  const c1 = colors[n % colors.length];
+  const c2 = colors[(n + 1) % colors.length];
   const gradId = `grad-${category}-${index}`;
   return (
     <svg width="100%" height={height} viewBox={`0 0 400 ${height}`} preserveAspectRatio="xMidYMid slice" style={{ display: 'block' }}>
@@ -485,6 +489,14 @@ const PlaceDetailModal = ({ place, onClose }) => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const thumbStripRef = useRef(null);
+
+  // Sur téléphone, la page derrière la fenêtre ne doit pas défiler
+  useEffect(() => {
+    if (!place || !window.matchMedia('(max-width: 640px)').matches) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previous; };
+  }, [place]);
 
   if (!place) return null;
   const buildAllMedia = (p) => {
@@ -678,6 +690,7 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
               <X size={14} />
             </button>
           )}
+          <button className="search-overlay-close" onClick={onClose}>Fermer</button>
         </div>
 
         <div className="search-overlay-results">
@@ -735,7 +748,7 @@ const SearchOverlay = ({ open, onClose, places, onSelectPlace }) => {
 
         <div className="search-overlay-footer">
           {total > 0 ? `${total} résultat${total > 1 ? 's' : ''}` : 'Commencez à taper…'}
-          {' · '}Échap pour fermer
+          <span className="search-overlay-esc"> · Échap pour fermer</span>
         </div>
       </div>
     </div>
@@ -922,7 +935,7 @@ const HomePage = () => {
         <div className="v2-hero-text">
           <p className="v2-hero-eyebrow">Des lieux extraordinaires</p>
           <h1 className="v2-hero-title">Des expériences<br />qui font voyager</h1>
-          <p className="v2-hero-sub">Nos bonnes adresses, nos coups de coeur et nos guides<br />pour s'évader, proche ou loin.</p>
+          <p className="v2-hero-sub">Nos bonnes adresses, nos coups de coeur et nos guides <br />pour s'évader, proche ou loin.</p>
         </div>
         <div className="v2-searchbar-wrap">
           <div className="v2-searchbar v2-searchbar--simple">
@@ -1585,7 +1598,7 @@ const GuideDetailPage = () => {
       <div className="guide-detail-page">
 
         {/* ── Hero ─────────────────────────────────────────── */}
-        <div style={{ position: 'relative', height: 300, overflow: 'hidden' }}>
+        <div className="guide-detail-hero" style={{ position: 'relative', height: 300, overflow: 'hidden' }}>
           {guide.cover_image
             ? <img src={guide.cover_image} alt={guide.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             : <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #c17c5a 0%, #5B7A8A 100%)' }} />
@@ -1593,7 +1606,7 @@ const GuideDetailPage = () => {
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,17,15,0.78) 0%, rgba(15,17,15,0.2) 55%, transparent 100%)' }} />
 
           {/* Back */}
-          <button onClick={() => navigate(-1)} style={{
+          <button className="guide-detail-hero-btn" onClick={() => navigate(-1)} style={{
             position: 'absolute', top: 20, left: 20, background: 'rgba(0,0,0,0.38)',
             border: 'none', color: '#fff', borderRadius: 6, padding: '8px 16px',
             fontFamily: 'Jost, sans-serif', fontSize: 13, cursor: 'pointer',
@@ -1602,7 +1615,7 @@ const GuideDetailPage = () => {
 
           {/* Photos shortcut */}
           {allPhotos.length > 0 && (
-            <button onClick={() => { setLightboxIndex(0); setLightboxOpen(true); }} style={{
+            <button className="guide-detail-hero-btn" onClick={() => { setLightboxIndex(0); setLightboxOpen(true); }} style={{
               position: 'absolute', top: 20, right: 20, background: 'rgba(0,0,0,0.38)',
               border: 'none', color: '#fff', borderRadius: 6, padding: '8px 16px',
               fontFamily: 'Jost, sans-serif', fontSize: 13, cursor: 'pointer',
@@ -1615,7 +1628,7 @@ const GuideDetailPage = () => {
             <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
               Guide voyage — {guide.destination}, {guide.country}
             </p>
-            <h1 style={{ fontFamily: "'EB Garamond', Georgia, serif", fontWeight: 600, fontSize: 42, color: '#fff', margin: 0, lineHeight: 1.1, textShadow: '0 2px 16px rgba(0,0,0,0.35)' }}>
+            <h1 className="guide-detail-hero-title" style={{ fontFamily: "'EB Garamond', Georgia, serif", fontWeight: 600, fontSize: 42, color: '#fff', margin: 0, lineHeight: 1.1, textShadow: '0 2px 16px rgba(0,0,0,0.35)' }}>
               {guide.title}
             </h1>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
@@ -1631,17 +1644,17 @@ const GuideDetailPage = () => {
         </div>
 
         {/* ── Body ─────────────────────────────────────────── */}
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '48px 24px 80px' }}>
+        <div className="guide-detail-body" style={{ maxWidth: 860, margin: '0 auto', padding: '48px 24px 80px' }}>
 
           {/* Intro */}
           {guide.intro && (
-            <p style={{ fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'italic', fontSize: 20, color: '#666',
+            <p className="guide-detail-intro" style={{ fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'italic', fontSize: 20, color: '#666',
               lineHeight: 1.75, marginBottom: 44, textAlign: 'center' }}
               dangerouslySetInnerHTML={{ __html: guide.intro }} />
           )}
 
           {/* Tab toggle */}
-          <div style={{ display: 'flex', gap: 4, marginBottom: 36, background: '#ede8db', borderRadius: 8, padding: 4, width: 'fit-content', flexWrap: 'wrap' }}>
+          <div className="guide-detail-tabs" style={{ display: 'flex', gap: 4, marginBottom: 36, background: '#ede8db', borderRadius: 8, padding: 4, width: 'fit-content', flexWrap: 'wrap' }}>
             {TABS.map(([key, label]) => (
               <button key={key} onClick={() => setActiveSection(key)} style={{
                 fontFamily: 'Jost, sans-serif', fontSize: 13, padding: '7px 20px', borderRadius: 6,
@@ -1659,7 +1672,7 @@ const GuideDetailPage = () => {
               ? <p className="guide-empty-section">Itinéraire à venir…</p>
               : <>
                   {/* Day pills */}
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 36, flexWrap: 'wrap' }}>
+                  <div className="guide-detail-days" style={{ display: 'flex', gap: 8, marginBottom: 36, flexWrap: 'wrap' }}>
                     {guide.itinerary.map((day, i) => (
                       <button key={i} onClick={() => setActiveDay(i)} style={{
                         fontFamily: 'Jost, sans-serif', fontSize: 13, padding: '8px 20px', borderRadius: 6,
@@ -1736,7 +1749,7 @@ const GuideDetailPage = () => {
                                       dangerouslySetInnerHTML={{ __html: act.description }} />
                                   )}
                                   {linked && (
-                                    <button onClick={() => setSelectedPlace(linked)} style={{
+                                    <button className="guide-detail-place-btn" onClick={() => setSelectedPlace(linked)} style={{
                                       display: 'inline-flex', alignItems: 'center', gap: 8,
                                       background: '#f5f1ea', borderRadius: 6, padding: '6px 12px',
                                       border: '1px solid #e5e0d5', cursor: 'pointer',
@@ -1846,7 +1859,7 @@ const GuideDetailPage = () => {
                           </div>
                         ))}
                       </div>
-                      <MapContainer center={center} zoom={13}
+                      <MapContainer center={center} zoom={13} className="guide-detail-map"
                         style={{ height: '440px', width: '100%', borderRadius: '10px', border: '1px solid #e5e0d5', marginBottom: 24 }}
                         scrollWheelZoom={false}>
                         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
