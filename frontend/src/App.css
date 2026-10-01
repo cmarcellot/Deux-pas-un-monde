@@ -555,7 +555,8 @@
 .pdm-highlight img { width: 100%; height: 130px; object-fit: cover; display: block; }
 
 @media (max-width: 720px) {
-  .pdm-body { grid-template-columns: 1fr; padding: 22px 20px 26px; gap: 24px; }
+  /* minmax(0, …) : sinon la bande de miniatures élargit la colonne au-delà de l'écran */
+  .pdm-body { grid-template-columns: minmax(0, 1fr); padding: 22px 20px 26px; gap: 24px; }
   .pdm-hero { height: 260px; }
   .pdm-title { font-size: 30px; }
   .pdm-sidebar { order: -1; padding-left: 0; border-left: none; }
@@ -1881,6 +1882,22 @@
 /* Map section */
 .guide-map-section { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
 
+/* Page guide (styles en ligne dans GuideDetailPage) : ajustements téléphone */
+@media (max-width: 640px) {
+  .guide-detail-hero { height: 340px !important; }
+  .guide-detail-hero-btn { min-height: 44px; }
+  .guide-detail-hero-title { font-size: 30px !important; }
+  .guide-detail-body { padding: 32px 18px 64px !important; }
+  .guide-detail-intro { font-size: 18px !important; margin-bottom: 32px !important; }
+  /* Les 4 onglets en grille 2 × 2 plutôt que « Carte du séjour » seul sur sa ligne */
+  .guide-detail-tabs { display: grid !important; grid-template-columns: 1fr 1fr; width: 100% !important; }
+  .guide-detail-tabs button { padding: 13px 8px !important; }
+  .guide-detail-days button { padding: 13px 16px !important; }
+  .guide-detail-place-btn { min-height: 44px; flex-wrap: wrap; text-align: left; }
+  /* Carte moins haute : on peut encore faire défiler la page autour avec le doigt */
+  .guide-detail-map { height: 320px !important; }
+}
+
 /* ============================================================
    RESPONSIVE
    ============================================================ */
@@ -1901,7 +1918,10 @@
 
   /* Modal slides up */
   .modal-overlay { padding: 0; align-items: flex-end; }
-  .pdm { max-height: 95vh; border-radius: 16px 16px 0 0; max-width: 100%; }
+  .pdm { max-height: 95vh; max-height: 95dvh; border-radius: 16px 16px 0 0; max-width: 100%; }
+  .pdm-hero-close { width: 44px; height: 44px; }
+  .pdm-hero-arrow { width: 40px; height: 40px; }
+  .pdm-gallery-arrow { display: none; }
 
   .action-btn { min-width: 32px; min-height: 32px; }
 
@@ -1923,7 +1943,7 @@
   .activity-form-row { flex-direction: column; }
   .activity-form-row input, .activity-form-row select { width: 100%; }
 
-  .lightbox-stage { padding: 56px 48px; }
+  .lightbox-stage { padding: 64px 8px 80px; }
   .lightbox-arrow { width: 40px; height: 40px; }
   .lightbox-arrow-prev { left: 6px; }
   .lightbox-arrow-next { right: 6px; }
@@ -2108,6 +2128,25 @@
   font-size: 11px;
   color: var(--text-light);
   flex-shrink: 0;
+}
+.search-overlay-close { display: none; }
+
+/* Téléphone : recherche en plein écran, avec un bouton pour la fermer */
+@media (max-width: 640px) {
+  .search-overlay-backdrop { padding-top: 0; }
+  .search-overlay-panel { max-width: none; height: 100vh; height: 100dvh; max-height: none; border-radius: 0; }
+  .search-overlay-input-row { padding: 6px 6px 6px 16px; }
+  .search-overlay-input { font-size: 16px; min-width: 0; min-height: 44px; }
+  .search-overlay-clear { width: 44px; height: 44px; justify-content: center; }
+  .search-overlay-close {
+    display: flex; align-items: center; min-height: 44px; padding: 0 10px;
+    background: none; border: none; cursor: pointer;
+    font-family: 'Jost', sans-serif; font-size: 14px; color: var(--text);
+  }
+  .search-result-row { padding: 10px 16px; }
+  .search-result-row .v2-place-badge,
+  .search-result-row .cat-badge { display: none; }
+  .search-overlay-esc { display: none; }
 }
 
 /* ============================================================
@@ -2957,7 +2996,8 @@
 @media (max-width: 640px) {
   .v2-footer { height: auto; min-height: 56px; padding: 12px 0; }
   .v2-footer-inner--full { flex-wrap: wrap; row-gap: 10px; }
-  .v2-footer-links { gap: 18px; flex-wrap: wrap; }
+  .v2-footer-links { gap: 0 22px; flex-wrap: wrap; }
+  .v2-footer-admin-link { display: inline-flex; align-items: center; min-height: 44px; font-size: 12.5px; }
 }
 
 /* ── RESPONSIVE ── */
@@ -2969,6 +3009,9 @@
 
 @media (max-width: 1024px) {
   .v2-nav-links { gap: 16px; }
+  /* La recherche passe sous le texte du héro : centrée en bas, elle recouvrait le sous-titre */
+  .v2-hero { height: auto; min-height: 370px; padding-bottom: 44px; }
+  .v2-searchbar-wrap { position: relative; bottom: auto; left: auto; transform: none; width: 84%; margin: 28px auto 0; }
 }
 
 @media (max-width: 900px) {
@@ -2980,8 +3023,12 @@
   .v2-guides-grid { grid-column: 1/-1; padding: 20px 5%; grid-template-columns: repeat(2, 1fr); }
   .v2-guide-mini-img { height: 130px; }
   .v2-hero { height: auto; min-height: 390px; }
-  .v2-searchbar-wrap { left: 6%; width: 88%; }
+  .v2-searchbar-wrap { width: 88%; }
   .v2-cat-strip-inner { padding-left: 4%; padding-right: 4%; }
+}
+
+@media (max-width: 560px) {
+  .v2-places-grid { grid-template-columns: minmax(0, 1fr) !important; }
 }
 
 @media (max-width: 640px) {
@@ -2990,21 +3037,25 @@
   .v2-nav-logo { width: 80px; height: 58px; }
   .v2-nav-actions { padding-top: 0; }
   .v2-nav-burger { display: flex; width: 44px; height: 44px; padding: 10px; }
-  .v2-hero { height: auto; min-height: 590px; }
+  .v2-hero { min-height: 460px; padding-bottom: 36px; }
+  .v2-hero-text { margin: 0 5%; }
   .v2-hero-title { font-size: 34px; line-height: 1.1; }
-  .v2-searchbar-wrap { position: relative; bottom: auto; left: auto; width: 88%; margin: 16px auto 0; }
-  .v2-searchbar { grid-template-columns: 1fr 1fr; border-radius: 18px; padding: 10px; gap: 6px; }
-  .v2-searchbar-field { padding: 12px 8px; border: 0; }
-  .v2-searchbar-field:nth-child(3) { border: 0; }
-  .v2-searchbar-btn { grid-column: 1/-1; font-size: 14px; }
+  .v2-hero-sub br { display: none; }
+  .v2-searchbar-wrap { width: 90%; margin: 22px auto 0; }
+  /* Bouton réduit à sa loupe : le champ garde la place pour son texte */
+  .v2-searchbar { min-height: 56px; padding: 6px 6px 6px 18px; }
+  .v2-searchbar-text { font-size: 16px; min-width: 0; min-height: 44px; }
+  .v2-searchbar-btn { font-size: 0; gap: 0; width: 44px; height: 44px; padding: 0; flex-shrink: 0; border-radius: 50%; }
   .v2-cat-strip-inner { flex-wrap: wrap; gap: 20px 0; padding: 22px 3%; justify-content: center; }
-  .v2-cat-item { min-width: 100px; }
+  .v2-cat-item { flex: 0 0 33.333%; min-width: 0; }
   .v2-cat-item + .v2-cat-item::before { display: none; }
   .v2-adresses-section { padding: 28px 5%; }
-  .v2-places-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .v2-adresses-sub { font-size: 13px; }
   .v2-guides-section { grid-template-columns: 35% 65%; }
   .v2-guides-grid { grid-template-columns: 1fr; }
   .v2-guide-mini-img { height: 115px; }
+  .v2-guide-mini-dur { font-size: 10px; }
+  .v2-guide-mini-dest { font-size: 11px; }
 }
 
 /* ============================================================
@@ -3160,12 +3211,33 @@
 }
 
 @media (max-width: 640px) {
-  .adresses-hero { height: 210px; }
-  .adresses-hero-content { padding-top: 90px; }
+  .adresses-hero, .guides-page-hero { height: auto; min-height: 210px; padding-bottom: 24px; }
+  .adresses-hero-content { padding-top: 90px; margin-left: 5%; margin-right: 5%; }
   .adresses-hero-title { font-size: 32px; }
-  .adresses-toolbar { padding: 12px 5%; flex-wrap: wrap; row-gap: 10px; }
+  .adresses-searchbar-wrap .v2-searchbar--simple { width: 90%; }
+  .adresses-toolbar { padding: 10px 5%; }
   .adresses-sort-label { display: none; }
+  .adresses-sort-select { font-size: 16px; min-height: 44px; }
+  .view-toggle-btn { width: 44px; height: 44px; }
   .adresses-places { padding: 20px 5% 40px; }
+
+  /* Vue liste : la note et la ville passent sous le texte au lieu de déborder à droite */
+  .place-list-row { grid-template-columns: 112px minmax(0, 1fr); }
+  .place-list-thumb { grid-row: 1 / span 2; height: auto; min-height: 112px; }
+  .place-list-body { padding: 12px 14px 4px; min-width: 0; }
+  .place-list-body h3 { font-size: 17px; line-height: 1.2; }
+  .place-list-meta-row { flex-wrap: wrap; row-gap: 4px; }
+  .place-list-right { flex-direction: row-reverse; justify-content: space-between; align-items: center; padding: 4px 14px 12px; }
+  .place-list-right span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .guide-list-row { grid-template-columns: 112px minmax(0, 1fr); }
+  .guide-list-thumb { height: 100%; min-height: 112px; }
+  .guide-list-body { padding: 12px 14px; min-width: 0; }
+  .guide-list-body h3 { font-size: 17px; line-height: 1.2; }
+  .guide-list-meta { flex-wrap: wrap; row-gap: 2px; }
+  .guide-list-meta span { white-space: nowrap; }
+
+  .leaflet-touch .leaflet-bar a { width: 44px; height: 44px; line-height: 44px; }
 }
 
 /* ============================================================
